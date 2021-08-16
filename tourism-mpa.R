@@ -4,16 +4,19 @@
 #3 August 2021
 
 #To do:
-
+#1. Goal: Biomass model. Adding an MPA, how much biomass will increase at a site?
+#2. What I found so far: Maybe challenging to model if per species. For the biomass, we do not need the identity of the species.
+#We have a separate model for the biodiversity change.
+#3. Simplification --- Biomass as a single species. Need to check how to model dispersal??? For growth, we could get the average r.
+#average movement also? well, this assumption cannot capture site-specific differences but maybe we do not need to be accurate.
 
 #Biomass model - add MPAs, how much biomass will change?
-#1st: is to define current B/Bmsy and equilibrium B/Bmsy given F/Fmsy
+#1st: define current B/Bmsy and equilibrium B/Bmsy given F/Fmsy
 #we do not care about catch transition but we care about B/Bmsy transition.
-#steady state???
 
-#2nd: 
 gc()
 rm(list = ls())
+
 library(doParallel)
 library(raster)
 library(rgdal)
@@ -26,6 +29,7 @@ library(maps)
 library(sf)
 library(tidyverse)
 library(patchwork)
+library(data.table)
 
 #load EEZ mollweide file
 Final_EEZ_file_with_names<-readRDS("/Users/ren/Documents/GitHub/MPAFishFlow/Final_EEZ_file_with_names.rds")
@@ -60,26 +64,197 @@ CleanCoordmegacell_EEZ_wMPA$MPA[is.na(CleanCoordmegacell_EEZ_wMPA$MPA)] <- 0
 head(CleanCoordmegacell_EEZ_wMPA)
 dim(CleanCoordmegacell_EEZ_wMPA)
 
-#PLOT MPAs
+#plot MPAs
 CleanCoordmegacell_EEZ_wMPA %>% filter(MPA==1)  %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
+#Plot world
+CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
+head(CleanCoordmegacell_EEZ_wMPA)
+#review
+#1. CleanCoordmegacell_EEZ_wMPA contans the lat, lon, MPA or not, territory, and soverignity
 
-#we could subset eezs if we want to
-EEZposition<-which(CleanCoordmegacell_EEZ_wMPA$sovereign1=="Indonesia")
-length(EEZposition)
+biol_data <- CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% mutate(r=1, K=1000, E=0, B=1000)#B=K*runif(n(), min=0, max=1)
+#add ID
+biol_data <- biol_data %>% mutate(pos1 = row_number())
+max(biol_data$pos1)
+head(biol_data)
+dim(biol_data)[1]
 
-#Permutations
-ncell<-10
-perms<-cbind(rep(1:ncell, each=ncell),rep(1:ncell, ncell)) #ok, this is how we could do permutation
 
-#Now, check using actual data
-#add sequence id
-CleanCoordmegacell_EEZ_wMPA$ID <- seq.int(nrow(CleanCoordmegacell_EEZ_wMPA))
-ncell<-max(CleanCoordmegacell_EEZ_wMPA$ID)
+# create distance matrix
+#test
+sqrt((biol_data[1,1]-biol_data[2,1])^2+(biol_data[1,2]-biol_data[2,2])^2) #50100 unit in meters -- so this is 50km or 0.5 degree
 
-#create a biomass matrix library
-Biom_matrix<-cbind(rep(1:ncell, each=ncell),rep(1:ncell, ncell)) 
-##opps. not working! this operation takes lots of memory!
+n_pixel <- dim(biol_data)[1] #there are 120297 pixels
 
+# #IMPORTANT -- JUST RUN ONCE. COMMENTED FOR NOW. JUST LOAD THE OUTPUT.
+# #Option 1 for computing the distance matrix is good
+# #permutation with no repetition, and only store the elements within the x km dispersal distance
+# dispersal_distance_lim<-1000 #let us say a limit of 1000km as the dispersal distance range...realistic?
+# distance_mat<-list()
+# cores<-detectCores()
+# registerDoParallel(cores-1)
+# for (i in 1:n_pixel){ #calculate the distance of pixel i to all (except itself and no repetition, i.e., the half of the distance matrix)
+#   distance <- sqrt((biol_data[i,1]-biol_data[i+1:n_pixel,1])^2+(biol_data[i,2]-biol_data[i+1:n_pixel,2])^2)/1000
+#   position <- which(distance<=dispersal_distance_lim)
+#   
+#   if (length(position)==0){next} #in case zero data
+#   
+#   #save i,j,distance
+#   prep_data<-as.data.frame(distance[position])
+#   colnames(prep_data) <- "dist"
+#   prep_data$pos1<-i
+#   prep_data$pos2<-position+i
+#   
+#   distance_mat[[i]] <- prep_data
+# }
+# distance_mat_merged <- do.call("rbind",distance_mat)
+# stopImplicitCluster()
+# head(distance_mat_merged)
+# dim(distance_mat_merged)
+# #save the data then load so we do not need to run the code above
+# saveRDS(distance_mat_merged, file = "/Users/ren/Documents/GitHub/tourism-mpa/data/distance_mat_merged.rds")
+distance_mat_merged <- readRDS("/Users/ren/Documents/GitHub/tourism-mpa/data/distance_mat_merged.rds")
+dim(distance_mat_merged)
+head(distance_mat_merged)
+
+# #Option 2 for computing the distance matrix is slow. Option 1 is the best.
+# n_pixel<-100 #placeholder
+# dispersal_distance_lim<-110 #km #for now 100 but realistically 1000?
+# distance_mat<-list()
+# t <- 1
+# for (i in 1:n_pixel){
+#   for (j in i+1:n_pixel){ #i'll remove the distance of pixel i from itself which is zero
+#     distance <- sqrt((biol_data[i,1]-biol_data[j,1])^2+(biol_data[i,2]-biol_data[j,2])^2)/1000
+#     if( distance <= dispersal_distance_lim ){
+#       distance_mat[[t]] <- c(i,j,distance)
+#       t <- t+1
+#     }
+#   }
+# }
+# #
+# distance_mat_merged2 <- do.call("rbind",distance_mat)
+# head(distance_mat_merged2)
+# dim(distance_mat_merged2)
+
+#Complete the distance matrix by adding in the self-loop and the other part of the mirror matrix
+head(distance_mat_merged)
+#biomass in next time step = biomass with diffusion - harvest + growth in the form of larval dispersal 
+
+#the second mirror half of the matrix
+distance_mat_part2 <- distance_mat_merged %>% select(dist,pos2,pos1) 
+colnames(distance_mat_part2) <- c("dist","pos1","pos2")
+head(distance_mat_part2)
+
+#the link to itself
+distance_mat_part3 <- data.frame(dist = rep(0,n_pixel)) %>% mutate(pos1 = 1:n_pixel, pos2 = 1:n_pixel)
+head(distance_mat_part3)
+
+#now, combine the three datasets to complete the matrix
+distance_mat_full<-rbind(distance_mat_merged,distance_mat_part2,distance_mat_part3)
+dim(distance_mat_full)
+
+
+##ADD a column indicating the proportion of biomass that will move at a specific site
+#use gaussian equation here
+sigma <- 100
+#norm function
+
+#test 
+testme <- distance_mat_full %>% filter(pos1==1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) 
+sum(testme$biom_prop) #ok, it is working!
+#use group_by, remove the distance column
+distance_mat_full_prop <- distance_mat_full %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% select(-dist)
+head(distance_mat_full_prop) #fast!
+#check if correct
+distance_mat_full_prop %>% filter(pos1==1) %>% summarise(sum(biom_prop)) #ok good
+
+#ok, now that we have the distance matrix, implement biomass diffusion and larval dispersal 
+head(biol_data)
+
+biom <- biol_data %>% select(pos1,B)
+head(biom)
+
+#test how fast is data.frame
+ptm <- proc.time()
+Result1<-left_join(distance_mat_full_prop, biom, by = "pos1")
+(proc.time() - ptm)/60 #check process time in minutes
+head(Result1)
+
+# # #This code is working and is based on data.frame! But it seems that data.table is faster. So I will comment this.
+# cores<-detectCores()
+# registerDoParallel(cores-1)
+# ptm <- proc.time()
+# for (t in 1:30){
+#   biom <- left_join(distance_mat_full_prop, biom, by = "pos1") %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% select(pos2,Bdist) %>% summarize(B=sum(Bdist))
+#   colnames(biom) <- c("pos1","B") #now, make the output biomass as input biomass to our next iteration.
+# }
+# stopImplicitCluster()
+# (proc.time() - ptm)/60 #check process time in minutes
+# head(biom)
+
+ptm <- proc.time()
+Resultx <- left_join(distance_mat_full_prop, biom, by = "pos1") %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% select(pos2,Bdist) %>% summarize(B=sum(Bdist))
+(proc.time() - ptm)/60 #check process time in minutes
+
+#test how fast is data.table
+biom <- data.table(biom)
+distance_mat_full_prop <- data.table(distance_mat_full_prop)
+head(biom)
+head(distance_mat_full_prop)
+
+setkey(distance_mat_full_prop,pos1)
+setkey(biom,pos1)
+
+test1<-distance_mat_full_prop[biom]
+head(test1)
+dim(test1)
+
+test2<-merge(distance_mat_full_prop,biom, all.x=TRUE)
+head(test2)
+dim(test2)
+
+ptm <- proc.time()
+Result2 <- merge(distance_mat_full_prop,biom, all.x=TRUE) %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% select(pos2,Bdist) %>% summarize(B=sum(Bdist))
+(proc.time() - ptm)/60 #check process time in minutes
+head(Result2)
+
+testme<-distance_mat_full_prop[biom] %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% select(pos2,Bdist) %>% summarize(B=sum(Bdist))
+head(testme)
+colnames(testme) <- c("pos1","B")
+
+#ok, data.table is much faster! Nearly double the speed. Let us model using data.table!!!
+
+biom_diff <- biom
+head(biol_data)
+E <- 0#biol_data$E #we can make this dynamic. i.e., as MPA size increases, E changes.
+rKE<-biol_data %>% select(pos1,r,K,E) %>% as.data.table()
+setkey(rKE,pos1)
+distance_mat_full_prKE<-distance_mat_full_prop[rKE]
+#distance_mat_full_prKE<-merge(distance_mat_full_prop,rKE, all.x=TRUE)
+head(distance_mat_full_prKE)
+
+distance_mat_full_prKE %>% group_by(pos1) %>% summarise(propor=sum(biom_prop)) %>% head()
+
+cores<-detectCores()
+registerDoParallel(cores-1)
+ptm <- proc.time()
+for (t in 1:30){
+  
+#  biom_test <- merge(distance_mat_full_prKE,biom_diff, all.x=TRUE) %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
+#    mutate(B=((1-E)*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
+  
+  biom_diff <- distance_mat_full_prKE[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
+    mutate(B=((1-E)*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
+  
+  #colnames(biom_diff) <- c("pos1","B") #now, make the output biomass as input biomass to our next iteration.
+  #biom_diff <- data.table(biom_diff)
+}
+stopImplicitCluster()
+(proc.time() - ptm)/60 #check process time in minutes
+head(biom_diff)
+
+CleanCoordmegacell_EEZ_wMPA$B<-biom_diff$B 
+CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=B)) + geom_raster() #ok, great
 
 #Toy model
 #Empirically derived parameters
