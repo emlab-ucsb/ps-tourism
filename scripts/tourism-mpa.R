@@ -34,6 +34,7 @@ library(patchwork)
 library(data.table)
 library(here)
 
+
 #load EEZ mollweide file
 Final_EEZ_file_with_names <- readRDS(here("data","Final_EEZ_file_with_names.rds"))
 head(Final_EEZ_file_with_names)
@@ -48,18 +49,43 @@ CleanCoordmegacell<-readRDS(here("data","CleanCoordmegacell_mollweide.rds"))
 dim(CleanCoordmegacell)
 
 #land_shp_moll<-readRDS(file = "/Users/ren/Documents/CODES/FoodProvision/land_shp_moll.rds")
-#MegaData<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/MegaData_Ray.rds")
-#Cleanmegacell<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/Cleanmegacell_mollweide.rds")
 #CleanCoordmegacell<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/CleanCoordmegacell_mollweide.rds")
-dim(CleanCoordmegacell2)
 #this can be used to calculate the % of species range in protected area
 #KprotectedPerCell_Library<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/KprotectedPerCell_Library_mollweide.rds")
 #MPA_coord<-readRDS(file="/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/MPA_coord_mollweide.rds")
+
+#extract K per cell
+Cleanmegacell<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/Cleanmegacell_mollweide.rds")
+head(Cleanmegacell)
+dim(Cleanmegacell)
+colSums(Cleanmegacell)
+MegaData<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/MegaData_Ray.rds")
+head(MegaData)
+
+#check the order of the stock list
+stocklist <- data.frame(MegaData$stockid)
+stocklist$stocklist2 <- colnames(Cleanmegacell)
+
+#K per stock
+KperStock <- MegaData$Kfin
+head(KperStock)
+length(KperStock)
+
+KperStock_expand<-matrix(rep(KperStock,each=120297),nrow=120297)
+dim(KperStock_expand)
+
+head(Cleanmegacell)
+dim(Cleanmegacell)
+
+KperStockCell<-KperStock_expand*Cleanmegacell#KperStock
+colSums(KperStockCell)
+KperCell<-rowSums(KperStockCell)
+length(KperCell)
+
+#get MPA positions
 MPA_coord$MPA<-1 
 head(MPA_coord)
 dim(MPA_coord)
-
-#get MPA positions
 CleanCoordmegacell_MPA<-left_join(CleanCoordmegacell,MPA_coord,by=c("lon","lat"))
 head(CleanCoordmegacell_MPA)
 dim(CleanCoordmegacell_MPA)
@@ -233,13 +259,11 @@ distance_mat_full_prK %>% group_by(pos1) %>% summarise(propor=sum(biom_prop)) %>
 
 biom_diff <- biom
 
-cores<-detectCores()
-registerDoParallel(cores-1)
 ptm <- proc.time()
 for (t in 1:30){
   
-#  biom_test <- merge(distance_mat_full_prKE,biom_diff, all.x=TRUE) %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
-#    mutate(B=((1-E)*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
+  #  biom_test <- merge(distance_mat_full_prKE,biom_diff, all.x=TRUE) %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
+  #    mutate(B=((1-E)*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
   
   biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
     mutate(B=((1-(E*(1-MPAcell)))*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
@@ -247,22 +271,276 @@ for (t in 1:30){
   #colnames(biom_diff) <- c("pos1","B") #now, make the output biomass as input biomass to our next iteration.
   #biom_diff <- data.table(biom_diff)
 }
-stopImplicitCluster()
 (proc.time() - ptm)/60 #check process time in minutes
 head(biom_diff)
 
 CleanCoordmegacell_EEZ_wMPA$B<-biom_diff$B 
-CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=B)) + geom_raster() #ok, great
+CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=B)) + scale_fill_gradientn(colours = colorspace::diverge_hcl(7)) + geom_raster() 
+#ok, great
 
 
-#NOTE:
-#1) make distance calculation more realistic
-#2) The B for now is fine. Need to decide if the diffusion model is ok. The drawback is the edge effect.
-#3) Model the effect of MPA
+##***CHUNK***: model with real K and test MPA effect
+###OK, now, add the real K and model (use KperCell)
+CleanCoordmegacell_EEZ_wMPA$KperCell<-KperCell 
+CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=KperCell)) + scale_fill_viridis_c(limits = c(0, max(KperCell))) + geom_raster()
+#assume biomass = half of K, E=0.3 with no transfer, and test how MPAs will perform in 30 years.
+#Plot biomass transition for demonstration purposes.
 
-#MODEL the effect of MPA
+#---I'll be back here---
+biom_diff <- biom
+biom_diff$B <- 0.25*KperCell
+
+biol_data$K <- KperCell
+rK<-biol_data %>% select(pos1,r,K) %>% as.data.table()
+setkey(rK,pos1)
+distance_mat_full_prK<-distance_mat_full_prop[rK]
+
+total_biomass<-list()
+
+#cores<-detectCores()
+#registerDoParallel(cores-1)
+ptm <- proc.time()
+for (t in 1:30){
+  biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
+    mutate(B=((1-(E*(1-MPAcell)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
+  total_biomass[[t]]<-sum(biom_diff$B)
+}
+#stopImplicitCluster()
+(proc.time() - ptm)/60 #check process time in minutes
+head(biom_diff)
+CleanCoordmegacell_EEZ_wMPA$B<-biom_diff$B
+CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=B)) +  scale_fill_viridis_c(limits = c(0, max(biom_diff$B))) + geom_raster() #ok, great
 
 
+#plot biomass trajectory in time
+total_biomass_merged <- do.call("rbind",total_biomass)
+plot(total_biomass_merged,xlab="Time (years)", ylab="Total Biomass (MT)") #ok, looks good
+
+last(total_biomass_merged)
+
+##***CHUNK*** close each pixel and evaluate global biomass
+#now, check the change in global biomass as pixels are closed one at a time.
+#calculate total biomass with additional MPA - total biomass without additional MPA
+#Final output is a plot this delta biomass... this will feed into the tourism model.
+
+biol_data$K <- KperCell
+rK<-biol_data %>% select(pos1,r,K) %>% as.data.table()
+setkey(rK,pos1)
+distance_mat_full_prK<-distance_mat_full_prop[rK]
+
+biomass_withMPA<-list()
+
+#Non-mpa positions
+nonMPAposition<-which(MPAcell==0)
+length(nonMPAposition)
+length(MPAcell)
+
+
+#ok to put outside since we are doing parallel comp
+biom_diff <- biom
+biom_diff$B <- 0.25*KperCell
+EvaluateMPA <- MPAcell
+
+#cores<-detectCores()
+#registerDoParallel(cores-1)
+ptm <- proc.time()
+doParallel::registerDoParallel(cores=5)
+
+biomass_withMPA <- foreach(i=1:5, .combine='rbind') %dopar% {
+
+  EvaluateMPA[nonMPAposition[i]]<-1
+  
+  for (t in 1:20){
+    biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
+      mutate(B=((1-(E*(1-EvaluateMPA)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
+  }
+  sum(biom_diff$B)
+  #biomass_withMPA[[i]]<-sum(biom_diff$B)
+}
+doParallel::stopImplicitCluster()
+(proc.time() - ptm)/60 #check process time in minutes
+
+plot(biomass_withMPA) #ok, looks good
+
+
+GlobalDeltaBiom<-data.frame(biomass_withMPA)$biomass_withMPA-data.frame(last(total_biomass_merged))$last.total_biomass_merged.
+
+CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% slice(nonMPAposition[1:20]) %>% mutate(deltaBiomass=GlobalDeltaBiom) %>%
+  ggplot(aes(x=lon,y=lat,fill=deltaBiomass)) + geom_raster()
+
+plot(GlobalDeltaBiom,xlab="pixel #",ylab="delta Biomass (metric ton)")
+
+#Note: need to run the code above for all the pixels in the world. Use the cloud to do the calculation,
+#more efficient if the parameters are ready.
+
+##***CHUNK*** Derive B/K per pixel and E per pixel.
+##*
+head(MegaData)
+dim(MegaData)
+
+
+dim(Cleanmegacell)
+head(Cleanmegacell)
+
+#K per stock
+dim(KperStockCell)
+
+rperStock_expand <- matrix(rep(MegaData$r_fin,each=120297),nrow=120297)
+dim(rperStock_expand)
+rperStockCell <- rperStock_expand*KperStockCell #r*K per cell
+rperCell <- rowSums(rperStockCell)/rowSums(KperStockCell)
+length(rperCell)
+head(rperCell)
+
+#plot r per cell
+CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% mutate(rperCell=rperCell) %>%
+  ggplot(aes(x=lon,y=lat,fill=rperCell)) + scale_fill_viridis_c(limits = c(0, max(rperCell))) + geom_raster()
+
+#plot E per cell
+plot(MegaData$Efin_BAU1_Ray,MegaData$ExploitationRate_BAU1_Ray) #ok the formula is ER=1-E
+
+ERperStock_expand <- matrix(rep(MegaData$ExploitationRate_BAU1_Ray,each=120297),nrow=120297)
+ERperStockCell <- ERperStock_expand*KperStockCell #r*K per cell
+ERperCell <- rowSums(ERperStockCell)/rowSums(KperStockCell)
+CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% mutate(ERperCell=ERperCell) %>%
+  ggplot(aes(x=lon,y=lat,fill=ERperCell)) + scale_fill_viridis_c(limits = c(0, max(ERperCell))) + geom_raster()
+
+
+#what is the current biomass?
+#We need the B/K parameter
+plot(MegaData$BK2012)
+
+#Load Costello et al. (2016) database
+CostelloData<-read.csv("/Users/ren/Documents/CODES/FoodProvision/Aquamaps/UnlumpedProjectionData.csv", stringsAsFactors = FALSE)
+dim(CostelloData)
+head(CostelloData,5)
+
+Costello2012<-CostelloData %>% filter(Year=="2012")
+table(Costello2012$Dbase)
+table(Costello2012$Policy)
+table(Costello2012$Scenario)
+head(Costello2012)
+
+#MSY from costello of RAM, FAO, and SOFIA
+Costello2012 %>% group_by(Dbase,CatchShare) %>% summarise(sum(MSY))
+
+#Manually change species name with related species to match Aquamaps species range data
+CostelloDataPrime<- CostelloData %>%
+  mutate(SciName=replace(SciName, SciName=="Sardinops melanostictus", "Sardinops sagax")) %>%
+  mutate(SciName=replace(SciName, SciName=="Sardinops caeruleus", "Sardinops sagax")) %>%
+  mutate(SciName=replace(SciName, SciName=="Sardinops ocellatus", "Sardinops sagax")) %>%
+  mutate(SciName=replace(SciName, SciName=="Merluccius capensis, M.paradoxus", "Merluccius capensis")) %>%
+  mutate(SciName=replace(SciName, SciName=="Auxis thazard, A. rochei", "Auxis thazard")) %>%
+  mutate(SciName=replace(SciName, SciName=="Pleuronectes quadrituberculat.", "Pleuronectes quadrituberculat")) %>%
+  mutate(SciName=replace(SciName, SciName=="Pseudopleuronectes herzenst.", "Pseudopleuronectes herzenst")) %>%
+  mutate(SciName=replace(SciName, SciName=="Herklotsichthys quadrimaculat.", "Herklotsichthys quadrimaculat")) %>%
+  mutate(SciName=replace(SciName, SciName=="Engraulis capensis", "Engraulis encrasicolus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Trachypenaeus curvirostris", "Trachysalambria curvirostris")) %>%
+  mutate(SciName=replace(SciName, SciName=="Patinopecten yessoensis", "Mizuhopecten yessoensis")) %>%
+  mutate(SciName=replace(SciName, SciName=="Penaeus setiferus", "Litopenaeus setiferus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Loligo opalescens", "Doryteuthis opalescens")) %>%
+  mutate(SciName=replace(SciName, SciName=="Larimichthys croceus", "Larimichthys crocea")) %>%
+  mutate(SciName=replace(SciName, SciName=="Loligo gahi", "Doryteuthis gahi")) %>%
+  mutate(SciName=replace(SciName, SciName=="Chelon haematocheilus", "Liza haematocheila")) %>%
+  mutate(SciName=replace(SciName, SciName=="Anadara granosa", "Tegillarca granosa")) %>%
+  mutate(SciName=replace(SciName, SciName=="Penaeus chinensis", "Fenneropenaeus chinensis")) %>%
+  mutate(SciName=replace(SciName, SciName=="Penaeus merguiensis", "Fenneropenaeus merguiensis")) %>%
+  mutate(SciName=replace(SciName, SciName=="Sebastes marinus", "Sebastes norvegicus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Cancer magister", "Metacarcinus magister")) %>%
+  mutate(SciName=replace(SciName, SciName=="Loligo pealeii", "Doryteuthis pealeii")) %>%  
+  mutate(SciName=replace(SciName, SciName=="Spisula polynyma", "Mactromeris polynyma")) %>%  
+  mutate(SciName=replace(SciName, SciName=="Ommastrephes bartramii", "Ommastrephes bartramii")) %>%  
+  mutate(SciName=replace(SciName, SciName=="Stichopus japonicus", "Apostichopus japonicus")) %>%  
+  mutate(SciName=replace(SciName, SciName=="Penaeus notialis", "Farfantepenaeus notialis")) %>%  
+  mutate(SciName=replace(SciName, SciName=="Psetta maxima", "Scophthalmus maximus")) %>%  
+  mutate(SciName=replace(SciName, SciName=="Ostrea lutaria", "Ostrea chilensis")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Tawera gayi", "Tawera elliptica")) %>%   
+  mutate(SciName=replace(SciName, SciName=="Penaeus japonicus", "Marsupenaeus japonicus")) %>%   
+  mutate(SciName=replace(SciName, SciName=="Penaeus brasiliensis","Farfantepenaeus aztecus")) %>%   
+  mutate(SciName=replace(SciName, SciName=="Mytilus chilensis","Mytilus edulis")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Tetrapturus audax","Kajikia audax" )) %>% 
+  mutate(SciName=replace(SciName, SciName=="Cheilodactylus bergi","Nemadactylus bergi")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Venerupis pullastra","Venerupis corrugata")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Penaeus aztecus","Farfantepenaeus aztecus")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Penaeus duorarum","Farfantepenaeus duorarum")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Penaeus kerathurus","Melicertus kerathurus")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Penaeus californiensis","Farfantepenaeus californiensis")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Penaeus brevirostris","Farfantepenaeus brevirostris")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Penaeus latisulcatus","Melicertus latisulcatus")) %>%     
+  mutate(SciName=replace(SciName, SciName=="Penaeus occidentalis","Litopenaeus occidentalis")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Penaeus vannamei","Litopenaeus vannamei")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Raja naevus","Leucoraja naevus")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Jasus novaehollandiae","Jasus edwardsii")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Makaira indica","Istiompax indica")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Lithodes aequispina","Lithodes aequispinus")) %>% 
+  mutate(SciName=replace(SciName, SciName=="Eleginus navaga","Eleginus nawaga")) %>%
+  mutate(SciName=replace(SciName, SciName=="Saxidomus giganteus","Saxidomus gigantea")) %>%
+  mutate(SciName=replace(SciName, SciName=="Mugil soiuy","Liza haematocheila")) %>%
+  mutate(SciName=replace(SciName, SciName=="Xiphopenaeus riveti","Xiphopenaeus kroyeri")) %>%
+  mutate(SciName=replace(SciName, SciName=="Pleuronectes vetulus","Parophrys vetulus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Raja radiata","Amblyraja radiata")) %>%
+  mutate(SciName=replace(SciName, SciName=="Aspitrigla cuculus","Chelidonichthys cuculus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Valamugil seheli","Moolgarda seheli")) %>%
+  mutate(SciName=replace(SciName, SciName=="Tetrapturus albidus","Kajikia albida")) %>%
+  mutate(SciName=replace(SciName, SciName=="Zenopsis nebulosus","Zenopsis nebulosa")) %>%
+  mutate(SciName=replace(SciName, SciName=="Arius thalassinus","Netuma thalassinus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Parika scaber","Meuschenia scaber")) %>%
+  mutate(SciName=replace(SciName, SciName=="Sardinops neopilchardus","Sardinops sagax")) %>%
+  mutate(SciName=replace(SciName, SciName=="Raja batis","Dipturus batis")) %>%
+  mutate(SciName=replace(SciName, SciName=="Alosa pontica","Alosa immaculata")) %>%
+  mutate(SciName=replace(SciName, SciName=="Conger orbignyanus","Conger orbignianus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Acanthopagrus schlegeli","Acanthopagrus schlegelii")) %>%
+  mutate(SciName=replace(SciName, SciName=="Solea lascaris","Pegusa lascaris")) %>%
+  mutate(SciName=replace(SciName, SciName=="Raja circularis","Leucoraja circularis")) %>%
+  mutate(SciName=replace(SciName, SciName=="Balistes carolinensis","Balistes capriscus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Plesiopenaeus edwardsianus","Aristaeopsis edwardsiana")) %>%
+  mutate(SciName=replace(SciName, SciName=="Epinephelus flavolimbatus","Hyporthodus flavolimbatus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Epinephelus niveatus","Hyporthodus niveatus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Epinephelus nigritus","Hyporthodus nigritus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Epinephelus mystacinus","Hyporthodus mystacinus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Raja oxyrinchus","Dipturus oxyrinchus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Raja fullonica","Leucoraja fullonica")) %>%
+  mutate(SciName=replace(SciName, SciName=="Jasus verreauxi","Sagmariasus verreauxi")) %>%
+  mutate(SciName=replace(SciName, SciName=="Anadara ovalis","Lunarca ovalis")) %>%
+  mutate(SciName=replace(SciName, SciName=="Pseudopentaceros richardsoni","Pentaceros richardsoni")) %>%
+  mutate(SciName=replace(SciName, SciName=="Chelidonichthys lastoviza","Trigloporus lastoviza")) %>%
+  mutate(SciName=replace(SciName, SciName=="Protothaca staminea","Leukoma staminea")) %>%
+  mutate(SciName=replace(SciName, SciName=="Notothenia squamifrons","Lepidonotothen squamifrons")) %>%
+  mutate(SciName=replace(SciName, SciName=="Pleuronectes quadrituberculat","Pleuronectes quadrituberculatus")) %>%
+  mutate(SciName=replace(SciName, SciName=="Pseudopleuronectes herzenst","Pseudopleuronectes herzensteini")) %>%
+  mutate(SciName=replace(SciName, SciName=="Herklotsichthys quadrimaculat","Herklotsichthys quadrimaculatus")) %>%
+  filter(k>0) #remove zero carrying capacity
+CostelloPresentPrime<- CostelloDataPrime %>% dplyr::filter(Year=="2012")
+head(CostelloPresentPrime)
+
+#check the effect of pooling from all dataset vs FAO only
+CostelloK_FAO_only<-CostelloDataPrime %>% filter(Year=="2012") %>% filter(Dbase=="FAO") %>%  mutate(k=Biomass/(0.4*BvBmsy)) %>% group_by(SciName) %>% summarize(K=sum(k), B=sum(Biomass), Fstatus=weighted.mean(FvFmsy, MSY), Bstatus=weighted.mean(BvBmsy, MSY)) %>% mutate(BK2012=B/K) %>% dplyr::select(SciName,BK2012) %>% dplyr::rename(BK2012_FAO_only = BK2012)
+head(CostelloK_FAO_only)
+#CostelloK_unfiltered<-CostelloDataPrime %>% filter(Year=="2012") %>% mutate(k=Biomass/(0.4*BvBmsy)) %>% group_by(SciName) %>% summarize(K=sum(k), B=sum(Biomass), Fstatus=weighted.mean(FvFmsy, MSY), Bstatus=weighted.mean(BvBmsy, MSY)) %>% mutate(BK2012=B/K)
+#CostelloK_Join<-left_join(CostelloK_unfiltered,CostelloK_FAO_only, by="SciName")
+#head(CostelloK_Join)
+#plot(CostelloK_Join$BK2012.x,CostelloK_Join$BK2012.y)
+
+CostelloK<-CostelloDataPrime %>% filter(Year=="2012") %>% mutate(k=Biomass/(0.4*BvBmsy)) %>% group_by(SciName) %>% summarize(K=sum(k), B=sum(Biomass), Fstatus=weighted.mean(FvFmsy, MSY), Bstatus=weighted.mean(BvBmsy, MSY)) %>% mutate(BK2012=B/K)
+CostelloK<-left_join(CostelloK,CostelloK_FAO_only, by="SciName")
+head(CostelloK)
+dim(CostelloK)
+
+plot(CostelloK$BK2012)
+
+
+
+
+
+BvKperStock_expand <- matrix(rep(MegaData$BK2012,each=120297),nrow=120297)
+BvKperStockCell <- BvKperStock_expand*KperStockCell #r*K per cell
+BvKperCell <- rowSums(BvKperStockCell)/rowSums(KperStockCell)
+CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% mutate(BvKperCell=BvKperCell) %>%
+  ggplot(aes(x=lon,y=lat,fill=BvKperCell)) + scale_fill_viridis_c(limits = c(0, max(BvKperCell))) + geom_raster()
+
+
+
+##***CHUNK***: TOY model. Useful after we have the biological model ready.
 #Toy model
 #Empirically derived parameters
 Qd0 <- 100 #current number of dives
