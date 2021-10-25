@@ -16,6 +16,8 @@
 #1st: define current B/Bmsy and equilibrium B/Bmsy given F/Fmsy
 #we do not care about catch transition but we care about B/Bmsy transition.
 
+#pos1 is the source
+
 gc()
 rm(list = ls())
 
@@ -110,7 +112,7 @@ head(CleanCoordmegacell_EEZ_wMPA)
 #CleanCoordmegacell_EEZ_wMPA contans the lat, lon, MPA or not, territory, and soverignity
 
 #add biol parameters placeholder and i.d.
-biol_data <- CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% mutate(r=0.5, K=1000, E=0.25, B=1000) %>% mutate(pos1 = row_number()) #B=K*runif(n(), min=0, max=1)
+biol_data <- CleanCoordmegacell_EEZ_wMPA %>% dplyr::select(lon, lat, MPA) %>% mutate(r=0.5, K=1000, E=0.25, B=1000) %>% mutate(pos1 = row_number()) #B=K*runif(n(), min=0, max=1)
 max(biol_data$pos1)
 head(biol_data)
 dim(biol_data)[1]
@@ -176,7 +178,7 @@ head(distance_mat_merged)
 #Complete the distance matrix by adding in the self-loop and the other part of the mirror matrix
 
 #the second mirror half of the matrix
-distance_mat_part2 <- distance_mat_merged %>% select(dist,pos2,pos1) 
+distance_mat_part2 <- distance_mat_merged %>% dplyr::select(dist,pos2,pos1) 
 colnames(distance_mat_part2) <- c("dist","pos1","pos2")
 head(distance_mat_part2)
 
@@ -192,7 +194,7 @@ dim(distance_mat_full)
 ##ADD a column indicating the proportion of biomass that will move at a specific site. Use a gaussian dispersal.
 sigma <- 100
 #use group_by, remove the distance column
-distance_mat_full_prop <- distance_mat_full %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% select(-dist)
+distance_mat_full_prop <- distance_mat_full %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% dplyr::select(-dist)
 head(distance_mat_full_prop) #fast!
 #check if correct
 distance_mat_full_prop %>% filter(pos1==1) %>% summarise(sum(biom_prop)) #ok good
@@ -200,7 +202,7 @@ distance_mat_full_prop %>% filter(pos1==1) %>% summarise(sum(biom_prop)) #ok goo
 #ok, now that we have the distance matrix, implement biomass diffusion and larval dispersal 
 head(biol_data)
 
-biom <- biol_data %>% select(pos1,B)
+biom <- biol_data %>% dplyr::select(pos1,B)
 head(biom)
 
 # # #This code is working and is based on data.frame! But it seems that data.table is faster. So I will comment this.
@@ -224,7 +226,7 @@ head(distance_mat_full_prop)
 setkey(distance_mat_full_prop,pos1)
 setkey(biom,pos1)
 
-test1<-distance_mat_full_prop[biom]
+test1<-distance_mat_full_prop[biom] #ok, this is a merge function by "pos1" variable
 head(test1)
 dim(test1)
 
@@ -233,11 +235,11 @@ head(test2)
 dim(test2)
 
 ptm <- proc.time()
-Result2 <- merge(distance_mat_full_prop,biom, all.x=TRUE) %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% select(pos2,Bdist) %>% summarize(B=sum(Bdist))
+Result2 <- merge(distance_mat_full_prop,biom, all.x=TRUE) %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist) %>% summarize(B=sum(Bdist))
 (proc.time() - ptm)/60 #check process time in minutes
 head(Result2)
 
-testme<-distance_mat_full_prop[biom] %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% select(pos2,Bdist) %>% summarize(B=sum(Bdist))
+testme<-distance_mat_full_prop[biom] %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist) %>% summarize(B=sum(Bdist))
 head(testme)
 colnames(testme) <- c("pos1","B")
 
@@ -246,7 +248,7 @@ colnames(testme) <- c("pos1","B")
 head(biol_data)
 E <- biol_data$E #we can make this dynamic. i.e., as MPA size increases, E changes.
 MPAcell <- biol_data$MPA
-rK<-biol_data %>% select(pos1,r,K) %>% as.data.table()
+rK<-biol_data %>% dplyr::select(pos1,r,K) %>% as.data.table()
 setkey(rK,pos1)
 distance_mat_full_prK<-distance_mat_full_prop[rK]
 #distance_mat_full_prKE<-merge(distance_mat_full_prop,rKE, all.x=TRUE)
@@ -265,8 +267,8 @@ for (t in 1:30){
   #  biom_test <- merge(distance_mat_full_prKE,biom_diff, all.x=TRUE) %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
   #    mutate(B=((1-E)*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
   
-  biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
-    mutate(B=((1-(E*(1-MPAcell)))*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
+  biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
+    mutate(B=((1-(E*(1-MPAcell)))*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% dplyr::select(pos1,B) %>% as.data.table()
   
   #colnames(biom_diff) <- c("pos1","B") #now, make the output biomass as input biomass to our next iteration.
   #biom_diff <- data.table(biom_diff)
@@ -291,7 +293,7 @@ biom_diff <- biom
 biom_diff$B <- 0.25*KperCell
 
 biol_data$K <- KperCell
-rK<-biol_data %>% select(pos1,r,K) %>% as.data.table()
+rK<-biol_data %>% dplyr::select(pos1,r,K) %>% as.data.table()
 setkey(rK,pos1)
 distance_mat_full_prK<-distance_mat_full_prop[rK]
 
@@ -301,8 +303,8 @@ total_biomass<-list()
 #registerDoParallel(cores-1)
 ptm <- proc.time()
 for (t in 1:30){
-  biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
-    mutate(B=((1-(E*(1-MPAcell)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
+  biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
+    mutate(B=((1-(E*(1-MPAcell)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% dplyr::select(pos1,B) %>% as.data.table()
   total_biomass[[t]]<-sum(biom_diff$B)
 }
 #stopImplicitCluster()
@@ -324,10 +326,9 @@ last(total_biomass_merged)
 #Final output is a plot this delta biomass... this will feed into the tourism model.
 
 biol_data$K <- KperCell
-rK<-biol_data %>% select(pos1,r,K) %>% as.data.table()
+rK<-biol_data %>% dplyr::select(pos1,r,K) %>% as.data.table()
 setkey(rK,pos1)
 distance_mat_full_prK<-distance_mat_full_prop[rK]
-
 biomass_withMPA<-list()
 
 #Non-mpa positions
@@ -344,15 +345,15 @@ EvaluateMPA <- MPAcell
 #cores<-detectCores()
 #registerDoParallel(cores-1)
 ptm <- proc.time()
-doParallel::registerDoParallel(cores=5)
+doParallel::registerDoParallel(cores=2)
 
-biomass_withMPA <- foreach(i=1:5, .combine='rbind') %dopar% {
+biomass_withMPA <- foreach(i=1:2, .combine='rbind') %dopar% {
 
   EvaluateMPA[nonMPAposition[i]]<-1
   
   for (t in 1:20){
-    biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
-      mutate(B=((1-(E*(1-EvaluateMPA)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
+    biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
+      mutate(B=((1-(E*(1-EvaluateMPA)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% dplyr::select(pos1,B) %>% as.data.table()
   }
   sum(biom_diff$B)
   #biomass_withMPA[[i]]<-sum(biom_diff$B)
@@ -365,7 +366,7 @@ plot(biomass_withMPA) #ok, looks good
 
 GlobalDeltaBiom<-data.frame(biomass_withMPA)$biomass_withMPA-data.frame(last(total_biomass_merged))$last.total_biomass_merged.
 
-CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% slice(nonMPAposition[1:20]) %>% mutate(deltaBiomass=GlobalDeltaBiom) %>%
+CleanCoordmegacell_EEZ_wMPA %>% dplyr::select(lon, lat, MPA) %>% slice(nonMPAposition[1:length(GlobalDeltaBiom)]) %>% mutate(deltaBiomass=GlobalDeltaBiom) %>%
   ggplot(aes(x=lon,y=lat,fill=deltaBiomass)) + geom_raster()
 
 plot(GlobalDeltaBiom,xlab="pixel #",ylab="delta Biomass (metric ton)")
@@ -532,48 +533,167 @@ plot(CostelloK$BK2012)
 
 
 
+###CHUNK
+#implement the analytic solution.
+#steps
+#NOTE: This is not necessary!!!
+#1. K per pixel per stock per cell. K density per pixel per stock should be constant.
+Cleanmegacell<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/Cleanmegacell_mollweide.rds")
+ncell<-dim(Cleanmegacell)[1]
+kpercell_filter<-(Cleanmegacell>0)*1 #stock extent
+
+#kperstock
+MegaData <- readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/MegaData_Ray.rds")
+kperstock <- MegaData$Kfin
+head(kperstock)
+
+#kpercellperstock. This distributes K spatially.
+kpercell_denominator<-matrix(rep(colSums(kpercell_filter)/kperstock,each=ncell),nrow=ncell)
+kpercell_expand<-kpercell_filter/kpercell_denominator
+colSums(kpercell_expand) #ok, looks good. the same as kperstock
+
+#plot k per cell
+head(CleanCoordmegacell_EEZ_wMPA)
+CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat) %>% mutate(kpercell=rowSums(kpercell_expand)) %>%
+  ggplot(aes(x=lon,y=lat,fill=kpercell)) + scale_fill_viridis_c()+ geom_raster()
+
+#2. r per stock
+head(MegaData)
+rperstock<-MegaData$r_fin
+
+#3. B0vK #revisit this. Critical parameter
 BvKperStock_expand <- matrix(rep(MegaData$BK2012,each=120297),nrow=120297)
-BvKperStockCell <- BvKperStock_expand*KperStockCell #r*K per cell
-BvKperCell <- rowSums(BvKperStockCell)/rowSums(KperStockCell)
+biomperStockCell <- BvKperStock_expand*kpercell_expand #r*K per cell
+bvk_params <- BvKperStock_expand*(kpercell_expand>0) ##use this parameter
+#this contains bvk per species per cell
+#we do not actually need the bvk per cell. We just need a single value as it is constant per stock.
+plot(bvk_params[,1])
+
+dim(biomperStockCell)
+head(biomperStockCell) 
+#print the first entry: 
+sum(biomperStockCell[,1])
+plot(biomperStockCell[,1]) #ok, this is flat. good.
+
+BvKperCell <- rowSums(biomperStockCell)/rowSums(kpercell_expand)
+
+#plot average
 CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% mutate(BvKperCell=BvKperCell) %>%
   ggplot(aes(x=lon,y=lat,fill=BvKperCell)) + scale_fill_viridis_c(limits = c(0, max(BvKperCell))) + geom_raster()
 
 
+#4. Assume all pixels allow fishing. Evaluate change in biomass at pixel i. Our assumption is conservative given that build-up of biomass only happens inside the MPA. 
 
-##***CHUNK***: TOY model. Useful after we have the biological model ready.
-#Toy model
-#Empirically derived parameters
-Qd0 <- 100 #current number of dives
-P0 <- 50 #current price per dive in USD
-C0 <- 150 #choke price in USD
-alpha <- 0.5
-beta <- 0.5
-X0 <- 10 #dive price (USD) where no company will offer their service
-nu <- 1.1
+#Non-mpa positions
+MPAcell <- biol_data$MPA
+nonMPAposition<-which(MPAcell==0)
 
-#Model intermediate output
-deltaB <- 20 #change in biomass
-deltaS <- 10 #change in species diversity metric
+length(nonMPAposition)
+length(MPAcell)
 
-#Parameter calculations
-#we need a and b to compute mu
-(a <- (C0*Qd0)/(C0-P0))
-(b <- Qd0/(C0-P0))
-(mu <- nu*(a-(b*P0))) #assume that MPA will increase the demand for diving by 10%.
 
-(e <- (a-(b*P0))/(P0-X0)) #Slope of the supply curve
-(c <- (((b*P0)-a)*X0)/(P0-X0)) #Dive quantity supplied by the industry when the price of diving is zero
+#--explore the connectivity matrix here
+#--This is the base code for generating distance_mat_full_prop
+head(distance_mat_full) #the columns are: dist, pos1, pos2 (pos1 is the source)
+distance_mat_full_prop <- distance_mat_full %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% dplyr::select(-dist) %>% as.data.table()
+head(distance_mat_full_prop) #fast!
 
-(P1 <- (a-c+mu+(alpha*deltaB)+(beta*deltaS))/(e+b)) #Price per dive at site i when the site is converted to an MPA
-(Qd1 <- a-(b*P1)+mu+(alpha*deltaB)+(beta*deltaS)) #Number of dives at site i when the site is converted to an MPA
-(C1 <- (a+mu+(alpha*deltaB)+(beta*deltaS))/b)
+#--check if correct
+distance_mat_full_prop %>% group_by(pos1) %>% summarise(checksum=sum(biom_prop)) #ok, the answer is correct.
 
-##Tourism model output
-#Change in tourism revenue at site i
-(P1*Qd1) - (P0*Qd0)
+#--add evaluate MPA here
+source(here("scripts","func_evaluateMPA.R")) 
 
-#Change in counsumer surplus
-(0.5*(C1-P1)*Qd1) - (0.5*(C0-P0)*Qd0)
+#--test the code
+stock_num<-1
+bvk_equi <- func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)
+head(bvk_equi)
+dim(bvk_equi)
+#--store the results and collate later
+collate_bvk_equi<-list()
+nstock<-2#dim(MegaData)[1]
+for (stock_num in 1:nstock){ 
+collate_bvk_equi[[stock_num]] <- func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)$bvk_equi
+}
 
-#Change in consumer + producer surplus
-(Qd0*(C1-C0)) + (0.5*(Qd1-Qd0)*(C1-C0))
+collate_bvk_equi_merged <- data.frame(do.call("cbind",collate_bvk_equi))
+colnames(collate_bvk_equi_merged)<-MegaData$stockid[1:nstock]
+head(collate_bvk_equi_merged)
+dim(collate_bvk_equi_merged)
+#ok, done testing. Now, do parallel compute
+
+#--parallel compute
+nstock<-dim(MegaData)[1]
+ptm <- proc.time()
+cores<-detectCores()
+registerDoParallel(cores/2)
+
+stock_include<-c(1,3,5)#edit this. include only stocks for the analysis
+collate_bvk_equi_merged <- foreach(stock_num=stock_include[1:length(stock_include)], .combine='cbind') %dopar% {
+  func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)$bvk_equi
+}
+doParallel::stopImplicitCluster()
+(proc.time() - ptm)/60 #check process time in minutes
+colnames(collate_bvk_equi_merged)<-MegaData$stockid[stock_include]
+head(collate_bvk_equi_merged)
+dim(collate_bvk_equi_merged)
+
+#--to do
+#calculation of tourism values can be incorporated in the function
+#tou
+
+
+# biomass_withMPA <- foreach(i=1:2, .combine='rbind') %dopar% {
+#   EvaluateMPA <- MPAcell #this is inside since we need to close each pixel and put it back
+#   EvaluateMPA[nonMPAposition[i]]<-1
+#   
+#   # for (t in 1:20){
+#   #   biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
+#   #     mutate(B=((1-(E*(1-EvaluateMPA)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% dplyr::select(pos1,B) %>% as.data.table()
+#   # }
+#   sum(biom_diff$B)
+# }
+# doParallel::stopImplicitCluster()
+# (proc.time() - ptm)/60 #check process time in minutes
+# 
+# plot(biomass_withMPA) #ok, looks good
+
+
+
+# ##***CHUNK***: TOY model. Useful after we have the biological model ready.
+# #Toy model
+# #Empirically derived parameters
+# Qd0 <- 100 #current number of dives
+# P0 <- 50 #current price per dive in USD
+# C0 <- 150 #choke price in USD
+# alpha <- 0.5
+# beta <- 0.5
+# X0 <- 10 #dive price (USD) where no company will offer their service
+# nu <- 1.1
+# 
+# #Model intermediate output
+# deltaB <- 20 #change in biomass
+# deltaS <- 10 #change in species diversity metric
+# 
+# #Parameter calculations
+# #we need a and b to compute mu
+# (a <- (C0*Qd0)/(C0-P0))
+# (b <- Qd0/(C0-P0))
+# (mu <- nu*(a-(b*P0))) #assume that MPA will increase the demand for diving by 10%.
+# 
+# (e <- (a-(b*P0))/(P0-X0)) #Slope of the supply curve
+# (c <- (((b*P0)-a)*X0)/(P0-X0)) #Dive quantity supplied by the industry when the price of diving is zero
+# 
+# (P1 <- (a-c+mu+(alpha*deltaB)+(beta*deltaS))/(e+b)) #Price per dive at site i when the site is converted to an MPA
+# (Qd1 <- a-(b*P1)+mu+(alpha*deltaB)+(beta*deltaS)) #Number of dives at site i when the site is converted to an MPA
+# (C1 <- (a+mu+(alpha*deltaB)+(beta*deltaS))/b)
+# 
+# ##Tourism model output
+# #Change in tourism revenue at site i
+# (P1*Qd1) - (P0*Qd0)
+# 
+# #Change in counsumer surplus
+# (0.5*(C1-P1)*Qd1) - (0.5*(C0-P0)*Qd0)
+# 
+# #Change in consumer + producer surplus
+# (Qd0*(C1-C0)) + (0.5*(Qd1-Qd0)*(C1-C0))

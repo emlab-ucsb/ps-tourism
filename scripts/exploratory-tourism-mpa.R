@@ -4,7 +4,7 @@ rm(list = ls())
 library(dplyr)
 library(ggplot2)
 
-#checking the performance of an equation that quantifies tourism benefits
+#checking the performance of an equation that quantifies tourism benefits and compare them with our analytic results
 #s <- 0.5
 alphaii <- 0.5
 K <- 1000
@@ -25,6 +25,21 @@ for (s in seq(0.2,1,0.2)){
 result_merged <- do.call("rbind",result) 
 
 data.frame(result_merged) %>% dplyr::rename(s=X1,time=X2,biomass=X3) %>% ggplot(aes(time,biomass/K,group=factor(s), shape=factor(s)))+geom_line()+geom_point()+ylim(0,1)+labs(x="Year",y="B/K",shape="s(i->i)")
+
+data.frame(result_merged) %>% filter(X2==30)#these are steady-state values
+
+#now, compare the steady-state values to our analytic results.
+
+for (c1 in seq(0.2,1,0.2)){
+c2<-(1-c1)*Bt0/K
+c3<-alphaii*r
+c4<-r*sum_alpha_ji*Bt0/K
+
+B<- K*(-(1+c4-c1-c3)+sqrt((1+c4-c1-c3)^2+(4*c3*(c2+c4))))/(2*c3)
+print(B)
+}
+#ok, our analyic solution is correct
+
 
 #Effect of larval dispersal
 s <- 0.8 #fix sii
