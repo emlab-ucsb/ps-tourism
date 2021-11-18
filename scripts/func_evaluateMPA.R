@@ -1,25 +1,32 @@
-#fucntion
+#function for evaluating the biomass inside MPA
 
 func_evaluateMPA<-function(stock_num, Cleanmegacell,biol_data, distance_mat_full, MegaData){
  
-#--TEST subset to the first stock only
-#dim(Cleanmegacell)
-#length(Cleanmegacell[,1])#ok. This considers the first stock only
-
-#--subset the stock and get the row numbers where entry == 1
+# #--TEST subset to the first stock only
+# #dim(Cleanmegacell)
+# #length(Cleanmegacell[,1])#ok. This considers the first stock only
+# 
+# #--subset the stock and get the row numbers where entry == 1
 stock_subset_i<-which(Cleanmegacell[,stock_num] > 0) #that's K density map so the values are < 1
+# 
+# #--subset connectivity matrix
+# #distance_mat_full %>% filter(pos1 %in% stock_subset_i, pos2 %in% stock_subset_i) %>% dim()
+# #--Process: 
+# #1. filter source-sink pixels that are part of the species geographic range
+# #2. group by pos1. pos1 contains the source pixels.
+# #3. calculate the proportion of biomass that will distribute from source to sinks
+# distance_mat_full_prop <- distance_mat_full %>% filter(pos1 %in% stock_subset_i, pos2 %in% stock_subset_i) %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% dplyr::select(-dist) %>% as.data.table()
+# #distance_mat_full_prop %>% group_by(pos1) %>% summarise(checksum=sum(biom_prop)) #ok, the answer is correct.
+# #dim(distance_mat_full_prop)
 
-#--subset connectivity matrix
-#distance_mat_full %>% filter(pos1 %in% stock_subset_i, pos2 %in% stock_subset_i) %>% dim()
-distance_mat_full_prop <- distance_mat_full %>% filter(pos1 %in% stock_subset_i, pos2 %in% stock_subset_i) %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% dplyr::select(-dist) %>% as.data.table()
-#distance_mat_full_prop %>% group_by(pos1) %>% summarise(checksum=sum(biom_prop)) #ok, the answer is correct.
-#dim(distance_mat_full_prop)
+#distance_mat_full_prop <- fst::read.fst(here("data","connect_matrix",paste0(stock_num,"_connect.fst"))) %>% as.data.table()
+distance_mat_full_prop <- fst::read.fst(paste0("/Users/ren/Documents/GitHub/tourism-mpa-support/connect_matrix/",stock_num,"_connect.fst")) %>% as.data.table()
 
-#--add MPA column but make it as pos2 (we want to know if the sink locations are MPAs)
-#head(biol_data)
-#dim(biol_data)
-#length(stock_subset_i)
-#biol_data %>% filter(pos1 %in% stock_subset_i) %>% dim() #ok, we can filter the biol_data to contain stock i's position only.
+# #--add MPA column but make it as pos2 (we want to know if the sink locations are MPAs)
+# #head(biol_data)
+# #dim(biol_data)
+# #length(stock_subset_i)
+# #biol_data %>% filter(pos1 %in% stock_subset_i) %>% dim() #ok, we can filter the biol_data to contain stock i's position only.
 
 MPA_source <- biol_data %>% filter(pos1 %in% stock_subset_i) %>% select(pos1,MPA) %>% as.data.table()
 #MPA_sink <- biol_data %>% filter(pos1 %in% stock_subset_i) %>% select(pos1,MPA) %>% dplyr::rename(pos2 = pos1, MPA_sink = MPA) %>% as.data.table()
@@ -45,8 +52,8 @@ distance_mat_full_prop_wMPA <- distance_mat_full_prop_wMPA_sink[MPA_source]
 #head(check1)
 
 #--REWIRE
-#--if the sink cell (pos2) is an MPA, then we should rewire those. i.e., if MPA_sink=1 (1 or 0 values only), make pos2 equals the pos1 number.
-distance_mat_full_prop_wMPA_rewired <- distance_mat_full_prop_wMPA %>% mutate(pos2=replace(pos2, MPA_sink==1, pos1[MPA_sink==1]))
+#--if the sink cell (pos2) and source cell are MPAs, then we should rewire those. i.e., if MPA_sink=1 and MPA = 1 (1 or 0 values only), make pos2 equals the pos1 number.
+distance_mat_full_prop_wMPA_rewired <- distance_mat_full_prop_wMPA %>% mutate(pos2=replace(pos2, MPA_sink==1 & MPA==1, pos1[MPA_sink==1 & MPA==1]))
 
 #check2<-distance_mat_full_prop_wMPA_rewired %>% filter(MPA_sink==1)
 #head(check2) #this is the rewired file
@@ -117,9 +124,24 @@ bvk_equi<- (-(1+c4-c1-c3)+sqrt((1+c4-c1-c3)^2+(4*c3*(c2+c4))))/(2*c3)
 #length(bvk_equi)
 #head(bvk_equi)
 
-bvk_result1<-data.frame(pos1=params_combined_v2$pos1,bvk_equi)
+
+params_combined_v2$bvk_equi<-bvk_equi
+#makes biomass density outside MPA equals the biomass density constant
+params_combined_v3 <- params_combined_v2 %>% mutate(bvk_equi=replace(bvk_equi, MPA==0, MegaData$bvk_fin[stock_num]))
+#plot(params_combined_v3$bvk_equi) #very useful!
+
+# #checks
+# biom_outside<-params_combined_v2 %>% filter(MPA==0)
+# plot(biom_outside$bvk_equi- MegaData$bvk_fin[1])
+
+bvk_result1<- params_combined_v3 %>% ungroup() %>% select(pos1,bvk_equi)
+#bvk_result1<-data.frame(pos1=params_combined_v2$pos1,bvk_equi)
+
+#merge to global pixels
 bvk_result2<-left_join(data.frame(pos1=biol_data$pos1), bvk_result1, by="pos1")
 #head(bvk_result2)
+
+#plot(bvk_result2$bvk_equi)
 
 return(bvk_result2)
 silence(TRUE)

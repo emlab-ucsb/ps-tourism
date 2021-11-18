@@ -1,21 +1,8 @@
 #Pristine seas tourism-MPA model
 #Author: Reniel Cabral
-#Last Edit: 18 May 2021
-#3 August 2021
-
-#To do:
-#1. Goal: Biomass model. Adding an MPA, how much biomass will increase at a site?
-#2. What I found so far: Maybe challenging to model if per species. For the biomass, we do not need the identity of the species.
-#We have a separate model for the biodiversity change.
-#3. Simplification --- Biomass as a single species. Need to check how to model dispersal??? For growth, we could get the average r.
-#average movement also? well, this assumption cannot capture site-specific differences but maybe we do not need to be accurate.
-#4. Add MPA code. Add the current MPA and implement a code where each area is closed and calculate biomass change.
-
-
-#Biomass model - add MPAs, how much biomass will change?
-#1st: define current B/Bmsy and equilibrium B/Bmsy given F/Fmsy
-#we do not care about catch transition but we care about B/Bmsy transition.
-
+#Clean version (18 Nov 2021)
+#This code evaluates the build-up of biomass inside the current MPAs.
+#After fully parameterizing this code, it is easy to add a chunk of code that evaluates tourism benefits of new MPAs.
 #pos1 is the source
 
 gc()
@@ -35,33 +22,34 @@ library(tidyverse)
 library(patchwork)
 library(data.table)
 library(here)
+library(fst)
 
-
-#load EEZ mollweide file
+#--load EEZ mollweide file
 Final_EEZ_file_with_names <- readRDS(here("data","Final_EEZ_file_with_names.rds"))
 head(Final_EEZ_file_with_names)
 
-#Plot World
+#--Plot the EEZ
 Final_EEZ_file_with_names %>% ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster()
 
-#load other files
+#--load other files. Load the MPA coordinates and our working coordinate.
 #land_shp_moll <- readRDS(here("data","land_shp_moll.rds"))
 MPA_coord <- readRDS(here("data","MPA_coord_mollweide.rds"))
 CleanCoordmegacell<-readRDS(here("data","CleanCoordmegacell_mollweide.rds"))
 dim(CleanCoordmegacell)
 
-#land_shp_moll<-readRDS(file = "/Users/ren/Documents/CODES/FoodProvision/land_shp_moll.rds")
-#CleanCoordmegacell<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/CleanCoordmegacell_mollweide.rds")
-#this can be used to calculate the % of species range in protected area
-#KprotectedPerCell_Library<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/KprotectedPerCell_Library_mollweide.rds")
-#MPA_coord<-readRDS(file="/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/MPA_coord_mollweide.rds")
+#--extract K per cell (not stored in Github because of the file size)
+Cleanmegacell<-readRDS(file = "/Users/ren/Documents/GitHub/tourism-mpa-support/Cleanmegacell_mollweide.rds")
+#FoodProvison_SupportFiles/Code Food Provision MPA/Cleanmegacell_mollweide.rds")
+#readRDS(here("data","Cleanmegacell_mollweide.rds")) #
 
-#extract K per cell
-Cleanmegacell<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/Cleanmegacell_mollweide.rds")
+#we will assume that K per cell is constant per stock. ok, we can deal with this later. For now, all good.
+colSums(Cleanmegacell)
+plot(Cleanmegacell[,1])
+
 head(Cleanmegacell)
 dim(Cleanmegacell)
 colSums(Cleanmegacell)
-MegaData<-readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/MegaData_Ray.rds")
+MegaData<-readRDS(here("data","MegaData_Ray.rds"))#readRDS(file = "/Users/ren/Documents/GitHub/FoodProvison_SupportFiles/Code Food Provision MPA/MegaData_Ray.rds")
 head(MegaData)
 
 #check the order of the stock list
@@ -75,9 +63,6 @@ length(KperStock)
 
 KperStock_expand<-matrix(rep(KperStock,each=120297),nrow=120297)
 dim(KperStock_expand)
-
-head(Cleanmegacell)
-dim(Cleanmegacell)
 
 KperStockCell<-KperStock_expand*Cleanmegacell#KperStock
 colSums(KperStockCell)
@@ -96,20 +81,20 @@ MPAposition<-which(CleanCoordmegacell_MPA$MPA==1)
 head(MPAposition)
 length(MPAposition)
 
-#join eez and clean coord file with MPA
+#--join eez and clean coord file with MPA
 CleanCoordmegacell_EEZ_wMPA<-left_join(CleanCoordmegacell_MPA,Final_EEZ_file_with_names,by=c("lon","lat"))
 #convert NA to 0, then plot MPA file to check
 CleanCoordmegacell_EEZ_wMPA$MPA[is.na(CleanCoordmegacell_EEZ_wMPA$MPA)] <- 0
 head(CleanCoordmegacell_EEZ_wMPA)
 dim(CleanCoordmegacell_EEZ_wMPA)
 
-#plot MPAs
+#--plot current MPAs
 CleanCoordmegacell_EEZ_wMPA %>% filter(MPA==1)  %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
+
 #Plot world
 CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
 head(CleanCoordmegacell_EEZ_wMPA)
-#review
-#CleanCoordmegacell_EEZ_wMPA contans the lat, lon, MPA or not, territory, and soverignity
+#--note:CleanCoordmegacell_EEZ_wMPA contains the lat, lon, MPA or not, territory, and soverignity
 
 #add biol parameters placeholder and i.d.
 biol_data <- CleanCoordmegacell_EEZ_wMPA %>% dplyr::select(lon, lat, MPA) %>% mutate(r=0.5, K=1000, E=0.25, B=1000) %>% mutate(pos1 = row_number()) #B=K*runif(n(), min=0, max=1)
@@ -117,8 +102,8 @@ max(biol_data$pos1)
 head(biol_data)
 dim(biol_data)[1]
 
-# create distance matrix
-#test
+#--create distance matrix
+#this is a test
 sqrt((biol_data[1,1]-biol_data[2,1])^2+(biol_data[1,2]-biol_data[2,2])^2) #50100 unit in meters -- so this is 50km or 0.5 degree
 (n_pixel <- dim(biol_data)[1]) #there are 120294 pixels
 
@@ -156,33 +141,13 @@ distance_mat_merged <- readRDS(here("data","distance_mat_merged.rds"))
 dim(distance_mat_merged)
 head(distance_mat_merged)
 
-# #Option 2 for computing the distance matrix is slow. Option 1 is the best.
-# n_pixel<-100 #placeholder
-# dispersal_distance_lim<-110 #km #for now 100 but realistically 1000?
-# distance_mat<-list()
-# t <- 1
-# for (i in 1:n_pixel){
-#   for (j in i+1:n_pixel){ #i'll remove the distance of pixel i from itself which is zero
-#     distance <- sqrt((biol_data[i,1]-biol_data[j,1])^2+(biol_data[i,2]-biol_data[j,2])^2)/1000
-#     if( distance <= dispersal_distance_lim ){
-#       distance_mat[[t]] <- c(i,j,distance)
-#       t <- t+1
-#     }
-#   }
-# }
-# #
-# distance_mat_merged2 <- do.call("rbind",distance_mat)
-# head(distance_mat_merged2)
-# dim(distance_mat_merged2)
-
-#Complete the distance matrix by adding in the self-loop and the other part of the mirror matrix
-
-#the second mirror half of the matrix
+#--Complete the distance matrix by adding in the self-loop and the other part of the mirror matrix
+#--the second mirror half of the matrix
 distance_mat_part2 <- distance_mat_merged %>% dplyr::select(dist,pos2,pos1) 
 colnames(distance_mat_part2) <- c("dist","pos1","pos2")
 head(distance_mat_part2)
 
-#the link to itself
+#--the link to itself
 distance_mat_part3 <- data.frame(dist = rep(0,n_pixel)) %>% mutate(pos1 = 1:n_pixel, pos2 = 1:n_pixel)
 head(distance_mat_part3)
 
@@ -190,11 +155,11 @@ head(distance_mat_part3)
 distance_mat_full<-rbind(distance_mat_merged,distance_mat_part2,distance_mat_part3)
 dim(distance_mat_full)
 
+##--ADD a column indicating the proportion of biomass that will move at a specific site. Use a gaussian dispersal.
+sigma <- 100 #this is a single value for now. Eventually, we will have species-specific parameter
 
-##ADD a column indicating the proportion of biomass that will move at a specific site. Use a gaussian dispersal.
-sigma <- 100
 #use group_by, remove the distance column
-distance_mat_full_prop <- distance_mat_full %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% dplyr::select(-dist)
+distance_mat_full_prop <- distance_mat_full %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% dplyr::select(-dist) %>% as.data.table()
 head(distance_mat_full_prop) #fast!
 #check if correct
 distance_mat_full_prop %>% filter(pos1==1) %>% summarise(sum(biom_prop)) #ok good
@@ -205,184 +170,17 @@ head(biol_data)
 biom <- biol_data %>% dplyr::select(pos1,B)
 head(biom)
 
-# # #This code is working and is based on data.frame! But it seems that data.table is faster. So I will comment this.
-# cores<-detectCores()
-# registerDoParallel(cores-1)
-# ptm <- proc.time()
-# for (t in 1:30){
-#   biom <- left_join(distance_mat_full_prop, biom, by = "pos1") %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% select(pos2,Bdist) %>% summarize(B=sum(Bdist))
-#   colnames(biom) <- c("pos1","B") #now, make the output biomass as input biomass to our next iteration.
-# }
-# stopImplicitCluster()
-# (proc.time() - ptm)/60 #check process time in minutes
-# head(biom)
-
-#test how fast is data.table
-biom <- data.table(biom)
-distance_mat_full_prop <- data.table(distance_mat_full_prop)
-head(biom)
-head(distance_mat_full_prop)
-
-setkey(distance_mat_full_prop,pos1)
-setkey(biom,pos1)
-
-test1<-distance_mat_full_prop[biom] #ok, this is a merge function by "pos1" variable
-head(test1)
-dim(test1)
-
-test2<-merge(distance_mat_full_prop,biom, all.x=TRUE)
-head(test2)
-dim(test2)
-
-ptm <- proc.time()
-Result2 <- merge(distance_mat_full_prop,biom, all.x=TRUE) %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist) %>% summarize(B=sum(Bdist))
-(proc.time() - ptm)/60 #check process time in minutes
-head(Result2)
-
-testme<-distance_mat_full_prop[biom] %>% mutate(Bdist=B*biom_prop) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist) %>% summarize(B=sum(Bdist))
-head(testme)
-colnames(testme) <- c("pos1","B")
-
-#ok, data.table is much faster! Nearly double the speed. Let us model using data.table!!!
-
 head(biol_data)
 E <- biol_data$E #we can make this dynamic. i.e., as MPA size increases, E changes.
 MPAcell <- biol_data$MPA
 rK<-biol_data %>% dplyr::select(pos1,r,K) %>% as.data.table()
 setkey(rK,pos1)
+setkey(distance_mat_full_prop,pos1)
 distance_mat_full_prK<-distance_mat_full_prop[rK]
 #distance_mat_full_prKE<-merge(distance_mat_full_prop,rKE, all.x=TRUE)
 head(distance_mat_full_prK)
 
-#check the file
-distance_mat_full_prK %>% group_by(pos1) %>% summarise(propor=sum(biom_prop)) %>% head()
-
-#biomass in next time step = biomass with diffusion - harvest + growth in the form of larval dispersal 
-
-biom_diff <- biom
-
-ptm <- proc.time()
-for (t in 1:30){
-  
-  #  biom_test <- merge(distance_mat_full_prKE,biom_diff, all.x=TRUE) %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
-  #    mutate(B=((1-E)*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% select(pos1,B) %>% as.data.table()
-  
-  biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B*(1-(B/K))) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>% 
-    mutate(B=((1-(E*(1-MPAcell)))*B_add)+G_add) %>% dplyr::rename(pos1 = pos2) %>% dplyr::select(pos1,B) %>% as.data.table()
-  
-  #colnames(biom_diff) <- c("pos1","B") #now, make the output biomass as input biomass to our next iteration.
-  #biom_diff <- data.table(biom_diff)
-}
-(proc.time() - ptm)/60 #check process time in minutes
-head(biom_diff)
-
-CleanCoordmegacell_EEZ_wMPA$B<-biom_diff$B 
-CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=B)) + scale_fill_gradientn(colours = colorspace::diverge_hcl(7)) + geom_raster() 
-#ok, great
-
-
-##***CHUNK***: model with real K and test MPA effect
-###OK, now, add the real K and model (use KperCell)
-CleanCoordmegacell_EEZ_wMPA$KperCell<-KperCell 
-CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=KperCell)) + scale_fill_viridis_c(limits = c(0, max(KperCell))) + geom_raster()
-#assume biomass = half of K, E=0.3 with no transfer, and test how MPAs will perform in 30 years.
-#Plot biomass transition for demonstration purposes.
-
-#---I'll be back here---
-biom_diff <- biom
-biom_diff$B <- 0.25*KperCell
-
-biol_data$K <- KperCell
-rK<-biol_data %>% dplyr::select(pos1,r,K) %>% as.data.table()
-setkey(rK,pos1)
-distance_mat_full_prK<-distance_mat_full_prop[rK]
-
-total_biomass<-list()
-
-#cores<-detectCores()
-#registerDoParallel(cores-1)
-ptm <- proc.time()
-for (t in 1:30){
-  biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
-    mutate(B=((1-(E*(1-MPAcell)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% dplyr::select(pos1,B) %>% as.data.table()
-  total_biomass[[t]]<-sum(biom_diff$B)
-}
-#stopImplicitCluster()
-(proc.time() - ptm)/60 #check process time in minutes
-head(biom_diff)
-CleanCoordmegacell_EEZ_wMPA$B<-biom_diff$B
-CleanCoordmegacell_EEZ_wMPA %>%  ggplot(aes(x=lon,y=lat,fill=B)) +  scale_fill_viridis_c(limits = c(0, max(biom_diff$B))) + geom_raster() #ok, great
-
-
-#plot biomass trajectory in time
-total_biomass_merged <- do.call("rbind",total_biomass)
-plot(total_biomass_merged,xlab="Time (years)", ylab="Total Biomass (MT)") #ok, looks good
-
-last(total_biomass_merged)
-
-##***CHUNK*** close each pixel and evaluate global biomass
-#now, check the change in global biomass as pixels are closed one at a time.
-#calculate total biomass with additional MPA - total biomass without additional MPA
-#Final output is a plot this delta biomass... this will feed into the tourism model.
-
-biol_data$K <- KperCell
-rK<-biol_data %>% dplyr::select(pos1,r,K) %>% as.data.table()
-setkey(rK,pos1)
-distance_mat_full_prK<-distance_mat_full_prop[rK]
-biomass_withMPA<-list()
-
-#Non-mpa positions
-nonMPAposition<-which(MPAcell==0)
-length(nonMPAposition)
-length(MPAcell)
-
-
-#ok to put outside since we are doing parallel comp
-biom_diff <- biom
-biom_diff$B <- 0.25*KperCell
-EvaluateMPA <- MPAcell
-
-#cores<-detectCores()
-#registerDoParallel(cores-1)
-ptm <- proc.time()
-doParallel::registerDoParallel(cores=2)
-
-biomass_withMPA <- foreach(i=1:2, .combine='rbind') %dopar% {
-
-  EvaluateMPA[nonMPAposition[i]]<-1
-  
-  for (t in 1:20){
-    biom_diff <- distance_mat_full_prK[biom_diff] %>% mutate(Bdist=B*biom_prop, Growth=biom_prop*r*B) %>% group_by(pos2) %>% dplyr::select(pos2,Bdist,Growth) %>% summarize(B_add=sum(Bdist),G_add=sum(Growth)) %>%
-      mutate(B=((1-(E*(1-EvaluateMPA)))*B_add)+pmax(G_add*(1-(biom_diff$B/KperCell)),0)) %>% dplyr::rename(pos1 = pos2) %>% dplyr::select(pos1,B) %>% as.data.table()
-  }
-  sum(biom_diff$B)
-  #biomass_withMPA[[i]]<-sum(biom_diff$B)
-}
-doParallel::stopImplicitCluster()
-(proc.time() - ptm)/60 #check process time in minutes
-
-plot(biomass_withMPA) #ok, looks good
-
-
-GlobalDeltaBiom<-data.frame(biomass_withMPA)$biomass_withMPA-data.frame(last(total_biomass_merged))$last.total_biomass_merged.
-
-CleanCoordmegacell_EEZ_wMPA %>% dplyr::select(lon, lat, MPA) %>% slice(nonMPAposition[1:length(GlobalDeltaBiom)]) %>% mutate(deltaBiomass=GlobalDeltaBiom) %>%
-  ggplot(aes(x=lon,y=lat,fill=deltaBiomass)) + geom_raster()
-
-plot(GlobalDeltaBiom,xlab="pixel #",ylab="delta Biomass (metric ton)")
-
-#Note: need to run the code above for all the pixels in the world. Use the cloud to do the calculation,
-#more efficient if the parameters are ready.
-
 ##***CHUNK*** Derive B/K per pixel and E per pixel.
-##*
-head(MegaData)
-dim(MegaData)
-
-
-dim(Cleanmegacell)
-head(Cleanmegacell)
-
 #K per stock
 dim(KperStockCell)
 
@@ -406,135 +204,8 @@ ERperCell <- rowSums(ERperStockCell)/rowSums(KperStockCell)
 CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% mutate(ERperCell=ERperCell) %>%
   ggplot(aes(x=lon,y=lat,fill=ERperCell)) + scale_fill_viridis_c(limits = c(0, max(ERperCell))) + geom_raster()
 
-
-#what is the current biomass?
-#We need the B/K parameter
-plot(MegaData$BK2012)
-
-#Load Costello et al. (2016) database
-CostelloData<-read.csv("/Users/ren/Documents/CODES/FoodProvision/Aquamaps/UnlumpedProjectionData.csv", stringsAsFactors = FALSE)
-dim(CostelloData)
-head(CostelloData,5)
-
-Costello2012<-CostelloData %>% filter(Year=="2012")
-table(Costello2012$Dbase)
-table(Costello2012$Policy)
-table(Costello2012$Scenario)
-head(Costello2012)
-
-#MSY from costello of RAM, FAO, and SOFIA
-Costello2012 %>% group_by(Dbase,CatchShare) %>% summarise(sum(MSY))
-
-#Manually change species name with related species to match Aquamaps species range data
-CostelloDataPrime<- CostelloData %>%
-  mutate(SciName=replace(SciName, SciName=="Sardinops melanostictus", "Sardinops sagax")) %>%
-  mutate(SciName=replace(SciName, SciName=="Sardinops caeruleus", "Sardinops sagax")) %>%
-  mutate(SciName=replace(SciName, SciName=="Sardinops ocellatus", "Sardinops sagax")) %>%
-  mutate(SciName=replace(SciName, SciName=="Merluccius capensis, M.paradoxus", "Merluccius capensis")) %>%
-  mutate(SciName=replace(SciName, SciName=="Auxis thazard, A. rochei", "Auxis thazard")) %>%
-  mutate(SciName=replace(SciName, SciName=="Pleuronectes quadrituberculat.", "Pleuronectes quadrituberculat")) %>%
-  mutate(SciName=replace(SciName, SciName=="Pseudopleuronectes herzenst.", "Pseudopleuronectes herzenst")) %>%
-  mutate(SciName=replace(SciName, SciName=="Herklotsichthys quadrimaculat.", "Herklotsichthys quadrimaculat")) %>%
-  mutate(SciName=replace(SciName, SciName=="Engraulis capensis", "Engraulis encrasicolus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Trachypenaeus curvirostris", "Trachysalambria curvirostris")) %>%
-  mutate(SciName=replace(SciName, SciName=="Patinopecten yessoensis", "Mizuhopecten yessoensis")) %>%
-  mutate(SciName=replace(SciName, SciName=="Penaeus setiferus", "Litopenaeus setiferus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Loligo opalescens", "Doryteuthis opalescens")) %>%
-  mutate(SciName=replace(SciName, SciName=="Larimichthys croceus", "Larimichthys crocea")) %>%
-  mutate(SciName=replace(SciName, SciName=="Loligo gahi", "Doryteuthis gahi")) %>%
-  mutate(SciName=replace(SciName, SciName=="Chelon haematocheilus", "Liza haematocheila")) %>%
-  mutate(SciName=replace(SciName, SciName=="Anadara granosa", "Tegillarca granosa")) %>%
-  mutate(SciName=replace(SciName, SciName=="Penaeus chinensis", "Fenneropenaeus chinensis")) %>%
-  mutate(SciName=replace(SciName, SciName=="Penaeus merguiensis", "Fenneropenaeus merguiensis")) %>%
-  mutate(SciName=replace(SciName, SciName=="Sebastes marinus", "Sebastes norvegicus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Cancer magister", "Metacarcinus magister")) %>%
-  mutate(SciName=replace(SciName, SciName=="Loligo pealeii", "Doryteuthis pealeii")) %>%  
-  mutate(SciName=replace(SciName, SciName=="Spisula polynyma", "Mactromeris polynyma")) %>%  
-  mutate(SciName=replace(SciName, SciName=="Ommastrephes bartramii", "Ommastrephes bartramii")) %>%  
-  mutate(SciName=replace(SciName, SciName=="Stichopus japonicus", "Apostichopus japonicus")) %>%  
-  mutate(SciName=replace(SciName, SciName=="Penaeus notialis", "Farfantepenaeus notialis")) %>%  
-  mutate(SciName=replace(SciName, SciName=="Psetta maxima", "Scophthalmus maximus")) %>%  
-  mutate(SciName=replace(SciName, SciName=="Ostrea lutaria", "Ostrea chilensis")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Tawera gayi", "Tawera elliptica")) %>%   
-  mutate(SciName=replace(SciName, SciName=="Penaeus japonicus", "Marsupenaeus japonicus")) %>%   
-  mutate(SciName=replace(SciName, SciName=="Penaeus brasiliensis","Farfantepenaeus aztecus")) %>%   
-  mutate(SciName=replace(SciName, SciName=="Mytilus chilensis","Mytilus edulis")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Tetrapturus audax","Kajikia audax" )) %>% 
-  mutate(SciName=replace(SciName, SciName=="Cheilodactylus bergi","Nemadactylus bergi")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Venerupis pullastra","Venerupis corrugata")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Penaeus aztecus","Farfantepenaeus aztecus")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Penaeus duorarum","Farfantepenaeus duorarum")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Penaeus kerathurus","Melicertus kerathurus")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Penaeus californiensis","Farfantepenaeus californiensis")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Penaeus brevirostris","Farfantepenaeus brevirostris")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Penaeus latisulcatus","Melicertus latisulcatus")) %>%     
-  mutate(SciName=replace(SciName, SciName=="Penaeus occidentalis","Litopenaeus occidentalis")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Penaeus vannamei","Litopenaeus vannamei")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Raja naevus","Leucoraja naevus")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Jasus novaehollandiae","Jasus edwardsii")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Makaira indica","Istiompax indica")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Lithodes aequispina","Lithodes aequispinus")) %>% 
-  mutate(SciName=replace(SciName, SciName=="Eleginus navaga","Eleginus nawaga")) %>%
-  mutate(SciName=replace(SciName, SciName=="Saxidomus giganteus","Saxidomus gigantea")) %>%
-  mutate(SciName=replace(SciName, SciName=="Mugil soiuy","Liza haematocheila")) %>%
-  mutate(SciName=replace(SciName, SciName=="Xiphopenaeus riveti","Xiphopenaeus kroyeri")) %>%
-  mutate(SciName=replace(SciName, SciName=="Pleuronectes vetulus","Parophrys vetulus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Raja radiata","Amblyraja radiata")) %>%
-  mutate(SciName=replace(SciName, SciName=="Aspitrigla cuculus","Chelidonichthys cuculus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Valamugil seheli","Moolgarda seheli")) %>%
-  mutate(SciName=replace(SciName, SciName=="Tetrapturus albidus","Kajikia albida")) %>%
-  mutate(SciName=replace(SciName, SciName=="Zenopsis nebulosus","Zenopsis nebulosa")) %>%
-  mutate(SciName=replace(SciName, SciName=="Arius thalassinus","Netuma thalassinus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Parika scaber","Meuschenia scaber")) %>%
-  mutate(SciName=replace(SciName, SciName=="Sardinops neopilchardus","Sardinops sagax")) %>%
-  mutate(SciName=replace(SciName, SciName=="Raja batis","Dipturus batis")) %>%
-  mutate(SciName=replace(SciName, SciName=="Alosa pontica","Alosa immaculata")) %>%
-  mutate(SciName=replace(SciName, SciName=="Conger orbignyanus","Conger orbignianus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Acanthopagrus schlegeli","Acanthopagrus schlegelii")) %>%
-  mutate(SciName=replace(SciName, SciName=="Solea lascaris","Pegusa lascaris")) %>%
-  mutate(SciName=replace(SciName, SciName=="Raja circularis","Leucoraja circularis")) %>%
-  mutate(SciName=replace(SciName, SciName=="Balistes carolinensis","Balistes capriscus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Plesiopenaeus edwardsianus","Aristaeopsis edwardsiana")) %>%
-  mutate(SciName=replace(SciName, SciName=="Epinephelus flavolimbatus","Hyporthodus flavolimbatus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Epinephelus niveatus","Hyporthodus niveatus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Epinephelus nigritus","Hyporthodus nigritus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Epinephelus mystacinus","Hyporthodus mystacinus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Raja oxyrinchus","Dipturus oxyrinchus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Raja fullonica","Leucoraja fullonica")) %>%
-  mutate(SciName=replace(SciName, SciName=="Jasus verreauxi","Sagmariasus verreauxi")) %>%
-  mutate(SciName=replace(SciName, SciName=="Anadara ovalis","Lunarca ovalis")) %>%
-  mutate(SciName=replace(SciName, SciName=="Pseudopentaceros richardsoni","Pentaceros richardsoni")) %>%
-  mutate(SciName=replace(SciName, SciName=="Chelidonichthys lastoviza","Trigloporus lastoviza")) %>%
-  mutate(SciName=replace(SciName, SciName=="Protothaca staminea","Leukoma staminea")) %>%
-  mutate(SciName=replace(SciName, SciName=="Notothenia squamifrons","Lepidonotothen squamifrons")) %>%
-  mutate(SciName=replace(SciName, SciName=="Pleuronectes quadrituberculat","Pleuronectes quadrituberculatus")) %>%
-  mutate(SciName=replace(SciName, SciName=="Pseudopleuronectes herzenst","Pseudopleuronectes herzensteini")) %>%
-  mutate(SciName=replace(SciName, SciName=="Herklotsichthys quadrimaculat","Herklotsichthys quadrimaculatus")) %>%
-  filter(k>0) #remove zero carrying capacity
-CostelloPresentPrime<- CostelloDataPrime %>% dplyr::filter(Year=="2012")
-head(CostelloPresentPrime)
-
-#check the effect of pooling from all dataset vs FAO only
-CostelloK_FAO_only<-CostelloDataPrime %>% filter(Year=="2012") %>% filter(Dbase=="FAO") %>%  mutate(k=Biomass/(0.4*BvBmsy)) %>% group_by(SciName) %>% summarize(K=sum(k), B=sum(Biomass), Fstatus=weighted.mean(FvFmsy, MSY), Bstatus=weighted.mean(BvBmsy, MSY)) %>% mutate(BK2012=B/K) %>% dplyr::select(SciName,BK2012) %>% dplyr::rename(BK2012_FAO_only = BK2012)
-head(CostelloK_FAO_only)
-#CostelloK_unfiltered<-CostelloDataPrime %>% filter(Year=="2012") %>% mutate(k=Biomass/(0.4*BvBmsy)) %>% group_by(SciName) %>% summarize(K=sum(k), B=sum(Biomass), Fstatus=weighted.mean(FvFmsy, MSY), Bstatus=weighted.mean(BvBmsy, MSY)) %>% mutate(BK2012=B/K)
-#CostelloK_Join<-left_join(CostelloK_unfiltered,CostelloK_FAO_only, by="SciName")
-#head(CostelloK_Join)
-#plot(CostelloK_Join$BK2012.x,CostelloK_Join$BK2012.y)
-
-CostelloK<-CostelloDataPrime %>% filter(Year=="2012") %>% mutate(k=Biomass/(0.4*BvBmsy)) %>% group_by(SciName) %>% summarize(K=sum(k), B=sum(Biomass), Fstatus=weighted.mean(FvFmsy, MSY), Bstatus=weighted.mean(BvBmsy, MSY)) %>% mutate(BK2012=B/K)
-CostelloK<-left_join(CostelloK,CostelloK_FAO_only, by="SciName")
-head(CostelloK)
-dim(CostelloK)
-
-plot(CostelloK$BK2012)
-
-
-
-
-
 ###CHUNK
-#implement the analytic solution.
+#implement the analytic solution. THIS SPEEDS UP THE COMPUTATION
 #steps
 #NOTE: This is not necessary!!!
 #1. K per pixel per stock per cell. K density per pixel per stock should be constant.
@@ -561,8 +232,15 @@ CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat) %>% mutate(kpercell=rowSums(kpe
 head(MegaData)
 rperstock<-MegaData$r_fin
 
+#compute bvk
+#bvk_calculated <- MegaData %>% filter(INCLUDE==1) %>% summarise(bvk_calc = 1-(ExploitationRate_BAU1_Ray/r_fin))
+bvk_calculated <- MegaData %>% summarise(bvk_calc = 1-(ExploitationRate_BAU1_Ray/r_fin))
+head(bvk_calculated)
+dim(bvk_calculated)
+
 #3. B0vK #revisit this. Critical parameter
-BvKperStock_expand <- matrix(rep(MegaData$BK2012,each=120297),nrow=120297)
+#BvKperStock_expand <- matrix(rep(MegaData$BK2012,each=120297),nrow=120297)
+BvKperStock_expand <- matrix(rep(bvk_calculated$bvk_calc,each=120297),nrow=120297)
 biomperStockCell <- BvKperStock_expand*kpercell_expand #r*K per cell
 bvk_params <- BvKperStock_expand*(kpercell_expand>0) ##use this parameter
 #this contains bvk per species per cell
@@ -575,22 +253,20 @@ head(biomperStockCell)
 sum(biomperStockCell[,1])
 plot(biomperStockCell[,1]) #ok, this is flat. good.
 
-BvKperCell <- rowSums(biomperStockCell)/rowSums(kpercell_expand)
+#Only include the stocks that are part of our analysis.
+BvKperCell <- rowSums(biomperStockCell[,which(MegaData$INCLUDE==1)])/rowSums(kpercell_expand[,which(MegaData$INCLUDE==1)])
 
-#plot average
-CleanCoordmegacell_EEZ_wMPA %>% select(lon, lat, MPA) %>% mutate(BvKperCell=BvKperCell) %>%
-  ggplot(aes(x=lon,y=lat,fill=BvKperCell)) + scale_fill_viridis_c(limits = c(0, max(BvKperCell))) + geom_raster()
-
+#plot average. 
+CleanCoordmegacell_EEZ_wMPA %>% dplyr::select(lon, lat, MPA) %>% #mutate(BvKperCell=BvKperCell) %>%
+  ggplot(aes(x=lon,y=lat,fill=BvKperCell)) + scale_fill_viridis_c(limits = c(0, 1)) + geom_raster()
 
 #4. Assume all pixels allow fishing. Evaluate change in biomass at pixel i. Our assumption is conservative given that build-up of biomass only happens inside the MPA. 
-
 #Non-mpa positions
 MPAcell <- biol_data$MPA
 nonMPAposition<-which(MPAcell==0)
 
 length(nonMPAposition)
 length(MPAcell)
-
 
 #--explore the connectivity matrix here
 #--This is the base code for generating distance_mat_full_prop
@@ -604,32 +280,55 @@ distance_mat_full_prop %>% group_by(pos1) %>% summarise(checksum=sum(biom_prop))
 #--add evaluate MPA here
 source(here("scripts","func_evaluateMPA.R")) 
 
-#--test the code
-stock_num<-1
-bvk_equi <- func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)
-head(bvk_equi)
-dim(bvk_equi)
-#--store the results and collate later
-collate_bvk_equi<-list()
-nstock<-2#dim(MegaData)[1]
-for (stock_num in 1:nstock){ 
-collate_bvk_equi[[stock_num]] <- func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)$bvk_equi
+##--Run only once. Subsetting the connectivity matrix. Save inside a folder then call inside the function
+#--subset the stock and get the row numbers where entry == 1, then subset the connectivit matrix
+run_subset_connectivitymatrix <- 0 #1 for on, 0 to switch this off
+#the code below can be optimized by running this in parallel.
+if(run_subset_connectivitymatrix == 1){
+  registerDoParallel(detectCores()/2)
+  #CHECK IF THIS IS CORRECT: which(MegaData$INCLUDE==1)
+  foreach(stock_num=which(MegaData$INCLUDE==1)) %dopar% {
+  #for (stock_num in which(MegaData$INCLUDE==1)){
+    stock_subset_i<-which(Cleanmegacell[,stock_num] > 0) #that's K density map so the values are < 1
+    distance_mat_full_prop <- distance_mat_full %>% filter(pos1 %in% stock_subset_i, pos2 %in% stock_subset_i) %>% group_by(pos1) %>% mutate(biom_prop = exp(-( dist^2 / (2*(sigma^2))) ), biom_prop = biom_prop/sum(biom_prop)) %>% dplyr::select(-dist) %>% as.data.table()
+    
+    #fts is the fastest in saving and loading files.
+    #fst::write.fst(distance_mat_full_prop , here("data","connect_matrix",paste0(stock_num,"_connect.fst")))
+    fst::write.fst(distance_mat_full_prop , paste0("/Users/ren/Documents/GitHub/tourism-mpa-support/connect_matrix/",stock_num,"_connect.fst"))
+  }
+  doParallel::stopImplicitCluster()
 }
+#test<-fst::read.fst(here("data","connect_matrix",paste0(1,"_connect.fst")))
+#head(test)
 
-collate_bvk_equi_merged <- data.frame(do.call("cbind",collate_bvk_equi))
-colnames(collate_bvk_equi_merged)<-MegaData$stockid[1:nstock]
-head(collate_bvk_equi_merged)
-dim(collate_bvk_equi_merged)
-#ok, done testing. Now, do parallel compute
+head(MegaData)
+MegaData$bvk_fin<-bvk_calculated$bvk_calc
+
+# #--test the code
+# stock_num<-1
+# bvk_equi <- func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)
+# head(bvk_equi)
+# dim(bvk_equi)
+# #--store the results and collate later
+# collate_bvk_equi<-list()
+# nstock<-2#dim(MegaData)[1]
+# for (stock_num in 1:nstock){ 
+#   collate_bvk_equi[[stock_num]] <- func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)$bvk_equi
+# }
+# collate_bvk_equi_merged <- data.frame(do.call("cbind",collate_bvk_equi))
+# colnames(collate_bvk_equi_merged)<-MegaData$stockid[1:nstock]
+# head(collate_bvk_equi_merged)
+# dim(collate_bvk_equi_merged)
+# #ok, done testing. Now, do parallel compute
 
 #--parallel compute
+#This code evaluates the biomass change for each stock
 nstock<-dim(MegaData)[1]
 ptm <- proc.time()
-cores<-detectCores()
-registerDoParallel(cores/2)
-
-stock_include<-c(1,3,5)#edit this. include only stocks for the analysis
-collate_bvk_equi_merged <- foreach(stock_num=stock_include[1:length(stock_include)], .combine='cbind') %dopar% {
+registerDoParallel(detectCores()/2)
+stock_include<-which(MegaData$INCLUDE==1)#c(1,3,5)#which(MegaData$INCLUDE==1)#c(1,3,5)#edit this. include only stocks for the analysis
+#collate_bvk_equi_merged <- foreach(stock_num=stock_include[1:length(stock_include)], .combine='cbind') %dopar% {
+collate_bvk_equi_merged <- foreach(stock_num=stock_include, .combine='cbind') %dopar% {
   func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)$bvk_equi
 }
 doParallel::stopImplicitCluster()
@@ -638,10 +337,18 @@ colnames(collate_bvk_equi_merged)<-MegaData$stockid[stock_include]
 head(collate_bvk_equi_merged)
 dim(collate_bvk_equi_merged)
 
+#plot
+#collate_bvk_equi_merged[is.na(collate_bvk_equi_merged)] <- 0 #never do this.
+collate_bvk_equi_merged[collate_bvk_equi_merged>1]<-1 #cap to 1
+plotme<-rowMeans(collate_bvk_equi_merged,na.rm = TRUE)
+plot(plotme)
+
+plot(plotme,BvKperCell)
+
+CleanCoordmegacell_EEZ_wMPA %>% ggplot(aes(x=lon,y=lat,fill=plotme)) + scale_fill_viridis_c(limits = c(0, max(plotme))) + geom_raster() #ok, great
+
 #--to do
 #calculation of tourism values can be incorporated in the function
-#tou
-
 
 # biomass_withMPA <- foreach(i=1:2, .combine='rbind') %dopar% {
 #   EvaluateMPA <- MPAcell #this is inside since we need to close each pixel and put it back
@@ -657,43 +364,3 @@ dim(collate_bvk_equi_merged)
 # (proc.time() - ptm)/60 #check process time in minutes
 # 
 # plot(biomass_withMPA) #ok, looks good
-
-
-
-# ##***CHUNK***: TOY model. Useful after we have the biological model ready.
-# #Toy model
-# #Empirically derived parameters
-# Qd0 <- 100 #current number of dives
-# P0 <- 50 #current price per dive in USD
-# C0 <- 150 #choke price in USD
-# alpha <- 0.5
-# beta <- 0.5
-# X0 <- 10 #dive price (USD) where no company will offer their service
-# nu <- 1.1
-# 
-# #Model intermediate output
-# deltaB <- 20 #change in biomass
-# deltaS <- 10 #change in species diversity metric
-# 
-# #Parameter calculations
-# #we need a and b to compute mu
-# (a <- (C0*Qd0)/(C0-P0))
-# (b <- Qd0/(C0-P0))
-# (mu <- nu*(a-(b*P0))) #assume that MPA will increase the demand for diving by 10%.
-# 
-# (e <- (a-(b*P0))/(P0-X0)) #Slope of the supply curve
-# (c <- (((b*P0)-a)*X0)/(P0-X0)) #Dive quantity supplied by the industry when the price of diving is zero
-# 
-# (P1 <- (a-c+mu+(alpha*deltaB)+(beta*deltaS))/(e+b)) #Price per dive at site i when the site is converted to an MPA
-# (Qd1 <- a-(b*P1)+mu+(alpha*deltaB)+(beta*deltaS)) #Number of dives at site i when the site is converted to an MPA
-# (C1 <- (a+mu+(alpha*deltaB)+(beta*deltaS))/b)
-# 
-# ##Tourism model output
-# #Change in tourism revenue at site i
-# (P1*Qd1) - (P0*Qd0)
-# 
-# #Change in counsumer surplus
-# (0.5*(C1-P1)*Qd1) - (0.5*(C0-P0)*Qd0)
-# 
-# #Change in consumer + producer surplus
-# (Qd0*(C1-C0)) + (0.5*(Qd1-Qd0)*(C1-C0))

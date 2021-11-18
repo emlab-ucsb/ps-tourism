@@ -1,0 +1,807 @@
+OriginalName,UpdatedName,Family,Order,Class,Phylum,Genus,Hemisphere,Latitude,Longitude,DevelopmentalMode,EggSize,PlanktonicTime,absLatitude,speed_annual,temperature_annual,Reference,ott_id
+Salmacis bicolor,Salmacis bicolor,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Salmacis,N,13,80,P,100,23,13,0.308129863,28.25659943,Aiyar 1935,ott335256
+Eunice kobiensis,Eunice kobiensis,Eunicidae,Eunicida,Polychaeta,Annelida,Eunice,N,48.537522,-123,L,310,NA,48.537522,0.220556316,9.867109299,Akesson 1967,ott162291
+Eunice valens,Leodice valens,Eunicidae,Eunicida,Polychaeta,Annelida,Leodice,N,48.537522,-123,L,310,NA,48.537522,0.220556316,9.867109299,Akesson 1967,NA
+Ophryotrocha hartmanni,Ophryotrocha hartmanni,Dorvilleidae,Eunicida,Polychaeta,Annelida,Ophryotrocha,N,36.668419,-4,L,160,NA,36.668419,0.250871392,17.79549026,Akesson 1973,NA
+Ophryotrocha labronica,Ophryotrocha labronica,Dorvilleidae,Eunicida,Polychaeta,Annelida,Ophryotrocha,N,40.840308,14,L,120,NA,40.840308,0.063237197,19.15680885,Akesson 1973,NA
+Ophryotrocha bacci,Ophryotrocha baccii,Dorvilleidae,Eunicida,Polychaeta,Annelida,Ophryotrocha,N,61.614681,17,L,250,NA,61.614681,0.0395933,6.084489822,Akesson 1973,NA
+Ophyotrocha maculata,Ophryotrocha maculata,Dorvilleidae,Eunicida,Polychaeta,Annelida,Ophryotrocha,N,58.403151,12,L,125,NA,58.403151,0.00693357,9.55880928,Akesson 1974,NA
+Ophryotrocha diadema,Ophryotrocha diadema,Dorvilleidae,Eunicida,Polychaeta,Annelida,Ophryotrocha,N,33,-117,L,190,NA,33,0.205243114,6.667709827,Akesson 1976,NA
+Macrophiothrix lorioli,Macrophiothrix lorioli,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Macrophiothrix,S,-14,145,P,166,23,14,0.257141842,26.78990936,Allen & Podolsky 2007,ott763535
+Macrophiothrix belli,Macrophiothrix belli,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Macrophiothrix,S,-14,145,L,406,3,14,0.257141842,26.78990936,Allen & Podolsky 2007,ott763535
+Macrophiothrix longipeda,Macrophiothrix longipeda,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Macrophiothrix,S,-14,145,P,155,14,14,0.257141842,26.78990936,Allen & Podolsky 2007,ott763535
+Macrophiothrix rhabdota,Macrophiothrix rhabdota,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Macrophiothrix,S,-14,145,P,230,6.88,14,0.257141842,26.78990936,Allen & Podolsky 2007,ott763535
+Macrophiothrix nereidina,Macrophiothrix nereidina,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Macrophiothrix,S,-14,145,L,266,2.95,14,0.257141842,26.78990936,Allen & Podolsky 2007,ott763535
+Macrophiothrix koehleri,Macrophiothrix koehleri,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Macrophiothrix,S,-14,145,P,147,32,14,0.257141842,26.78990936,Allen & Podolsky 2007,ott763535
+Macrophiothrix caenosa,Macrophiothrix caenosa,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Macrophiothrix,S,-14,145,L,242,5,14,0.257141842,26.78990936,Allen & Podolsky 2007,ott763535
+Spirobranchus tricornis,Spirobranchus giganteus,Serpulidae,Sabellida,Polychaeta,Annelida,Spirobranchus,N,18,-67,P,83,NA,18,0.032271248,27.12110901,Allen 1957,ott906173
+Diopatra cuprea,Diopatra cuprea,Onuphidae,Eunicida,Polychaeta,Annelida,Diopatra,N,41.524773,-71,P,220,NA,41.524773,0.071645968,11.21480942,Allen 1959,ott1042378
+Autolytus fasciatus,Proceraea fasciata,Syllidae,Phyllodocida,Polychaeta,Annelida,Proceraea,N,18,-67,P,100,NA,18,0.032271248,27.12110901,Allen 1964,ott457824
+Elysia stylifera,Elysia stylifera,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,S,-27,153,P,71,NA,27,0.057735343,23.96480942,Allen et al 2009,ott322154
+Asthenosoma ijimai,Asthenosoma ijimai,Echinothuriidae,Echinothurioida,Echinoidea,Echinodermata,Asthenosoma,N,34,132,L,1200,21,34,0.123060811,18.36749077,Amemiya & Tsuchiya 1979,ott788004
+Crepidula plana,Crepidula plana,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,N,41,-70,P,136,13,41,0.031781489,10.3125906,Ament 1979,ott24075
+Haploscoloplos fragilis,Leitoscoloplos fragilis,Orbiniidae,,Polychaeta,Annelida,Leitoscoloplos,S,-33,151.159515,L,150,4,33,0.585780803,20.54590988,Anderson 1961,ott760483
+Chelidonura varians,Chelidonura varians,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Chelidonura,S,-14,145,P,55,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott823227
+Chelidonura sandrana,Chelidonura sandrana,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Chelidonura,S,-14,145,P,45,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott823227
+Chelidonura fulvipunctat,Chelidonura fulvipunctata,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Chelidonura,S,-14,145,P,60,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott823227
+Chelidonura pallida,Chelidonura pallida,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Chelidonura,S,-14,145,P,55,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott823227
+Melanochlamys sp.,Melanochlamys,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Melanochlamys,S,-14,145,P,110,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott828148
+Melanochlamys diomedea,Melanochlamys diomedea,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Melanochlamys,N,48,-123,P,53,NA,48,0.136874763,9.787690163,Anthes & Michiels 2007,ott828148
+Melanochlamys spp.,Melanochlamys,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Melanochlamys,S,-14,145,P,105,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott828148
+Navanax inermis,Navanax inermis,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Navanax,N,25,-111,P,100,NA,25,0.191319313,24.9375,Anthes & Michiels 2007,ott621617
+Philinopsis cyanea,Philinopsis speciosa,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Philinopsis,S,-14,145,P,140,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott621615
+Philinopsis gardineri,Philinopsis gardineri,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Philinopsis,S,-14,145,P,95,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott621615
+Philinopsis lineolata,Philinopsis lineolata,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Philinopsis,S,-14,145,P,65.25,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott621615
+Philinopsis pilsbryi,Philinopsis pilsbryi,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Philinopsis,S,-14,145,P,70,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott621615
+Philinopsis reticulata,Philinopsis reticulata,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Philinopsis,S,-14,145,P,70,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott621615
+Siphopteron pohnpei,Sagaminopteron pohnpei,Gastropteridae,Cephalaspidea,Gastropoda,Mollusca,Sagaminopteron,S,-14,145,P,71,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott151175
+Siphopteron sp.,Siphopteron,Gastropteridae,Cephalaspidea,Gastropoda,Mollusca,Siphopteron,S,-14,145,P,120,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott492369
+Siphopteron quadrispinos,Siphopteron quadrispinosum,Gastropteridae,Cephalaspidea,Gastropoda,Mollusca,Siphopteron,S,-14,145,P,76,NA,14,0.389974561,26.9333992,Anthes & Michiels 2007,ott492369
+Echinaster echinophorus,Echinaster echinophorus,Echinasteridae,Spinulodisa,Asteroidea,Echinodermata,Echinaster,N,30,-83,L,860,6,30,0.017389743,22.06800079,Atwood 1973,ott893170
+Echinaster echinophorus,Echinaster echinophorus,Echinasteridae,Spinulodisa,Asteroidea,Echinodermata,Echinaster,N,30,-83,L,860,6,30,0.017389743,22.06800079,Atwood 1973,ott893170
+Astreopora myriophthalma,Astreopora myriophthalma,Acroporidae,Scleractinia,Anthozoa,Cnidaria,Astreopora,S,-18,146,L,538,NA,18,0.257141842,26.75159073,Baird et al. 2001,ott145356
+Favites halicora,Favites halicora,Faviidae,Scleractinia,Anthozoa,Cnidaria,Favites,S,-18,146,L,401,NA,18,0.257141842,26.75159073,Baird et al. 2001,NA
+Goniastrea retiformis,Goniastrea retiformis,Faviidae,Scleractinia,Anthozoa,Cnidaria,Goniastrea,S,-18,146,L,371,NA,18,0.257141842,26.75159073,Baird et al. 2001,ott34489
+Montipora digitata,Montipora digitata,Acroporidae,Scleractinia,Anthozoa,Cnidaria,Montipora,S,-18,146,L,337,NA,18,0.257141842,26.75159073,Baird et al. 2001,ott134705
+Pachyseris speciosa,Pachyseris speciosa,Agariciidae,Scleractinia,Anthozoa,Cnidaria,Pachyseris,S,-18,146,L,368,NA,18,0.257141842,26.75159073,Baird et al. 2001,ott387481
+Sabella (Demonax) media,Parasabella media,Sabellidae,Sabellida,Polychaeta,Annelida,Parasabella,N,48.537522,-123,L,200,NA,48.537522,0.220556316,9.867109299,Banse 1979; McEuen et al. 1983,ott4987177
+Coscinasterias calamaria,Coscinasterias calamaria,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Coscinasterias,S,-36,174,P,150,27,36,0.091147681,17.83588982,Barker 1978,ott987829
+Stichaster australis,Stichaster australis,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Stichaster,S,-40,174,P,130,38,40,0.238261311,15.10259056,Barker 1978,ott772173
+Brisinga endecacnemos,Brisinga endecacnemos,Brisingidae,Forcipulatida,Asteroidea,Echinodermata,Brisinga,N,57,-10,L,1250,NA,57,0.070035989,11.3216095,Barnes & Barnes 1965,ott3657351
+Brisingella coronata,Hymenodiscus coronata,Brisingidae,Forcipulatida,Asteroidea,Echinodermata,Hymenodiscus,N,51,-13,L,1250,NA,51,0.030995979,12.9836092,Barnes & Barnes 1965,ott912599
+Holothuria fuscogilva,Holothuria (Microthele) fuscogilva,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Holothuria,S,-9,159,P,151.7,NA,9,0.137619465,29.08510971,Battaglene et al. 2002,ott924443
+Spirorbis granulatus,Bushiella (Jugaria) granulata,Spirorbidae,Sabellida,Polychaeta,Annelida,Bushiella,N,59.509242,10,L,140,NA,59.509242,0.157437,9.339609146,Bergan 1953,ott511721
+Branchiomma nigromaculat,Branchiomma nigromaculatum,Sabellidae,Sabellida,Polychaeta,Annelida,Branchiomma,N,21,-157,L,135,NA,21,0.111114649,25.24470901,Berill 1977,ott1015093
+Fabricia sabella,Fabricia stellaris,Sabellidae,Sabellida,Polychaeta,Annelida,Fabricia,N,55.801281,12,L,210,NA,55.801281,0.086931549,9.373809814,Berill 1977,ott981512
+Strongylocentrotus purpu,Strongylocentrotus purpuratus,Strongylocentro,Echinoida,Echinoidea,Echinodermata,Strongylocentrotus,N,49,-125,P,82,51,49,0.040957509,10.52399063,Bertram et al 2009,ott564714
+Flabelligera pennigera,Flabelligera pennigera,Flabelligeridae,Terebellida,Polychaeta,Annelida,Flabelligera,S,-49,69.647827,L,600,NA,49,0.062233934,3.829210043,Bhaud & Duchene 1996,ott805973
+Platynereis magalhaensis,Platynereis magalhaensis,Nereidae,Phyllodocida,Polychaeta,Annelida,Platynereis,S,-49,69.647827,L,450,NA,49,0.062233934,3.829210043,Bhaud & Duchene 1997,ott268486
+Melibe leonina,Melibe leonina,Tethydidae,Nudibranchia,Gastropoda,Mollusca,Melibe,N,49,-125,P,90,38,49,0.040957509,10.52399063,Bickel & Kempf 1983,ott662116
+Mediaster aequalis,Mediaster aequalis,Goniasteridae,Valvatida,Asteroidea,Echinodermata,Mediaster,N,50,-122,L,1100,33,50,0.040957509,10.41240978,Birkeland et al 1971,ott658155
+Bembicium nanum,Bembicium nanum,Littorinidae,,Gastropoda,Mollusca,Bembicium,S,-33,152,P,100,NA,33,0.649368987,20.55579948,Black et al. 1994,ott789214
+Bembicium melanostoma,Bembicium melanostoma,Littorinidae,,Gastropoda,Mollusca,Bembicium,S,-34,138,L,200,NA,34,0.144487574,17.60709953,Black et al. 1994,ott789214
+Pseudopolydora paucibran,Pseudopolydora paucibranchiata,Spionidae,Spionida,Polychaeta,Annelida,Pseudopolydora,N,38.24627,-123,P,100,NA,38.24627,0.165433632,11.53059006,Blake & Woodwick 1975,ott328224
+Pseudopolydora kempi,Pseudopolydora kempi,Spionidae,Spionida,Polychaeta,Annelida,Pseudopolydora,N,38.24627,-123,L,165,2,38.24627,0.165433632,11.53059006,Blake & Woodwick 1975,ott328224
+Polydora concharum,Dipolydora concharum,Spionidae,Spionida,Polychaeta,Annelida,Dipolydora,N,43.691708,-70,P,220,NA,43.691708,0.050230938,9.315690041,Blake 1969,ott382879
+Polydora quarilobata,Dipolydora quadrilobata,Spionidae,Spionida,Polychaeta,Annelida,Dipolydora,N,43.691708,-70,P,190,NA,43.691708,0.050230938,9.315690041,Blake 1969,ott382879
+Polydora websteri,Polydora websteri,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,43.691708,-70,P,140,NA,43.691708,0.050230938,9.315690041,Blake 1969,ott918307
+Polydora aggregata,Polydora aggregata,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,43.691708,-70,P,120,NA,43.691708,0.050230938,9.315690041,Blake 1969,ott918307
+Chrysopetalum bellis,Chrysopetalum,Chrysopetalidae,Phyllodocida,Polychaeta,Annelida,Chrysopetalum,N,38.24627,-123,P,70,NA,38.24627,0.165433632,11.53059006,Blake 1975,ott151156
+Gyptis brunnea,Gyptis brunnea,Hesionidae,Phyllodocida,Polychaeta,Annelida,Gyptis,N,38.24627,-123,L,100,NA,38.24627,0.165433632,11.53059006,Blake 1975,ott1009761
+Halosydna brevisetosa,Halosydna brevisetosa,Polynoidae,Phyllodocida,Polychaeta,Annelida,Halosydna,N,38.24627,-123,P,110,NA,38.24627,0.165433632,11.53059006,Blake 1975,ott494969
+Northria elegans,Onuphis elegans,Onuphidae,Eunicida,Polychaeta,Annelida,Onuphis,N,38.24627,-123,L,230,NA,38.24627,0.165433632,11.53059006,Blake 1975,ott433141
+Anaitides williamsi,Phyllodoce williamsi,Phyllodocidae,Phyllodocida,Polychaeta,Annelida,Phyllodoce,N,38.24627,-123,P,88,NA,38.24627,0.165433632,11.53059006,Blake 1975,ott398723
+Leitoscoloplos pugettens,Leitoscoloplos pugettensis,Orbiniidae,,Polychaeta,Annelida,Leitoscoloplos,N,38.24627,-123,L,200,NA,38.24627,0.165433632,11.53059006,Blake 1980,ott760483
+Scoloplos acmeceps,Scoloplos acmeceps,Orbiniidae,,Polychaeta,Annelida,Scoloplos,N,38.24627,-123,L,200,NA,38.24627,0.165433632,11.53059006,Blake 1980,ott918301
+Aurospiro dibranchiata,Aurospio dibranchiata,Spionidae,Spionida,Polychaeta,Annelida,Aurospio,N,34.558597,-76,P,85,NA,34.558597,0.086146361,22.96558952,Blake 1993,ott752046
+Pholoe anoculata,Pholoe anoculata,Sigalionidae,Phyllodocida,Polychaeta,Annelida,Pholoe,N,55.372868,-1,L,190,NA,55.372868,0.081551171,9.931690216,Blake 1993,ott398717
+Marenzelleria viridis,Marenzelleria viridis,Spionidae,Spionida,Polychaeta,Annelida,Marenzelleria,N,54,12,P,175,12,54,0.020724543,9.273509979,Bochert & Bick 1995,ott4324
+Dasybranchus caducus,Dasybranchus caducus,Capitellidae,,Polychaeta,Annelida,Dasybranchus,N,25,-79,L,95,NA,25,0.504045503,26.65699959,Bookhout 1957,ott365429
+Axiothella mucosa,Clymenella mucosa,Maldanidae,,Polychaeta,Annelida,Clymenella,N,34.716835,-76,L,255,NA,34.716835,0.086146361,22.96558952,Bookout & Horn 1949,ott148575
+Crepidula fornicata,Crepidula fornicata,Calyptraeidae,Neotaenioglossa,Gastropoda,Mollusca,Crepidula,N,48,-3,P,170,NA,48,0.07694893,13.87839031,Brante et al 2008,ott24075
+Parvulastra parvivipara,Parvulastra parvivipara,Asterinidae,Valvatida,Asteroidea,Echinodermata,Parvulastra,S,-34,135,L,135,NA,34,0.024184786,17.07759094,Bryne & Cerra 1996,ott881870
+Parvulastra vivipara,Parvulastra vivipara,Asterinidae,Valvatida,Asteroidea,Echinodermata,Parvulastra,S,-42,147,L,148,NA,42,0.247528596,14.42409039,Bryne & Cerra 1996,ott881870
+Lumbrinereis japonica,Lumbrineris japonica,Lumbrinereidae,Eunicida,Polychaeta,Annelida,Lumbrineris,N,42.650374,131,L,310,NA,42.650374,0.190848105,8.874400139,Buzhinskaya 1982,ott834687
+Sabellastarte spectabili,Sabellastarte spectabilis,Sabellidae,Sabellida,Polychaeta,Annelida,Sabellastarte,N,21,-157,L,175,6.67,21,0.111114649,25.24470901,Bybee et al 2006,ott992905
+Cryptasterina pentagona,Cryptasterina pentagona,Asterinidae,Spinulosida,Asteroidea,Echinodermata,Cryptasterina,S,-19,146,L,413,6,19,0.257141842,26.78990936,Byrne et al 2003,ott831359
+Aplysia californica,Aplysia californica,Anaspidea,Anaspidea,Gastropoda,Mollusca,Aplysia,N,33,-118,P,85,35,33,0.018636925,17.13749123,Capo et al 2009,ott126322
+Hydroides elegans,Hydroides elegans,Serpulidae,Sabellida,Polychaeta,Annelida,Hydroides,N,21,-157,P,45,4.5,21,0.111114649,25.24470901,Carpizo-Ituarte & Hadfield 1998,ott327392
+Hyalinoecia araucana,Hyalinoecia araucana,Onuphidae,Eunicida,Polychaeta,Annelida,Hyalinoecia,S,-37,-73,L,300,NA,37,0.370589849,13.02869034,Carrasco 1983,ott1025752
+Asterina stellifera,Asterina stellifera,Asterinidae,Valvatida,Asteroidea,Echinodermata,Asterina,S,-22,-42,P,90,NA,22,0.346509196,22.40339088,Carvalho & Ventura 2002,ott977095
+Glycera convoluta,Glycera tridactyla,Glyceridae,Phyllodocida,Polychaeta,Annelida,Glycera,N,44.667066,-1,P,130,NA,44.667066,0.047790446,15.94629955,Cazaux 1967,ott941631
+Glycera tridactyla,Glycera tridactyla,Glyceridae,Phyllodocida,Polychaeta,Annelida,Glycera,N,44.667066,-1,P,140,NA,44.667066,0.047790446,15.94629955,Cazaux 1967,ott941631
+Nereis irrorata,Neanthes nubila,Nereidae,Phyllodocida,Polychaeta,Annelida,Neanthes,N,44.667066,-1,P,210,NA,44.667066,0.047790446,15.94629955,Cazaux 1967,ott563194
+Parapionosyllis gestans,Parapionosyllis gestans,Syllidae,Phyllodocida,Polychaeta,Annelida,Parapionosyllis,N,44.667066,-1,L,170,NA,44.667066,0.047790446,15.94629955,Cazaux 1967,ott315157
+Pholoe synophtalmica,Pholoe inornata,Sigalionidae,Phyllodocida,Polychaeta,Annelida,Pholoe,N,44.667066,-1,P,78,NA,44.667066,0.047790446,15.94629955,Cazaux 1967,ott398717
+Syllis variegata,Syllis variegata,Syllidae,Phyllodocida,Polychaeta,Annelida,Syllis,N,44.666577,-1,P,75,NA,44.666577,0.047790446,15.94629955,Cazaux 1969,ott608534
+Lumbrinereis impatiens,Scoletoma impatiens,Lumbrineridae,Eunicida,Polychaeta,Annelida,Scoletoma,N,44.666577,-1,L,220,NA,44.666577,0.047790446,15.94629955,Cazaux 1970,ott499832
+Nicolea zostericola,Nicolea zostericola,Terebellidae,Terebellida,Polychaeta,Annelida,Nicolea,N,42.42371,-71,L,250,NA,42.42371,0.015552108,10.29349041,Cazaux 1970; Eckelbarger 1974,ott841679
+Lagisca extenuata,Harmothoe extenuata,Polynoidae,Phyllodocida,Polychaeta,Annelida,Harmothoe,N,44.666577,-1,P,95,NA,44.666577,0.047790446,15.94629955,Cazaux 1972,ott1067342
+Clymenura clypeata,Leiochone leiopygos,Maldanidae,,Polychaeta,Annelida,Leiochone,N,44.666577,-1,L,250,NA,44.666577,0.047790446,15.94629955,Cazaux 1972,ott4977585
+Lumbrinereis tetraura,Lumbrineris tetraura,Lumbrineridae,Eunicida,Polychaeta,Annelida,Lumbrineris,N,44.666577,-1,L,225,NA,44.666577,0.047790446,15.94629955,Cazaux 1972,ott834687
+Grybeoyllis limbata,Salvatoria limbata,Syllidae,Phyllodocida,Polychaeta,Annelida,Salvatoria,N,44.666577,-1,L,85,NA,44.666577,0.047790446,15.94629955,Cazaux 1972,ott938777
+Sphaerosyllis bulbosa,Sphaerosyllis bulbosa,Syllidae,Phyllodocida,Polychaeta,Annelida,Sphaerosyllis,N,44.666577,-1,L,90,NA,44.666577,0.047790446,15.94629955,Cazaux 1972,ott315166
+Ditrupa arietina,Ditrupa arietina,Serpulidae,Sabellida,Polychaeta,Annelida,Ditrupa,N,42,3,P,75,NA,42,0.057204852,16.71149063,Charles et al. 2003,ott957229
+Rostanga pulchra,Rostanga pulchra,Rostangidae,Nudibranchia,Gastropoda,Mollusca,Rostanga,N,48,-123,P,73,35,48,0.136874763,9.787690163,Chia & Koss 1978,ott779149
+Limapontia depressa,Limapontia depressa,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Limapontia,N,55,-1,P,80,NA,55,0.081551171,9.94230938,Chia 1970,ott492223
+Limapontia capitata,Limapontia capitata,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Limapontia,N,55,-1,P,82,NA,55,0.081551171,9.94230938,Chia 1970,ott492223
+Limapontia senestra as c,Limapontia senestra,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Limapontia,N,55,-1,L,200,NA,55,0.081551171,9.94230938,Chia 1971,ott492223
+Diopatra neopolitana,Diopatra neapolitana,Onuphidae,Eunicida,Polychaeta,Annelida,Diopatra,N,34.770948,137,L,200,NA,34.770948,0.191808836,19.32069016,Choe 1960,ott1042378
+Sphaerodoris gracilis,Sphaerodorum gracilis,Sphaerodoridae,Phyllodocida,Polychaeta,Annelida,Sphaerodorum,N,55.372868,-1,L,225,NA,55.372868,0.081551171,9.931690216,Christie 1984,ott649026
+Trichobranchus glacialis,Trichobranchus glacialis,Terebellidae,Terebellida,Polychaeta,Annelida,Trichobranchus,N,55.372868,-1,L,175,NA,55.372868,0.081551171,9.931690216,Christie 1986,ott717442
+Ophiarachnella gorgonia,Ophiarachnella gorgonia,Ophiodermatidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiarachnella,S,-14,145,L,320,2.5,14,0.389974561,26.9333992,Cisternas & Bryne 2005,ott3654785
+Caliphylla mediteranea,Caliphylla mediterranea,Polybranchiidae,Sacoglossa,Gastropoda,Mollusca,Caliphylla,N,24,-81,P,89.2,NA,24,1.209522203,26.99490929,Clark & Goetzfried 1978,ott231031
+Ercolania funerea,Ercolania viridis,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Ercolania,N,24,-81,P,59.5,NA,24,1.209522203,26.99490929,Clark & Goetzfried 1978,ott1076308
+Lobiger souverbii,Lobiger souverbii,Oxynoidae,Sacoglossa,Gastropoda,Mollusca,Lobiger,N,24,-81,P,54.6,NA,24,1.209522203,26.99490929,Clark & Goetzfried 1978,ott1036542
+Oxynoe antillarum,Oxynoe antillarum,Oxynoidae,Sacoglossa,Gastropoda,Mollusca,Oxynoe,N,24,-81,P,62.5,NA,24,1.209522203,26.99490929,Clark & Goetzfried 1978,ott588314
+Berthelinia caribbea,Berthelinia caribbea,Juliidae,Sacoglossa,Gastropoda,Mollusca,Berthelinia,N,24,-81,L,100,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott5719938
+Bosellia mimetica,Bosellia mimetica,Boselliidae,Sacoglossa,Gastropoda,Mollusca,Bosellia,N,24,-81,P,59,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott462111
+Costasiella nonatoi,Costasiella nonatoi,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Costasiella,N,32,-65,P,69,NA,32,0.0156624,23.06729126,Clark & Jensen 1981,ott639889
+Cyerce antillensis,Cyerce antillensis,Polybranchiidae,Sacoglossa,Gastropoda,Mollusca,Cyerce,N,24,-81,L,112,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott898991
+Elysia timida,Elysia timida,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,32,35,L,120,NA,32,0.3087705,22.63718987,Clark & Jensen 1981,ott322154
+Elysia serca,Elysia serca,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,24,-81,P,61,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott322154
+Elysia evelinae,Elysia evelinae,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,24,-81,L,104,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott322154
+Ercolania fuscata,Ercolania fuscata,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Ercolania,N,24,-81,P,60,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott1076308
+Ercolania caerula,Ercolania coerulea,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Ercolania,N,24,-81,P,70,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott1076308
+Hermaea cruciata,Hermaea cruciata,Hermaeidae,Sacoglossa,Gastropoda,Mollusca,Hermaea,N,24,-81,P,77,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott231028
+Mourgona murca as germai,Mourgona murca,Polybranchiidae,Sacoglossa,Gastropoda,Mollusca,Mourgona,N,24,-81,P,62,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott1036540
+Placida kingstoni,Placida kingstoni,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Placida,N,24,-81,P,60,NA,24,1.209522203,26.99490929,Clark & Jensen 1981,ott322147
+Volvatella bermudae,Volvatella bermudae,Volvatellidae,Sacoglossa,Gastropoda,Mollusca,Volvatella,N,32,-65,P,66,NA,32,0.0156624,23.06729126,Clark & Jensen 1981,ott665614
+Aeolidia papillosa,Aeolidia papillosa,Aeolidiidae,Nudibranchia,Gastropoda,Mollusca,Aeolidia,N,41,-71,P,82.3,NA,41,0.02300504,11.30280972,Clark 1975,ott823221
+Ancula gibbosa,Ancula gibbosa,Goniodorididae,Nudibranchia,Gastropoda,Mollusca,Ancula,N,41,-71,P,74,NA,41,0.02300504,11.30280972,Clark 1975,ott739828
+Catriona aurantia,Catriona aurantia,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Catriona,N,41,-71,L,149.1,NA,41,0.02300504,11.30280972,Clark 1975,ott2876274
+Cratena pilata,Cratena pilata,Glaucidae,Nudibranchia,Gastropoda,Mollusca,Cratena,N,41,-71,P,74.8,NA,41,0.02300504,11.30280972,Clark 1975,ott299491
+Dendronotus frondosus,Dendronotus frondosus,Dendronotidae,Nudibranchia,Gastropoda,Mollusca,Dendronotus,N,41,-71,P,113.4,NA,41,0.02300504,11.30280972,Clark 1975,ott553083
+Doris verrucosa,Doris verrucosa,Dorididae,Nudibranchia,Gastropoda,Mollusca,Doris,N,41,-71,P,93.7,NA,41,0.02300504,11.30280972,Clark 1975,ott860557
+Doto coronata,Doto coronata,Dotidae,Nudibranchia,Gastropoda,Mollusca,Doto,N,41,-71,P,89.5,NA,41,0.02300504,11.30280972,Clark 1975,ott536796
+Stiliger fuscatus,Ercolania fuscata,Limapontiidae,Nudibranchia,Gastropoda,Mollusca,Ercolania,N,41,-71,P,64.5,NA,41,0.02300504,11.30280972,Clark 1975,ott1076308
+Eubranchus exiguus,Eubranchus exiguus,Eubranchidae,Nudibranchia,Gastropoda,Mollusca,Eubranchus,N,41,-71,P,80,NA,41,0.02300504,11.30280972,Clark 1975,ott896651
+Polycera dubia,Palio dubia,Polyceridae,Nudibranchia,Gastropoda,Mollusca,Palio,N,41,-71,P,76.4,NA,41,0.02300504,11.30280972,Clark 1975,ott83558
+Herrnaea dendritica,Placida dendritica,,Nudibranchia,Gastropoda,Mollusca,Placida,N,41,-71,P,72,NA,41,0.02300504,11.30280972,Clark 1975,ott322147
+Polycerella emertoni,Polycerella emertoni,Polyceridae,Nudibranchia,Gastropoda,Mollusca,Polycerella,N,41,-71,P,57.8,NA,41,0.02300504,11.30280972,Clark 1975,ott83556
+Tenellia fuscata,Tenellia fuscata,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Tenellia,N,41,-71,L,183.5,NA,41,0.02300504,11.30280972,Clark 1975,ott2876339
+Tergipes tergipes,Tergipes tergipes,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Tergipes,N,41,-71,P,79.4,NA,41,0.02300504,11.30280972,Clark 1975,ott917811
+Crepidula nivea,Crepidula nivea,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,N,33,-118,P,135,NA,33,0.018636925,17.13749123,Coe 1949,ott24075
+Odostomia columbiana,Odostomia columbiana,Odostomiidae,Stylommatophora,Gastropoda,Mollusca,Odostomia,N,48,-123,P,74,70,48,0.136874763,9.787690163,Collin & Wise 1997,ott165112
+Crepidula lingulata,Crepipatella lingulata,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepipatella,N,34,-119,P,150,38,34,0.042084293,16.19820976,Collin 2000,ott687044
+Calyptraea mamillaris,Calyptraea mamillaris,Calyptraeidae,Caenogastropoda,Gastropoda,Mollusca,Calyptraea,N,8,-82,P,200,NA,8,0.070643353,28.31451035,Collin 2003,ott297817
+Calyptraea pellucida,Calyptraea pellucida,Calyptraeidae,Caenogastropoda,Gastropoda,Mollusca,Calyptraea,N,25,38,P,120,NA,25,0.079708254,26.93510056,Collin 2003,ott297817
+Crepidula naticarum,Crepidula naticarum,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,N,34,-119,P,164,NA,34,0.042084293,16.19820976,Collin 2003,ott24075
+Crepidula incurva,Crepidula incurva,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,N,8,-80,P,150,17,8,0.196556854,27.00659943,Collin 2003,ott24075
+Crepidula costata,Crepidula costata,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,S,-36,174,P,256,NA,36,0.091147681,17.83588982,Collin 2003,ott24075
+Crepidula lessoni,Crepidula lessoni,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,N,8,-80,P,213,17,8,0.196556854,27.00659943,Collin 2003,ott24075
+Crepidula onyx,Crepidula onyx,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,N,33,-118,P,172,23,33,0.018636925,17.13749123,Collin 2003,ott24075
+Crepidula marginalis,Crepidula marginalis,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,N,9,-80,P,151,19.5,9,0.705341927,27.9847908,Collin 2003,ott24075
+Crucibulum spinosum,Crucibulum spinosum,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crucibulum,N,8,-80,P,NA,NA,8,0.196556854,27.00659943,Collin 2003,ott737388
+Crucibulum radiatum,Crucibulum,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crucibulum,N,8,-80,P,169,22,8,0.196556854,27.00659943,Collin 2003,ott737388
+Calyptraea extinctorum,Desmaulus extinctorium,Calyptraeidae,Caenogastropoda,Gastropoda,Mollusca,Desmaulus,N,22,114,P,208,NA,22,0.145798372,24.54298973,Collin 2003,ott2929376
+Obelia commissuralis,Obelia dichotoma,Campanulariidae,Leptothecata,Hydrozoa,Cnidaria,Obelia,N,41,-70,P,130,NA,41,0.031781489,10.3125906,Costello et al. 1957,NA
+Obelia geniculata,Obelia geniculata,Campanulariidae,Leptothecata,Hydrozoa,Cnidaria,Obelia,N,41,-70,P,130,NA,41,0.031781489,10.3125906,Costello et al. 1957,NA
+Siphonaira virgulata,Siphonaria virgulata,Siphonariidae,,Gastropoda,Mollusca,Siphonaria,S,-33,151,P,100,NA,33,0.585780803,20.54590988,Creese 1980,ott255561
+Siphonaria denticulata,Siphonaria denticulata,Siphonariidae,,Gastropoda,Mollusca,Siphonaria,S,-33,151,P,100,NA,33,0.585780803,20.54590988,Creese 1980,ott255561
+Pomatoleios kraussii,Spirobranchus kraussii,Serpulidae,Sabellida,Polychaeta,Annelida,Spirobranchus,N,29,48,P,63,NA,29,0.304862262,24.06670952,Crisp 1977,ott906173
+Antionella sarsi,Bylgides sarsi,Polynoidae,Phyllodocida,Polychaeta,Annelida,Bylgides,N,69.162558,-53,P,150,NA,69.162558,0.059601692,1.747200012,Curtis 1977,ott2533
+Antionella sarsi,Bylgides sarsi,Polynoidae,Phyllodocida,Polychaeta,Annelida,Bylgides,N,69.162558,-53,P,150,NA,69.162558,0.059601692,1.747200012,Curtis 1977,ott2533
+Pectinaria hyperborea,Cistenides hyperborea,Pectinariidae,Terebellida,Polychaeta,Annelida,Cistenides,N,69.162558,-53,P,60,NA,69.162558,0.059601692,1.747200012,Curtis 1977,ott177557
+Polydora caulleryi,Dipolydora caulleryi,Spionidae,Spionida,Polychaeta,Annelida,Dipolydora,N,69.162558,-53,P,120,NA,69.162558,0.059601692,1.747200012,Curtis 1977,ott382879
+Eteone flava,Eteone flava,Phyllodocidae,Phyllodocida,Polychaeta,Annelida,Eteone,N,69.162558,-53,P,120,NA,69.162558,0.059601692,1.747200012,Curtis 1977,ott890243
+Gattyana cirrhosa,Gattyana cirrhosa,Polynoidae,Phyllodocida,Polychaeta,Annelida,Gattyana,N,69.162558,-53,P,105,NA,69.162558,0.059601692,1.747200012,Curtis 1977,ott494971
+Ophelia limacina,Ophelia limacina,Opheliidae,,Polychaeta,Annelida,Ophelia,N,69.162558,-53,L,120,NA,69.162558,0.059601692,1.747200012,Curtis 1977,ott336914
+Cerithium auricoma,Cerithium guinaicum,Cerithiidae,Caenogastropoda,Gastropoda,Mollusca,Cerithium,N,25,-80,P,90,NA,25,1.304444019,26.89179039,D'Asaro 1970,ott409473
+Cerithium litteratum,Cerithium litteratum,Cerithiidae,Caenogastropoda,Gastropoda,Mollusca,Cerithium,N,24,-81,P,100,NA,24,1.209522203,26.99490929,D'Asaro 1970,ott409473
+Strombus gallus,Lobatus gallus,Strombidae,Littorinimorpha,Gastropoda,Mollusca,Lobatus,N,25,-79,P,170,NA,25,0.504045503,26.65699959,D'Asaro 1970,ott4158559
+Nereis diversicolor,Hediste diversicolor,Nereidae,Phyllodocida,Polychaeta,Annelida,Hediste,N,51,1,L,220,NA,51,0.175313729,11.91889954,Dales 1950,ott943098
+Autolytus prolifer,Myrianida prolifera,Syllidae,Phyllodocida,Polychaeta,Annelida,Myrianida,N,51,1,L,100,NA,51,0.175313729,11.91889954,Dales 1951,ott181928
+Euzonus mucronatus,Thoracophelia mucronata,Opheliidae,,Polychaeta,Annelida,Thoracophelia,N,32.872955,-117,P,65,NA,32.872955,0.188343445,17.75800896,Dales 1952; Kemp 1988,ott221846
+Amphibalanus amphitrite,Amphibalanus amphitrite,Balanidae,Sessilia,Maxillopoda,Arthropoda,Amphibalanus,N,13,80,P,NA,8,13,0.308129863,28.25659943,Daniel 1958,ott1042709
+Strombus raninus,Lobatus raninus,Strombidae,Mesogastropoda,Gastropoda,Mollusca,Lobatus,N,24,-76,P,140,NA,24,0.020267068,26.52319908,Davis et al. 1993,ott4158559
+Strombus gigas,Lobatus gigas,Strombidae,Mesogastropoda,Gastropoda,Mollusca,Lobatus,N,24,-76,P,225,NA,24,0.020267068,26.52319908,Davis et al. 1993,ott4158559
+Strombus costatus,Lobatus costatus,Strombidae,Mesogastropoda,Gastropoda,Mollusca,Lobatus,N,24,-76,P,262,NA,24,0.020267068,26.52319908,Davis et al. 1993,ott4158559
+Polydora giardi,Dipolydora giardi,Spionidae,Spionida,Polychaeta,Annelida,Dipolydora,N,38.250853,-123,P,80,25,38.250853,0.165433632,11.53059006,Day & Blake 1979,ott382879
+Scolecolepis fuliginosa,Scolelepis fulginosa,,Phyllodocida,Polychaeta,Annelida,Scolelepis,N,50,-4,P,130,34,50,0.167980313,12.54950047,Day 1934,ott58639
+Myxicola infundibulum,Myxicola infundibulum,Sabellidae,Sabellida,Polychaeta,Annelida,Myxicola,N,44.777936,-67,L,137,6.5,44.777936,0.226419579,7.355999947,Dean et al 1987,ott1015788
+Aplysiopsis zebra,Aplysiopsis formosa,Hermaeidae,Sacoglossa,Gastropoda,Mollusca,Aplysiopsis,N,27,-80,P,71,NA,27,1.475588376,26.87420082,DeFreese & Clark 1983,ott903295
+Oxynoe azuropunctata,Oxynoe azuropunctata,Oxynoidae,Sacoglossa,Gastropoda,Mollusca,Oxynoe,N,24,-81,L,113,NA,24,1.209522203,26.99490929,DeFreese & Clark 1983,ott588314
+Cadlina luteomarginata,Cadlina luteomarginata,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Cadlina,N,49,-123,P,95,NA,49,0.220556316,10.03800964,Dehnal & Kong 1979,ott981716
+Evechinus chloroticus,Evechinus chloroticus,Echinometridae,Echinoida,Echinoidea,Echinodermata,Evechinus,S,-42,174,P,NA,31.3,42,0.220130563,13.87730026,Dix 1969,ott924048
+Ficopomatus enigmaticus,Ficopomatus enigmaticus,Serpulidae,Sabellida,Polychaeta,Annelida,Ficopomatus,N,51,1,P,40,NA,51,0.175313729,11.91889954,Dixon 1981,ott631822
+Chitinopoma serrula,Chitinopoma serrula,Serpulidae,Sabellida,Polychaeta,Annelida,Chitinopoma,N,69.648491,19,L,180,NA,69.648491,0.205243114,6.667709827,Dons 1933,ott329378
+Boccardia polybranchia,Boccardia polybranchia,Spionidae,Spionida,Polychaeta,Annelida,Boccardia,S,-49,69.647827,L,75,NA,49,0.062233934,3.829210043,Duchene 1984,ott132231
+Sabellaria floridensis,Sabellaria floridensis,Sabellariidae,Terebellida,Polychaeta,Annelida,Sabellaria,N,30,-84,P,83,NA,30,0.017389743,23.49030876,Eckelbarger 1977,ott638889
+Encope michelini,Encope michelini,Mellitidae,Clypeasteroida,Echinoidea,Echinodermata,Encope,N,24,-80,P,175,14,24,0.147893152,26.96759033,Eckert 1995,ott3650799
+Austromegabalanus nigres,Austromegabalanus nigrescens,Balanidae,Sessilia,Maxillopoda,Arthropoda,Austromegabalanus,S,-34,151,P,NA,18,34,0.658320463,19.72261047,Egan & Anderson 1987,ott324424
+Austrobalanus imperator,Austrobalanus imperator,Austrobalanidae,Sessilia,Maxillopoda,Arthropoda,Austrobalanus,S,-34,151,P,NA,NA,34,0.658320463,19.72261047,Egan & Anderson 1988,ott1026335
+Tesseropora rosea,Tesseropora rosea,Tetraclitidae,Sessilia,Maxillopoda,Arthropoda,Tesseropora,S,-34,151,P,NA,NA,34,0.658320463,19.72261047,Egan & Anderson 1988,ott140027
+Tetraclitella purpurasce,Tetraclitella purpurascens,Tetraclitidae,Sessilia,Maxillopoda,Arthropoda,Tetraclitella,S,-34,151,P,NA,NA,34,0.658320463,19.72261047,Egan & Anderson 1988,ott324423
+Diopatra ornata,Diopatra ornata,Onuphidae,Eunicida,Polychaeta,Annelida,Diopatra,N,33,-117,L,230,NA,33,0.188343445,17.45948982,Emerson 1975,ott1042378
+Heliocidaris tuberculata,Heliocidaris tuberculata,Echinometridae,Camarodonta,Echinoidea,Echinodermata,Heliocidaris,S,-33,151,P,93.6,30,33,0.585780803,20.54590988,Emlet & Hoegh-Guldberg 1997,ott146857
+Clypeaster subdepressus,Clypeaster subdepressus,Clypeasteridae,Clypeasteroida,Echinoidea,Echinodermata,Clypeaster,N,10,-79,P,165,16,10,0.587371817,27.9405899,Emlet 1986,ott3649596
+Clypeaster rosaceus,Clypeaster rosaceus,Clypeasteridae,Clypeasteroida,Echinoidea,Echinodermata,Clypeaster,N,24,-80,P,270,7,24,0.147893152,26.96759033,Emlet 1986,ott3649596
+Echinometra lucunter,Echinometra lucunter,Echinometridae,Echinoida,Echinoidea,Echinodermata,Echinometra,N,10,-80,P,82,23,10,0.644591151,27.96689034,Emlet 1995,ott631177
+Echinometra vanbrunti,Echinometra vanbrunti,Echinometridae,Echinoida,Echinoidea,Echinodermata,Echinometra,N,10,-80,P,70,18,10,0.644591151,27.96689034,Emlet 1995,ott631177
+Nicon aestuariensis,Nicon aestuariensis,Nereidae,Phyllodocida,Polychaeta,Annelida,Nicon,S,-43,172.738037,L,150,NA,43,0.02791059,12.24730968,Estcourt 1966,ott4981890
+Arenicola ecaudata,Arenicolides ecaudata,Arenicolidae,,Polychaeta,Annelida,Arenicolides,N,50.356085,-4,L,140,NA,50.356085,0.123523186,12.54950047,Eve & Southward 1958,ott83353
+Diopatra marocensis,Diopatra marocensis,Onuphidae,Eunicida,Polychaeta,Annelida,Diopatra,N,31.546942,-10,L,600,NA,31.546942,0.116687436,17.97609138,Fadlaoui et al. 1995,ott1042378
+Asterias lincki,Urasterias lincki,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Urasterias,N,70,19,L,600,NA,70,0.285439592,6.7427001,Falk-Peterson & Sargent 1982,ott766849
+Ophionereis fasciata,Ophionereis fasciata,Ophionereididae,Ophiurida,Ophiuroidea,Echinodermata,Ophionereis,S,-36,174,P,99,NA,36,0.091147681,17.83588982,Falkner et al. 2006,ott34969
+Bulla gouldiana,Bulla gouldiana,Bullidae,Cephalaspidea,Gastropoda,Mollusca,Bulla,N,31,-116,P,NA,NA,31,0.196880733,16.80158997,Farfan & Ramirez 1988,ott848006
+Arenicola marina,Arenicola marina,Arenicolidae,,Polychaeta,Annelida,Arenicola,N,53.120405,5,L,130,NA,53.120405,0.047491849,11.23259068,Farke & Berghuis 1979,ott153397
+Kingberonuphis pulchra,Kinbergonuphis pulchra,Onuphidae,Eunicida,Polychaeta,Annelida,Kinbergonuphis,N,17,-88,L,330,NA,17,0.115631728,27.84209061,Fauchald 1983,ott4979979
+Lumbrinereis luti,Lumbrineris luti,Lumbrinereidae,Eunicida,Polychaeta,Annelida,Lumbrineris,N,38,-122,L,100,NA,38,0.078173553,13.09209061,Fauchald 1983,ott834687
+Magellona sacculata,Magelona sacculata,Magelonidae,Spionida,Polychaeta,Annelida,Magelona,N,38,-122,P,130,NA,38,0.078173553,13.09209061,Fauchald 1983,ott1067343
+Mediomastus californiens,Mediomastus californiensis,Capitellidae,,Polychaeta,Annelida,Mediomastus,N,38,-122,L,80,NA,38,0.078173553,13.09209061,Fauchald 1983,ott783244
+Mooreonuphis jonesi,Mooreonuphis jonesi,Onuphidae,Eunicida,Polychaeta,Annelida,Mooreonuphis,N,32.324276,-64,L,168,NA,32.324276,0.048863549,23.01150894,Fauchald 1983,ott618835
+Prionospio pigmea,Prionospio pygmaeus,Spionidae,Spionida,Polychaeta,Annelida,Prionospio,N,38,-122,P,60,NA,38,0.078173553,13.09209061,Fauchald 1983,ott275106
+Prionospio cirrifera,Prionospio cirrifera,Spionidae,Spionida,Polychaeta,Annelida,Prionospio,N,38,-122,P,30,NA,38,0.078173553,13.09209061,Fauchald 1983,ott275106
+Tridacna squamosa,Tridacna squamosa,Tridacnidae,Veneroida,Bivalvia,Mollusca,Tridacna,N,6,147,P,140,11,6,0.119807783,29.0750103,Fitt & Trench 1981,ott255553
+Ophiomastix venosa,Ophiomastix venosa,Ophiocomidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiomastix,S,-23,43,L,525,NA,23,0.387102541,26.2262001,Fourgon et al. 2005,ott3653712
+Acteocina canaliculata,Acteocina canaliculata,Cylichnidae,Cephalaspidea,Gastropoda,Mollusca,Acteocina,N,41,-72,P,91.5,6.5,41,0.123950006,11.35380936,Franz 1971,ott2914885
+Tornatina canaliculata,Acteocina canaliculata,Cylichnidae,Cephalaspidea,Gastropoda,Mollusca,Acteocina,N,41,-71,P,91.5,NA,41,0.02300504,11.30280972,Franz 1971,ott2914885
+Pisaster brevispinus,Pisaster brevispinus,Asteriidae,Forcipulata,Asteroidea,Echinodermata,Pisaster,N,50,-123,P,165,NA,50,0.040957509,10.82119083,Fraser et al. 1981,ott76841
+Ophiocten hastatum,Ophiocten hastatum,Ophiurudae,Ophiurida,Ophiuroidea,Echinodermata,Ophiocten,N,54,-12,P,140,NA,54,0.056173567,11.94939995,Gage et al. 2004,ott953588
+Crepidula fecunda,Crepipatella peruviana,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepipatella,S,-41,-72,P,212,NA,41,0.277179141,12.31289959,Gallardo 1977,ott687044
+Asterias rubens,Asterias rubens,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Asterias,N,55,-4,P,175,52.5,55,0.079657719,10.50130939,Gemmil 1914,ott721269
+Crossaster papposus,Crossaster papposus,Solasteridae,Spinulodisa,Asteroidea,Echinodermata,Crossaster,N,55,-4,L,800,19,55,0.079657719,10.50130939,Gemmil 1920,ott426293
+Porania pulvillus,Porania (Porania) pulvillus,Poraniidae,Spinulodisa,Asteroidea,Echinodermata,Porania,N,55,-4,P,200,NA,55,0.079657719,10.50130939,Gemmill 1913,ott843668
+Scolecolepides viridis,Marenzelleria viridis,Spionidae,Spionida,Polychaeta,Annelida,Marenzelleria,N,44.962855,-64,L,230,NA,44.962855,0.284789351,7.91260004,George 1966,ott4324
+Arbacia lixula,Arbacia lixula,Arbaciidae,Arbacioida,Echinoidea,Echinodermata,Arbacia,N,43,7,P,72.9,26,43,0.291258875,17.17739105,George at al 1990,ott146854
+Naineis laevigata,Naineris laevigata,Orbiniidae,,Polychaeta,Annelida,Naineris,N,40.417678,18,L,240,NA,40.417678,0.21171696,18.57551003,Giangrande & Petraroli  1991,ott760488
+Tharyx marioni,Aphelochaeta marioni,Cirratulidae,Spionida,Polychaeta,Annelida,Aphelochaeta,N,51,1,L,190,NA,51,0.175313729,11.91889954,Gibbs 1971,ott1094986
+Haminoea vesicula,Haminoea vesicula,Atyidae,Cephalaspidea,Gastropoda,Mollusca,Haminoea,N,49,-125,P,90,32,49,0.040957509,10.52399063,Gibson & Chia 1989,ott120645
+Dodecaceria concharum,Dodecaceria concharum,Cirratulidae,Spionida,Polychaeta,Annelida,Dodecaceria,N,55.025857,-1,L,100,NA,55.025857,0.081551171,9.94230938,Gibson 1977,ott1067345
+Anasterias minuta,Anasterias antarctica,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Anasterias,S,-45,-67,L,1810,NA,45,0.027789655,11.5770998,Gil et al. 2011,ott985897
+Ceratonereis limnetica,Simplisetia limnetica,Nereidae,Phyllodocida,Polychaeta,Annelida,Simplisetia,S,-33,150.886767,L,220,NA,33,0.585780803,20.54590988,Glasby 1986,ott499830
+Berthella californica,Berthella californica,Pleurobranchiid,Notaspidea,Gastropoda,Mollusca,Berthella,N,43,-124,P,92.6,NA,43,0.071941822,11.41149998,Goddard 1983,ott165262
+Diaphana californica,Diaphana californica,Cephalaspidea,Cephalaspidea,Gastropoda,Mollusca,Diaphana,N,43,-124,P,73,NA,43,0.071941822,11.41149998,Goddard 1983,ott714782
+Aldisa sanguinea,Aldisa sanguinea,Dorididae,Nudibranchia,Gastropoda,Mollusca,Aldisa,N,43,-124,P,90.7,NA,43,0.071941822,11.41149998,Goddard 1991,ott779154
+Cadlina marginata,Cadlina luteomarginata,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Cadlina,N,43,-124,P,94,NA,43,0.071941822,11.41149998,Goddard 1991,ott981716
+Catriona columbiana,Catriona columbiana,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Catriona,N,43,-124,P,100,NA,43,0.071941822,11.41149998,Goddard 1991,ott2876274
+Cuthona fulgens,Cuthona fulgens,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Cuthona,N,43,-124,P,94.3,NA,43,0.071941822,11.41149998,Goddard 1991,ott951821
+Cuthona divae,Cuthona divae,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Cuthona,N,43,-124,P,107.1,NA,43,0.071941822,11.41149998,Goddard 1991,ott951821
+Cuthona abronia,Cuthona abronia,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Cuthona,N,43,-124,P,94.8,NA,43,0.071941822,11.41149998,Goddard 1991,ott951821
+Cuthona cocoachroma,Cuthonella cocoachroma,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Cuthonella,N,43,-124,P,95.4,NA,43,0.071941822,11.41149998,Goddard 1991,ott5735263
+Cuthona lagunae,Diaphoreolis lagunae,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Diaphoreolis,N,43,-124,P,102.3,NA,43,0.071941822,11.41149998,Goddard 1991,NA
+Discodoris sandiegensis,Diaulula sandiegensis,Discodorididae,Nudibranchia,Gastropoda,Mollusca,Diaulula,N,43,-124,P,83,NA,43,0.071941822,11.41149998,Goddard 1991,ott1098564
+Archidoris odhneri,Doris odhneri,Dorididae,Nudibranchia,Gastropoda,Mollusca,Doris,N,43,-124,P,96.1,NA,43,0.071941822,11.41149998,Goddard 1991,ott860557
+Discodoris heathi,Geitodoris heathi,Discodorididae,Nudibranchia,Gastropoda,Mollusca,Geitodoris,N,43,-124,P,78.8,NA,43,0.071941822,11.41149998,Goddard 1991,ott593566
+Cuthona albocrusta,Trinchesia albocrusta,Tergipedidae,Nudibranchia,Gastropoda,Mollusca,Trinchesia,N,43,-124,P,97.2,NA,43,0.071941822,11.41149998,Goddard 1991,ott2876248
+Cumanotus beaumonti,Cumanotus beaumonti,Cumanotidae,Nudibranchia,Gastropoda,Mollusca,Cumanotus,N,43,-124,P,73,NA,43,0.071941822,11.41149998,Goddard 1992,ott2876373
+Eubranchus olivaceus,Eubranchus olivaceus,Eubranchidae,Nudibranchia,Gastropoda,Mollusca,Eubranchus,N,43,-124,P,85,NA,43,0.071941822,11.41149998,Goddard 1992,ott896651
+Flabellina trilineata,Orienthella trilineata,Flabellinidae,Nudibranchia,Gastropoda,Mollusca,Orienthella,N,43,-124,P,65,NA,43,0.071941822,11.41149998,Goddard 1992,NA
+Aplysiopsis enteromorpha,Aplysiopsis enteromorphae,Hermaeidae,Sacoglossa,Gastropoda,Mollusca,Aplysiopsis,N,34,-120,P,68,NA,34,0.03318607,15.03299999,Goddard 2004,ott903295
+Elysia hedgpethi,Elysia hedgpethi,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,34,-120,P,68,NA,34,0.03318607,15.03299999,Goddard 2004,ott322154
+Placida dendritica,Placida dendritica,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Placida,N,34,-120,P,57,NA,34,0.03318607,15.03299999,Goddard 2004,ott322147
+Philine auriformis,Philine auriformis,Philinidae,cephalaspidea,Gastropoda,Mollusca,Philine,N,37,-122,P,79.5,NA,37,0.073368934,13.02889061,Gosliner 1995,ott714769
+Ophiopsammus maculata,Ophiopsammus maculata,Ophiodermatidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiopsammus,S,-47,167,L,600,NA,47,0.174907208,12.31649017,Gould et al. 2001,ott3654830
+Pycnopodia helianthoides,Pycnopodia helianthoides,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Pycnopodia,N,50,-123,P,120,65,50,0.040957509,10.82119083,Greer 1962,ott76846
+Melinna palmata,Melinna palmata,Ampharetidae,Ophiurida,Ophiuroidea,Echinodermata,Melinna,N,52,-9,L,290,NA,52,0.383487679,12.12140942,Grehan et al. 1991,ott585618
+Gyptis rosea,Gyptis rosea,Hesionidae,Phyllodocida,Polychaeta,Annelida,Gyptis,N,59,10,P,90,NA,59,0.314747601,9.571709633,Haaland & Schram 1983,ott1009761
+Ophiodromus flexuosus,Oxydromus flexuosus,Hesionidae,Phyllodocida,Polychaeta,Annelida,Oxydromus,N,59.474384,10,P,108,NA,59.474384,0.157437,9.339609146,Haaland & Schram 1983,ott4166884
+Elysia hamatanii,Elysia hamatanii,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,34,135,P,68,NA,34,0.053331872,19.70858955,Hamatani 1960,ott322154
+Elysia trisinuata,Elysia trisinuata,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,34,135,P,46,NA,34,0.053331872,19.70858955,Hamatani 1967,ott322154
+Pygospio elegans,Pygospio elegans,Spionidae,Spionida,Polychaeta,Annelida,Pygospio,N,58.403151,12,L,300,NA,58.403151,0.00693357,9.55880928,Hannerz 1956,ott608082
+Scottolana canadensis,Scottolana canadensis,Canuellidae,Harpacticoida,Maxillopoda,Arthropoda,Scottolana,N,38,-77,P,NA,5,38,0.161090425,14.56690025,Harris 1977,ott2949551
+Strongylocentrotus droebachiensis,Strongylocentrotus droebachiensis,Strongylocentro,Echinoida,Echinoidea,Echinodermata,Strongylocentrotus,N,48,-123,P,155,36.5,48,0.136874763,9.787690163,Hart 1995,ott564714
+Brisaster latifrons,Brisaster latifrons,Schizasteridae,Spatangoida,Echinoidea,Echinodermata,Brisaster,N,48,-122,L,365,35,48,0.136874763,10.07400036,Hart 1996,ott262653
+Echinarachnius parma,Echinarachnius parma,Echinarachniida,Clypeasteroida,Echinoidea,Echinodermata,Echinarachnius,N,41,-70,P,145,32,41,0.031781489,10.3125906,Harvey 1956,ott3651061
+Cantharidus callichroa,Cantharidus callichroa,Trochidae,Archaeogastropo,Gastropoda,Mollusca,Cantharidus,N,26,120,L,446,NA,26,0.193178113,21.01478958,Havenhand 1993,ott96124
+Doridella steinbergae,Corambe steinbergae,Corambidae,Nudibranchia,Gastropoda,Mollusca,Corambe,N,48,-123,P,80,34,48,0.136874763,9.787690163,Havenhand 1993,ott2876340
+Doridella obscura,Corambe obscura,Corambidae,Nudibranchia,Gastropoda,Mollusca,Corambe,N,48,-123,P,65,13,48,0.136874763,9.787690163,Havenhand 1993,ott2876340
+Haminoea callidegenita,Haminoea japonica,Haminoedae,Cephalaspidea,Gastropoda,Mollusca,Haminoea,N,47,-122,L,220,NA,47,0.051839835,10.07400036,Havenhand 1993,ott120645
+Phidiana lycnaeus,Phidiana lynceus,Phidianidae,Nudibranchia,Gastropoda,Mollusca,Phidiana,N,17,-88,L,140,7,17,0.115631728,27.84209061,Havenhand 1993,ott617585
+Tritonia hombergi,Tritonia hombergii,Tritoniidae,Nudibranchia,Gastropoda,Mollusca,Tritonia,N,34,-4,L,200,43,34,0.420663719,18.26789093,Havenhand 1993,ott650635
+Pholoe minuta,Pholoe minuta,Sigalionidae,Phyllodocida,Polychaeta,Annelida,Pholoe,N,55.372868,-1,P,135,NA,55.372868,0.081551171,9.931690216,Heffernanan & Keegan 1988,ott398717
+Acanthaster planci,Acanthaster planci,Acanthasteridae,Spinulodisa,Asteroidea,Echinodermata,Acanthaster,S,-10,146,P,175,38,10,0.199498478,27.32588959,Henderson & Lucas 1971,ott337928
+Amphiodia pulchella,Amphiodia pulchella,Amphiuridae,Ophiurida,Ophiuroidea,Echinodermata,Amphiodia,N,16,-88,P,65,NA,16,0.095193988,27.94749069,Hendler & Littman 1986,ott573285
+Ophionereis reticulata,Ophionereis reticulata,Ophionereididae,Ophiurida,Ophiuroidea,Echinodermata,Ophionereis,N,18,-77,P,250,NA,18,0.120459857,27.76840973,Hendler & Littman 1986,ott34969
+Ophiopsila riisei,Ophiopsila riisei,Ophiocomidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiopsila,N,18,-77,L,230,NA,18,0.120459857,27.76840973,Hendler & Littman 1986,ott3653699
+Acrocnida brachiata,Acrocnida brachiata,Amphiuridae,Ophiurida,Ophiuroidea,Echinodermata,Acrocnida,N,54,-4,P,140,NA,54,0.079657719,10.7044096,Hendler 1991,ott1069189
+Amphioplus abditus,Amphioplus abditus,Amphiuridae,Ophiurida,Ophiuroidea,Echinodermata,Amphioplus,N,41,-73,L,160,NA,41,0.055490007,11.27120972,Hendler 1991,ott3654047
+Ophiocomella ophiactoide,Ophiocomella ophiactoide,Ophiocomidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiocomella,N,18,-77,P,80,NA,18,0.120459857,27.76840973,Hendler 1991,ott3653714
+Ophiolepis impressa,Ophiolepis impressa,Ophiurudae,Ophiurida,Ophiuroidea,Echinodermata,Ophiolepis,N,17,-88,L,200,NA,17,0.115631728,27.84209061,Hendler 1991,ott3654979
+Ophionereis annulata,Ophionereis annulata,Ophionereididae,Ophiurida,Ophiuroidea,Echinodermata,Ophionereis,N,8,-79,L,240,NA,8,0.19197631,27.07349014,Hendler 1991,ott34969
+Armandia brevis,Armandia brevis,Opheliidae,,Polychaeta,Annelida,Armandia,N,48.537522,-123,P,60,NA,48.537522,0.220556316,9.867109299,"Hermans 1964, 1969; Hermans & Cloney 1966",ott93886
+Encope aberrans,Encope michelini,Mellitidae,Clypeasteroida,Echinoidea,Echinodermata,Encope,N,24,-80,P,190,7,24,0.147893152,26.96759033,Herrera 1998,ott3650799
+Pseudochitinopoma occide,Pseudochitinopoma occidentalis,Serpulidae,Sabellida,Polychaeta,Annelida,Pseudochitinopoma,N,48.537522,-123,P,60,NA,48.537522,0.220556316,9.867109299,Hess 1993,ott44734
+Crepidula protea,Crepidula protea,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crepidula,S,-24,-42,P,150,NA,24,0.22860813,24.30579948,Hoagland 1983,ott24075
+Stylocidaris affinis,Stylocidaris affinis,Cidaridae,Cidaroida,Asteroidea,Echinodermata,Stylocidaris,N,41,14,P,110,NA,41,0.063237197,19.15680885,Holland 1967,ott1052951
+Astropecten auranciacus,Astropecten aranciacus,Astropectinidae,Paxillodisa,Asteroidea,Echinodermata,Astropecten,N,45,13,P,195,80,45,0.218961059,16.83670044,Horstadius 1939,ott269237
+Cerithium eburneum,Cerithium eburneum,Cerithiidae,Caenogastropoda,Gastropoda,Mollusca,Cerithium,N,26,-80,P,90,NA,26,0.472222748,27.07529068,Houbrick 1973,ott409473
+Cerithium nodulosum,Cerithium nodulosum,Cerithiidae,Caenogastropoda,Gastropoda,Mollusca,Cerithium,N,11,162,P,200,NA,11,0.218556338,28.18740082,Houbrick 1973,ott409473
+Cerithium muscarum,Cerithium muscarum,Cerithiidae,Caenogastropoda,Gastropoda,Mollusca,Cerithium,N,26,-80,P,250,NA,26,0.472222748,27.07529068,Houbrick 1973,ott409473
+Cerithium floridanum,Cerithium atratum,Cerithiidae,Caenogastropoda,Gastropoda,Mollusca,Cerithium,N,26,-80,P,100,NA,26,0.472222748,27.07529068,Houbrick 1973,ott409473
+Cerithium variabile,Cerithium lutosum,Cerithiidae,Caenogastropoda,Gastropoda,Mollusca,Cerithium,N,26,-80,P,200,NA,26,0.472222748,27.07529068,Houbrick 1973,ott409473
+Kingberonuphis simoni,Kinbergonuphis simoni,Onuphidae,Eunicida,Polychaeta,Annelida,Kinbergonuphis,N,28,-83,L,370,NA,28,0.180389506,23.64659119,Hsieh & Simon 1987,ott4979979
+Haliotis rubra,Haliotis rubra,Haliotidae,,Gastropoda,Mollusca,Haliotis,S,-38,144,L,207.65,NA,38,0.692250769,15.62879086,Huchette et al. 2004,ott228119
+Cypraecassis testiculus,Cypraecassis testiculus,Cassidae,Mesogastropoda,Gastropoda,Mollusca,Cypraecassis,N,13,-59,P,149,NA,13,0.069356002,27.54010963,Hughes & Hughes 1987,ott2889884
+Siphopatella walshi,Siphopatella walshi,Calyptraeidae,Caenogastropoda,Gastropoda,Mollusca,Siphopatella,N,22,114,P,250,NA,22,0.145798372,24.54298973,Ishiki 1939,ott162615
+Asterina burtoni,Aquilonastra burtoni,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Aquilonastra,N,15,81,L,500,5,15,0.177482625,28.31459045,James 1972,ott881871
+Arachnoides placenta,Arachnoides placenta,Arachnoididae,Clypeasteroida,Echinoidea,Echinodermata,Arachnoides,N,15,120,P,110,10,15,0.307159627,28.49060059,Jangoux & Lawrence 1982,ott3651166
+Elysia japonica,Elysia japonica,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,22,114,P,91,NA,22,0.145798372,24.54298973,Jensen 1985,ott322154
+Elysia atroviridis,Elysia atroviridis,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,22,114,P,54,NA,22,0.145798372,24.54298973,Jensen 1985,ott322154
+Calliopaea oophaga,Calliopaea oophaga,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Calliopaea,N,56,10,P,61.7,NA,56,0.086931549,9.526109695,Jensen 1986,ott1039062
+Elysia thompsoni,Elysia thompsoni,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,S,-25,114,P,62,NA,25,0.051180335,23.10758972,Jensen 1993,ott322154
+Ercolania endophytophaga,Ercolania endophytophaga,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Ercolania,S,-35,118,P,77.1,NA,35,0.400323843,18.64589119,Jensen 2001,ott1076308
+Ercolania emarginata,Ercolania boodleae,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Ercolania,N,22,114,P,63.4,NA,22,0.145798372,24.54298973,Jensen 2001,ott1076308
+Oxynoe olivacea,Oxynoe olivacea,Oxynoidae,Sacoglossa,Gastropoda,Mollusca,Oxynoe,N,40,0,P,65,NA,40,0.145182515,18.75199127,Jensen 2001,ott588314
+Thuridilla vatae,Thuridilla vataae,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Thuridilla,N,11,162,P,60,NA,11,0.218556338,28.18740082,Johnson & Boucher 1983,ott578609
+Thuridilla gracilis (rat,Thuridilla gracilis,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Thuridilla,N,11,162,P,80,NA,11,0.218556338,28.18740082,Johnson & Boucher 1983,ott578609
+Nereis vexillosa,Nereis vexillosa,Nereidae,Phyllodocida,Polychaeta,Annelida,Nereis,N,48.537522,-123,L,200,NA,48.537522,0.220556316,9.867109299,Johnson 1943,ott305738
+Scolelepis squamata,Scolelepis (Scolelepis) squamata,Spionidae,Spionida,Polychaeta,Annelida,Scolelepis,N,51.368351,1,P,240,NA,51.368351,0.175313729,11.81680012,Joyner 1962,ott58639
+Asterina batheri,Aquilonastra batheri,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Aquilonastra,N,35,137,L,430,10,35,0.191808836,19.32069016,Kano & Komatsu 1978,ott881871
+Berthelinia limax,Berthelinia limax,Juliidae,Sacoglossa,Gastropoda,Mollusca,Berthelinia,N,32,130,L,250,NA,32,0.135521512,20.54759026,Kawaguti & Yamasu 1960,ott5719938
+Julia japonica,Julia japonica,Juliidae,Sacoglossa,Gastropoda,Mollusca,Julia,N,32,130,P,65,NA,32,0.135521512,20.54759026,Kawaguti & Yamasu 1960,ott1036544
+Echinaster echinophorus,Echinaster echinophorus,Echinasteridae,Spinulodisa,Asteroidea,Echinodermata,Echinaster,N,30,-82,L,1000,10,30,0.178670299,24.04749107,Kempf 1966,ott893170
+Echinaster echinophorus,Echinaster echinophorus,Echinasteridae,Spinulodisa,Asteroidea,Echinodermata,Echinaster,N,30,-82,L,1000,10,30,0.178670299,24.04749107,Kempf 1966,ott893170
+Macoma mitchelli,Ameritella mitchelli,Tellinidae,Veneroida,Bivalvia,Mollusca,Ameritella,N,38,-76,P,59,6.5,38,0.161090425,14.56690025,Kennedy & Lutz 1989,ott5718656
+Nepanthia belcheri,Nepanthia belcheri,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Nepanthia,S,-19,146,L,450,NA,19,0.257141842,26.78990936,Kenny 1969,ott656008
+Perkinsiana antarctica,Perkinsiana antarctica,Sabellidae,Sabellida,Polychaeta,Annelida,Perkinsiana,S,-52,-60,L,195,NA,52,0.087009506,6.517610073,Knight-Jones & Bowden 1984,ott4987349
+Conus catus,Conus catus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,200,NA,21,0.111114649,25.24470901,Kohn 1961a,ott126315
+Conus vexillum,Conus vexillum,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,140,NA,21,0.111114649,25.24470901,Kohn 1961a,ott126315
+Conus vitulinus,Conus vitulinus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,225,NA,21,0.111114649,25.24470901,Kohn 1961a,ott126315
+Conus canonicus,Conus canonicus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-4,55,P,233,21,4,0.019371393,27.92080879,kohn 1961b,ott126315
+Conus moreleti,Conus moreleti,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-4,55,P,150,28,4,0.019371393,27.92080879,kohn 1961b,ott126315
+Conus geographus,Conus geographus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-4,55,P,190,27,4,0.019371393,27.92080879,kohn 1961b,ott126315
+Conus imperialis,Conus imperialis,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-4,55,P,220,22,4,0.019371393,27.92080879,kohn 1961b,ott126315
+Conus varius,Conus varius,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-4,55,P,160,27,4,0.019371393,27.92080879,kohn 1961b,ott126315
+Conus aristophanes,Conus aristophanes,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-17,178,P,186,25,17,0.120354375,27.16889,Kohn and Perron 1994,ott126315
+Conus eburneus,Conus eburneus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,11,162,P,150,28,11,0.218556338,28.18740082,Kohn and Perron 1994,ott126315
+Conus bandanus,Conus bandanus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,134,P,299,15,7,0.043304691,28.83070946,Kohn and Perron 1994,ott126315
+Conus omaria,Conus omaria,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,134,P,340,12,7,0.043304691,28.83070946,Kohn and Perron 1994,ott126315
+Conus chaldaeus,Conus chaldaeus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-19,-169,P,175,25,19,0.086787733,26.77579117,Kohn and Perron 1994,ott126315
+Conus araneosus,Conus araneosus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,12,122,P,492,1.5,12,0.199871816,28.20970917,Kohn and Perron 1994,ott126315
+Conus suratensis,Conus suratensis,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,16,120,P,207,23,16,0.233382304,28.3834095,Kohn and Perron 1994,ott126315
+Conus distans,Conus distans,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,134,P,148,28,7,0.043304691,28.83070946,Kohn and Perron 1994,ott126315
+Conus planorbis,Conus planorbis,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,13,121,P,214,22,13,0.358898472,28.28079033,Kohn and Perron 1994,ott126315
+Conus capitaneus,Conus capitaneus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,9,100,P,142.5,28.5,9,0.166499822,28.78680992,Kohn and Perron 1994,ott126315
+Conus tessulatus,Conus tessulatus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,27,51,P,250,19,27,0.304862262,26.28890991,Kohn and Perron 1994,ott126315
+Conus litteratus,Conus litteratus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,134,P,201,23,7,0.043304691,28.83070946,Kohn and Perron 1994,ott126315
+Conus miles,Conus miles,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,8,159,P,228,21,8,0.047772429,28.74658966,Kohn and Perron 1994,ott126315
+Conus striatellus,Conus striatellus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,134,P,193,24,7,0.043304691,28.83070946,Kohn and Perron 1994,ott126315
+Conus striolatus,Conus striolatus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,135,P,224,21,7,0.068971918,28.88099098,Kohn and Perron 1994,ott126315
+Conus episcopus,Conus pennaceus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,134,P,275,17,7,0.043304691,28.83070946,Kohn and Perron 1994,ott126315
+Conus stercusmuscarum,Conus stercusmuscarum,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,13,121,P,235,20,13,0.358898472,28.28079033,Kohn and Perron 1994,ott126315
+Conus coffeae,Conus coffeae,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,134,P,222,21,7,0.043304691,28.83070946,Kohn and Perron 1994,ott126315
+Conus frigidus,Conus frigidus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-3,100,P,212,22,3,0.228442534,29.0988903,Kohn and Perron 1994,ott126315
+Astropecten gisselbrecht,Astropecten gisselbrecht,Astropectentida,Paxillosida,Asteroidea,Echinodermata,Astropecten,N,33,130,L,353,3.38,33,0.04710635,21.10949135,Komatsu & Nojima 1985,ott269237
+Ctenopleura fisheri,Ctenopleura fisheri,Astropectinidae,Paxillodisa,Asteroidea,Echinodermata,Ctenopleura,N,57,137,L,465,15,57,0.087012374,3.428989887,Komatsu 1982,ott461258
+Asterina coronata,Aquilonastra coronata,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Aquilonastra,N,40,135,L,430,30,40,0.101719403,12.51439953,Komatsu et al 1979,ott881871
+Asterina minor,Aquilonastra minor,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Aquilonastra,N,40,135,L,440,10,40,0.101719403,12.51439953,Komatsu et al 1979,ott881871
+Orthopyxis compressa,Orthopyxis compressa,Campanularidae,Hydroida,Hydrozoa,Cnidaria,Orthopyxis,N,48,-123,P,210,NA,48,0.136874763,9.787690163,Kramp 1961,ott144201
+Diopatra variabilis,Diopatra variabilis,Onuphidae,Eunicida,Polychaeta,Annelida,Diopatra,N,13,80,L,600,NA,13,0.308129863,28.25659943,Krishnan 1936,ott1042378
+Ondina diaphana,Ondina diaphana,Pyramidellidae,,Gastropoda,Mollusca,Ondina,N,48,-4,P,80,NA,48,0.12954893,13.6171999,Kristensen 1970,ott460907
+Alderia willowi (benthic,Alderia willowi,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Alderia,N,33,-117,L,68,1.5,33,0.188343445,17.45948982,Krug 2007,ott239301
+Alderia willowi (plankto,Alderia willowi,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Alderia,N,33,-117,P,105,32,33,0.188343445,17.45948982,Krug 2007,ott239301
+Alderia modesta,Alderia modesta,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Alderia,N,38,-123,P,78,30.5,38,0.165433632,11.53059006,Krug 2007,ott239301
+Elysia zuleicae,Elysia zuleicae,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,18,-77,P,66.1,NA,18,0.120459857,27.76840973,Krug 2009,ott322154
+Elysia (Boselia) marcusi,Elysia marcusi,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,18,-77,L,103.9,5.5,18,0.120459857,27.76840973,Krug 2009,ott322154
+Elysia pratensis,Elysia pratensis,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,24,-81,L,117.9,NA,24,1.209522203,26.99490929,Krug 2009,ott322154
+Elysia cornigera,Elysia cornigera,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,24,-81,L,105,NA,24,1.209522203,26.99490929,Krug 2009,ott322154
+Elysia subornata,Elysia subornata,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,24,-81,L,119.2,NA,24,1.209522203,26.99490929,Krug 2009,ott322154
+Elysia crispata,Elysia crispata,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,12,-68,L,106.1,NA,12,0.326181622,27.25750923,Krug 2009,ott322154
+Elysia tuca,Elysia velutinus,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,22,-73,L,104.8,NA,22,0.091023813,27.04380035,Krug 2009,ott322154
+Elysia papillosa,Elysia papillosa,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,24,-81,L,116.3,NA,24,1.209522203,26.99490929,Krug 2009,ott322154
+Sphaeropomatus miamiensi,Ficopomatus miamiensis,Serpulidae,Sabellida,Polychaeta,Annelida,Ficopomatus,N,13,-59,P,48,4,13,0.069356002,27.54010963,Lacalli 1977,ott631822
+Spirobranchus polycerus,Spirobranchus polycerus,Serpulidae,Sabellida,Polychaeta,Annelida,Spirobranchus,N,13,-59,P,65,NA,13,0.069356002,27.54010963,Lacalli 1977,ott906173
+Pectinaria granulata,Cistenides granulata,Pectinariidae,Terebellida,Polychaeta,Annelida,Cistenides,N,69.162558,-53,P,68,NA,69.162558,0.059601692,1.747200012,Lacalli 1980,ott177557
+Nereis pelagica,Nereis pelagica,Nereididae,Phyllodocida,Polychaeta,Annelida,Nereis,N,50.352471,-4,L,180,NA,50.352471,0.123523186,12.54950047,Lacalli 1980,ott305738
+Phyllodoce maculata,Phyllodoce maculata,Phyllodocidae,Phyllodocida,Polychaeta,Annelida,Phyllodoce,N,45.073521,-67,P,110,NA,45.073521,0.226419579,7.355999947,Lacalli 1980,ott398723
+Clione limacina,Clione limacina,Clionidae,,Gastropoda,Mollusca,Clione,N,50,-4,P,85,17.5,50,0.167980313,12.54950047,Lebour 1931,ott191196
+Natica catena,Euspira catena,Naticidae,Neotaenioglossa,Gastropoda,Mollusca,Euspira,N,50,-4,P,160,NA,50,0.167980313,12.54950047,Lebour 1936,ott540620
+Alvania punctura,Alvania punctura,Rissoidae,,Gastropoda,Mollusca,Alvania,N,50,-4,P,60,NA,50,0.167980313,12.54950047,Lebour 1937,ott606380
+Cantharidus exasperatus,Cantharidus exasperatus,Trochidae,Archaeogastropo,Gastropoda,Mollusca,Cantharidus,N,48,-3,L,160,NA,48,0.07694893,13.87839031,Lebour 1937,ott96124
+Natica poliana,Euspira nitida,Naticidae,Neotaenioglossa,Gastropoda,Mollusca,Euspira,N,50,-4,P,140,NA,50,0.167980313,12.54950047,Lebour 1937,ott540620
+Lacuna vincta,Lacuna vincta,Littorinidae,,Gastropoda,Mollusca,Lacuna,N,50,-4,P,180,NA,50,0.167980313,12.54950047,Lebour 1937,ott415699
+Littorina neritoides,Littorina neritoides,Littorinidae,Neotaenioglossa,Gastropoda,Mollusca,Littorina,N,50,-4,P,80,NA,50,0.167980313,12.54950047,Lebour 1937,ott622240
+Littorina littorea,Littorina littorea,Littorinidae,Neotaenioglossa,Gastropoda,Mollusca,Littorina,N,50,-4,P,205,NA,50,0.167980313,12.54950047,Lebour 1937,ott622240
+Balcis alba,Melanella alba,Eulimidae,,Gastropoda,Mollusca,Melanella,N,50,-4,P,100,NA,50,0.167980313,12.54950047,Lebour 1937,ott1010588
+Littorina neritoides,Melarhaphe neritoides,Littorinidae,Neotaenioglossa,Gastropoda,Mollusca,Melarhaphe,N,50,-4,P,80,NA,50,0.167980313,12.54950047,Lebour 1937,ott489963
+Chrysallida decussata,Parthenina decussata,Pyramidellidae,,Gastropoda,Mollusca,Parthenina,N,50,-4,P,90,NA,50,0.167980313,12.54950047,Lebour 1937,ott987428
+Patella vulgata,Patella vulgata,Patellidae,,Gastropoda,Mollusca,Patella,N,50,-4,P,160,NA,50,0.167980313,12.54950047,Lebour 1937,ott717802
+Patina pellucida,Patella pellucida,Patellidae,Prosobranchia,Gastropoda,Mollusca,Patella,N,50,-4,L,320,NA,50,0.167980313,12.54950047,Lebour 1937,ott717802
+Pelseneeria stylifera,Pelseneeria stylifera,Eulimidae,,Gastropoda,Mollusca,Pelseneeria,N,50,-4,P,100,NA,50,0.167980313,12.54950047,Lebour 1937,ott6359900
+Rissoa membranacea,Rissoa membranacea,Rissoidae,,Gastropoda,Mollusca,Rissoa,N,50,-4,P,130,NA,50,0.167980313,12.54950047,Lebour 1937,ott1000553
+Simnia patula,Simnia patula,Ovulidae,Littorinimorpha,Gastropoda,Mollusca,Simnia,N,50,-4,P,130,NA,50,0.167980313,12.54950047,Lebour 1937,ott391830
+Trophon muricatus,Trophonopsis muricata,Muricidae,Neogastropoda,Gastropoda,Mollusca,Trophonopsis,N,50,-4,L,480,NA,50,0.167980313,12.54950047,Lebour 1937,ott2910244
+Branchiomma luctuosum,Branchiomma luctuosum,Sabellidae,Sabellida,Polychaeta,Annelida,Branchiomma,N,40.737633,14,L,140,5,40.737633,0.063237197,19.18870926,Licciano et al 2002,ott1015093
+Echinus esculentus,Echinus esculentus,Echinidae,Echinoida,Echinoidea,Echinodermata,Echinus,N,50,-4,P,180,42,50,0.167980313,12.54950047,MacBride 1903,ott616574
+Nodilittorina trochoides,Echinolittorina pascua,Littorinidae,Littorinimorpha,Gastropoda,Mollusca,Echinolittorina,N,22,114,P,65,NA,22,0.145798372,24.54298973,Mak 1995,ott265762
+Nodilittorina vidua,Echinolittorina vidua,Littorinidae,Littorinimorpha,Gastropoda,Mollusca,Echinolittorina,N,22,114,P,65,NA,22,0.145798372,24.54298973,Mak 1995,ott265762
+Littoraria articulata,Littoraria articulata,Littorinidae,Littorinimorpha,Gastropoda,Mollusca,Littoraria,N,22,114,P,70,NA,22,0.145798372,24.54298973,Mak 1995,ott952044
+Nodilittorina trochoides,Nodilittorina trochoides,Littorinidae,Littorinimorpha,Gastropoda,Mollusca,Nodilittorina,N,22,114,P,65,NA,22,0.145798372,24.54298973,Mak 1995,ott182101
+Peasiella roepstorffiana,Peasiella roepstorffiana,Littorinidae,Littorinimorpha,Gastropoda,Mollusca,Peasiella,N,22,114,P,70,NA,22,0.145798372,24.54298973,Mak 1995,ott789232
+Dipolydora melanopalpa,Dipolydora melanopalpa,Spionidae,Spionida,Polychaeta,Annelida,Dipolydora,N,42,132,L,80,NA,42,0.027145034,8.128600121,Manchenko & Radashevsky 2002,ott382879
+Manayunkia caspica,Manayunkia caspica,Sabellidae,Sabellida,Polychaeta,Annelida,Manayunkia,N,45.294211,28,L,120,NA,45.294211,0.073408718,13.75169086,Marinescu 1964,ott5128
+Galeolaria caespitosa,Galeolaria caespitosa,Serpulidae,Sabellida,Polychaeta,Annelida,Galeolaria,S,-33,151.202087,P,64,12,33,0.585780803,20.54590988,Marsden & Anderson 1981,ott702957
+Pyura fissa,Pyura fissa,Pyuridae,Stolidobranchia,Ascidiacea,Chordata,Pyura,S,-35,137,L,175.78,NA,35,0.144487574,17.74400902,Marshall & Keough 2008,ott176549
+Pyura stolonifera,Pyura stolonifera,Pyuridae,Stolidobranchia,Ascidiacea,Chordata,Pyura,S,-38,144,L,269,NA,38,0.692250769,15.62879086,Marshall & Keough 2008,ott176549
+Ambylpneustes formosus,Amblypneustes formosus,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Amblypneustes,S,-38,144,L,399,NA,38,0.692250769,15.62879086,Marshall et al. 2012,ott187525
+Amblypneustes pallidus,Amblypneustes pallidus,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Amblypneustes,S,-34,135,L,415.24,NA,34,0.024184786,17.07759094,Marshall et al. 2012,ott187525
+Amblypneustes ovum,Amblypneustes ovum,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Amblypneustes,S,-38,144,L,472,NA,38,0.692250769,15.62879086,Marshall et al. 2012,ott187525
+Ambylpneustes pachistus,Amblypneustes elevatus,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Amblypneustes,S,-34,138,L,383,NA,34,0.144487574,17.60709953,Marshall et al. 2012,ott187525
+Araeosoma owstoni,Araeosoma owstoni,Echinothuriidae,Echinothurioida,Echinoidea,Echinodermata,Araeosoma,N,34,139,L,1200,NA,34,0.539515645,21.06619072,Marshall et al. 2012,ott788003
+Araeosoma fenestratum,Araeosoma fenestratum,Echinothuriidae,Echinothurioida,Echinoidea,Echinodermata,Araeosoma,N,57,-10,L,1250,NA,57,0.070035989,11.3216095,Marshall et al. 2012,ott788003
+Ascobulla ulla,Ascobulla ulla,Volvatellidae,Sacoglossa,Gastropoda,Mollusca,Ascobulla,N,32,-65,L,99.3,NA,32,0.0156624,23.06729126,Marshall et al. 2012,ott298760
+Mangelia nebula,Bela nebula,Conidae,Neogastropoda,Gastropoda,Mollusca,Bela,N,50,-4,P,160,NA,50,0.167980313,12.54950047,Marshall et al. 2012,ott2910298
+Berthelinia  sp.1,Berthelinia,Juliidae,Sacoglossa,Gastropoda,Mollusca,Berthelinia,S,-31,159,L,90.5,NA,31,0.047935813,21.72961044,Marshall et al. 2012,ott5719938
+Bosellia sp.,Bosellia,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Bosellia,S,-27,153,P,56,NA,27,0.057735343,23.96480942,Marshall et al. 2012,ott462111
+Breynia australiasiae,Breynia australasiae,Loveniidae,Spatangoida,Echinoidea,Echinodermata,Breynia,S,-33,159,L,377,NA,33,0.166295026,20.93809128,Marshall et al. 2012,ott3649735
+Brissus obesus,Brissus obesus,Schizasteridae,Spatangoida,Echinoidea,Echinodermata,Brissus,N,10,-79,P,117.5,NA,10,0.587371817,27.9405899,Marshall et al. 2012,ott854445
+Bushiella abnormis,Bushiella abnormis,Spirorbidae,Sabellida,Polychaeta,Annelida,Bushiella,N,48,-123,L,185,NA,48,0.136874763,9.787690163,Marshall et al. 2012,ott511721
+Calveriosoma hystrix,Calveriosoma hystrix,Echinothuriidae,Echinothurioida,Echinoidea,Echinodermata,Calveriosoma,N,57,-10,L,1250,NA,57,0.070035989,11.3216095,Marshall et al. 2012,ott3650882
+Circeis armoricana,Circeis armoricana,Spirorbidae,Sabellida,Polychaeta,Annelida,Circeis,N,48,-123,L,167,NA,48,0.136874763,9.787690163,Marshall et al. 2012,ott617647
+Clypeaster australasiae,Clypeaster australasiae,Clypeasteridae,Clypeasteroida,Echinoidea,Echinodermata,Clypeaster,S,-33,151,P,88.56,NA,33,0.585780803,20.54590988,Marshall et al. 2012,ott3649596
+Conus victoriae,Conus victoriae,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-14,125,P,621,NA,14,0.012261634,28.04429054,Marshall et al. 2012,ott126315
+Conus thalassiarchus,Conus thalassiarchus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,8,117,P,602,NA,8,0.421524107,28.72019958,Marshall et al. 2012,ott126315
+Conus furvus,Conus furvus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,9,118,P,697,NA,9,0.193052096,28.63239098,Marshall et al. 2012,ott126315
+Conus magus,Conus magus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,13,121,P,566,NA,13,0.358898472,28.28079033,Marshall et al. 2012,ott126315
+Conus consors,Conus consors,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,7,134,P,389,7,7,0.043304691,28.83070946,Marshall et al. 2012,ott126315
+Conus stramineus,Conus stramineus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,13,121,P,537,NA,13,0.358898472,28.28079033,Marshall et al. 2012,ott126315
+Conus cinereus,Conus cinereus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,16,120,P,480,NA,16,0.233382304,28.3834095,Marshall et al. 2012,ott126315
+Costasiella usagi,Costasiella usagi,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Costasiella,N,13,144,P,79.8,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott639889
+Costasiella sp. 2 Guam,Costasiella,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Costasiella,N,13,144,P,62.7,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott639889
+"Costasiella sp. 3, cf. o",Costasiella,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Costasiella,N,13,144,P,77.2,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott639889
+Costasiella sp. 4 Guam,Costasiella,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Costasiella,N,13,144,L,105.2,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott639889
+Costasiella sp. 1 Guam,Costasiella,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Costasiella,N,13,144,P,67.3,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott639889
+Cyerce sp. 2,Cyerce,Polybranchiidae,Sacoglossa,Gastropoda,Mollusca,Cyerce,N,13,144,P,52.9,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott898991
+Cyerce nigra,Cyerce nigra,Polybranchiidae,Sacoglossa,Gastropoda,Mollusca,Cyerce,N,13,144,P,57.2,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott898991
+Cyerce sp. Bahamas,Cyerce,Polybranchiidae,Sacoglossa,Gastropoda,Mollusca,Cyerce,N,27,-78,P,61.8,NA,27,0.281421591,25.7720089,Marshall et al. 2012,ott898991
+Cylindrobulla sp1,Cylindrobulla,Volvatellidae,Sacoglossa,Gastropoda,Mollusca,Cylindrobulla,S,-31,159,L,114.7,NA,31,0.047935813,21.72961044,Marshall et al. 2012,ott2883775
+Echinosigra phiale,Echinosigra phiale,Pourtalesiidae,Pourtalesoida,Echinoidea,Echinodermata,Echinosigra,N,57,-12,L,335,NA,57,0.160720632,11.2353096,Marshall et al. 2012,ott3650192
+Echinostrephus aciculatu,Echinostrephus aciculatus,Echinometridae,Echinoida,Echinoidea,Echinodermata,Echinostrephus,N,35,136,P,150,NA,35,0.415158452,18.08909035,Marshall et al. 2012,ott694973
+Elysia marginata,Elysia marginata,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,13,144,P,55.7,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott322154
+Elysia pusilla,Elysia pusilla,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,13,144,P,97,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott322154
+Elysia patina,Elysia patina,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,12,-69,P,67.2,NA,12,0.346098317,27.17790985,Marshall et al. 2012,ott322154
+"Elysia sp. 18, Rhipilia",Elysia,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,26,-79,P,61.2,NA,26,0.352894985,26.89310074,Marshall et al. 2012,ott322154
+Elysia ornata,Elysia ornata,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,12,-69,P,59.4,NA,12,0.346098317,27.17790985,Marshall et al. 2012,ott322154
+E. furvacauda,Elysia furvacaud,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,S,-31,159,L,126.1,NA,31,0.047935813,21.72961044,Marshall et al. 2012,ott322154
+"Elysia sp. 24, cf brown",Elysia,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,S,-31,159,P,67.1,NA,31,0.047935813,21.72961044,Marshall et al. 2012,ott322154
+"Elysia sp. 22, gold spot",Elysia,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,S,-31,159,P,71.5,NA,31,0.047935813,21.72961044,Marshall et al. 2012,ott322154
+"Elysia sp. 15, Udotea-ea",Elysia,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,13,144,L,67.1,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott322154
+Echinus affinis,Gracilechinus affinis,Echinidae,Echinoida,Echinoidea,Echinodermata,Gracilechinus,N,57,-10,P,90,NA,57,0.070035989,11.3216095,Marshall et al. 2012,ott350764
+Holopneustes maroon,Holopneustes,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Holopneustes,S,-34,138,L,385.48,NA,34,0.144487574,17.60709953,Marshall et al. 2012,ott9415
+Holopneustes porosissimu,Holopneustes porosissimus,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Holopneustes,S,-38,144,L,426.4,NA,38,0.692250769,15.62879086,Marshall et al. 2012,ott9415
+Hydroides elegans (as no,Hydroides elegans,Serpulidae,Sabellida,Polychaeta,Annelida,Hydroides,S,-33,151.247749,P,45,NA,33,0.585780803,20.54590988,Marshall et al. 2012,ott327392
+Hygrosoma petersii,Hygrosoma petersii,Echinothuriidae,Echinothurioida,Echinoidea,Echinodermata,Hygrosoma,N,57,-10,L,1150,NA,57,0.070035989,11.3216095,Marshall et al. 2012,ott3650889
+Limacina retroversa,Limacina retroversa,Limacinidae,Thecosomata,Gastropoda,Mollusca,Limacina,N,50,-4,P,90,NA,50,0.167980313,12.54950047,Marshall et al. 2012,ott386771
+Cymatium cutaceum,Linatella caudata,Cymatiidae,Mesogastropoda,Gastropoda,Mollusca,Linatella,N,41,2,P,151,NA,41,0.300958531,17.94771004,Marshall et al. 2012,NA
+Lobiger viridis,Lobiger viridis,Oxynoidae,Sacoglossa,Gastropoda,Mollusca,Lobiger,S,-31,159,P,73.3,NA,31,0.047935813,21.72961044,Marshall et al. 2012,ott1036542
+Lytechinus williamsi,Lytechinus williamsi,Toxopneustidae,Temnopleuroida,Echinoidea,Echinodermata,Lytechinus,N,10,-79,P,103,NA,10,0.587371817,27.9405899,Marshall et al. 2012,ott561246
+Lytechinus anamesus,Lytechinus pictus,Toxopneustidae,Temnopleuroida,Echinoidea,Echinodermata,Lytechinus,N,32,-117,P,111,NA,32,0.083517241,17.20730972,Marshall et al. 2012,ott561246
+Encope stokesii,Mellitella stokesii,Curculionoidea,Clypeasteroida,Echinoidea,Echinodermata,Mellitella,N,10,-88,P,114,NA,10,0.332408603,26.87471008,Marshall et al. 2012,ott4147676
+Cymatium corrugatum,Monoplex corrugatus,Cymatiidae,Mesogastropoda,Gastropoda,Mollusca,Monoplex,N,41,2,P,216,NA,41,0.300958531,17.94771004,Marshall et al. 2012,ott86407
+Ostrea edulis,Ostrea edulis,Ostreidae,Ostreina,Bivalvia,Mollusca,Ostrea,N,58,11,P,202,NA,58,0.036005907,9.550909996,Marshall et al. 2012,ott969369
+Oulactis mucosa,Oulactis muscosa,Actiniidae,Actiniaria,Anthozoa,Cnidaria,Oulactis,S,-38,144,L,222,NA,38,0.692250769,15.62879086,Marshall et al. 2012,ott842106
+Oxynoe sp.1 (Gosliner),Oxynoe,Oxynoidae,Sacoglossa,Gastropoda,Mollusca,Oxynoe,N,13,144,L,121,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott588314
+Paradexiospira vitrea,Paradexiospira vitrea,Spirorbidae,Sabellida,Polychaeta,Annelida,Paradexiospira,N,48,-123,L,196,NA,48,0.136874763,9.787690163,Marshall et al. 2012,ott617650
+Parasalenia gratiosa,Parasalenia gratiosa,Parasaleniidae,Echinoida,Echinoidea,Echinodermata,Parasalenia,N,34,136,P,96,NA,34,0.133242163,20.75889015,Marshall et al. 2012,ott3650871
+Phormosoma placenta,Phormosoma placenta,Echinothuriidae,Echinothurioida,Echinoidea,Echinodermata,Phormosoma,N,57,-10,L,1100,NA,57,0.070035989,11.3216095,Marshall et al. 2012,ott3650807
+Pileolaria berkelyana,Pileolaria berkeleyana,Spirorbidae,Sabellida,Polychaeta,Annelida,Pileolaria,N,48,-122,L,169,NA,48,0.136874763,10.07400036,Marshall et al. 2012,ott511723
+Placida cremoniana,Placida cremoniana,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Placida,S,-33,151,P,54.1,NA,33,0.585780803,20.54590988,Marshall et al. 2012,ott322147
+Placida sp. Sydney,Placida,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Placida,S,-33,151,P,54.3,NA,33,0.585780803,20.54590988,Marshall et al. 2012,ott322147
+Plakobranchus sp white,Plakobranchus,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Plakobranchus,N,13,144,P,75,NA,13,0.166330757,28.4860096,Marshall et al. 2012,ott583123
+Pourtalesia miranda,Pourtalesia miranda,Pourtalesiidae,Pourtalesoida,Echinoidea,Echinodermata,Pourtalesia,N,57,-12,L,357,NA,57,0.160720632,11.2353096,Marshall et al. 2012,ott3650195
+Pourtalesia jeffreysi,Pourtalesia jeffreysi,Pourtalesiidae,Pourtalesoida,Echinoidea,Echinodermata,Pourtalesia,N,57,-12,L,225,NA,57,0.160720632,11.2353096,Marshall et al. 2012,ott3650195
+Protolaespira exima,Protolaeospira (Protolaeospira) eximia,Spirorbidae,Sabellida,Polychaeta,Annelida,Protolaeospira,N,48,-122,L,199,NA,48,0.136874763,10.07400036,Marshall et al. 2012,ott614225
+Pseudechinus huttoni,Pseudechinus huttoni,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Pseudechinus,S,-45,167,P,110.95,NA,45,0.365241075,13.37790012,Marshall et al. 2012,ott322256
+Scaphechinus tenuis,Scaphechinus tenuis,Scutellidae,Clypeasteroida,Echinoidea,Echinodermata,Scaphechinus,N,34,136,P,100,NA,34,0.133242163,20.75889015,Marshall et al. 2012,ott3651041
+Sperosoma grimaldii,Sperosoma grimaldii,Echinothuriidae,Echinothurioida,Echinoidea,Echinodermata,Sperosoma,N,57,-10,L,1100,NA,57,0.070035989,11.3216095,Marshall et al. 2012,ott328120
+Stiliger fuscovitatus,Stiliger fuscovittatus,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Stiliger,N,34,-118,P,65.4,NA,34,0.142537474,17.26959991,Marshall et al. 2012,ott903299
+Allocentrotus fragilis,Strongylocentrotus fragilis,Strongylocentro,Echinoida,Echinoidea,Echinodermata,Strongylocentrotus,N,48,-123,P,110,NA,48,0.136874763,9.787690163,Marshall et al. 2012,ott564714
+Temnopleurus hardwickii,Temnopleurus hardwickii,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Temnopleurus,N,35,140,P,100,NA,35,0.38873975,20.93688965,Marshall et al. 2012,ott335257
+Temnopleurus toreumaticu,Temnopleurus toreumaticus,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Temnopleurus,N,34,136,P,80,NA,34,0.133242163,20.75889015,Marshall et al. 2012,ott335257
+Temnopleurus michaelseni,Temnopleurus michaelseni,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Temnopleurus,S,-34,135,P,80.43,NA,34,0.024184786,17.07759094,Marshall et al. 2012,ott335257
+Toxopneustes pileolus,Toxopneustes pileolus,Toxopneustidae,Temnopleuroida,Echinoidea,Echinodermata,Toxopneustes,N,34,136,P,80,NA,34,0.133242163,20.75889015,Marshall et al. 2012,ott238725
+Toxopneustes roseus,Toxopneustes roseus,Toxopneustidae,Temnopleuroida,Echinoidea,Echinodermata,Toxopneustes,N,10,-79,P,100,NA,10,0.587371817,27.9405899,Marshall et al. 2012,ott238725
+Hydroides fusicola,Hydroides fusicola,Serpulidae,Sabellida,Polychaeta,Annelida,Hydroides,N,32.738772,129,P,67,NA,32.738772,0.029647677,21.60290909,Matsuo & Ko 1981,ott327392
+Lytechinus variegatus,Lytechinus variegatus,Toxopneustidae,Temnopleuroida,Echinoidea,Echinodermata,Lytechinus,N,29,-85,P,110,37,29,0.034274335,24.11639023,Mazur & Miller 1971,ott561246
+Phragmatopoma lapidosa,Phragmatopoma lapidosa,Sabellariidae,Terebellida,Polychaeta,Annelida,Phragmatopoma,N,26,-80,P,100,NA,26,0.472222748,27.07529068,McCarthy et al. 2003,ott857784
+Pteraster tesselatus,Pteraster tesselatus,Pterasteridae,Spinulodisa,Asteroidea,Echinodermata,Pteraster,N,48,-123,L,1200,11,48,0.136874763,9.787690163,McEdward 1992,ott781475
+Psolidium bullatum,Psolidium bullatum,Psolidae,Dendrochirotida,Holothuroid,Echinodermata,Psolidium,N,48,-123,L,330,8,48,0.136874763,9.787690163,McEuen & Chia 1991,NA
+Psolus chitonoides,Psolus chitonoides,Psolidae,Dendrochirotida,Holothuroid,Echinodermata,Psolus,N,48,-123,L,627,28,48,0.136874763,9.787690163,McEuen & Chia 1991,ott478660
+Psolus chitinoides,Psolus chitinoides,Psolidae,Dendrochirotida,Holothuroid,Echinodermata,Psolus,N,48,-123,L,627,NA,48,0.136874763,9.787690163,McEuen & Chia 1991,ott478660
+Eudistylia vancuvieri,Eudistylia vancouveri,Sabellidae,Sabellida,Polychaeta,Annelida,Eudistylia,N,48.537522,-123,L,180,NA,48.537522,0.220556316,9.867109299,McEuen et al. 1983,ott992900
+Doris montereyensis,Doris montereyensis,Dorididae,Nudibranchia,Gastropoda,Mollusca,Doris,N,43,-124,L,225,0.5,43,0.071941822,11.41149998,McGowan & Pratt 1954,ott860557
+Amphysamytha galapagensi,Amphisamytha galapagensis,Ampharetidae,Ophiurida,Ophiuroidea,Echinodermata,Amphisamytha,N,48,-130,L,240,NA,48,0.005731319,11.53020954,McHugh & Tunicliffe 1994,ott117874
+Paralvinella palmiformis,Paralvinella palmiformis,Alvinellidae,Terebellida,Polychaeta,Annelida,Paralvinella,N,47.9667,-129,L,260,NA,47.9667,0.070653765,11.64349079,McHugh 1989,ott386355
+Eupolymnia crescentis,Eupolymnia heterobranchia,Terebellidae,Terebellida,Polychaeta,Annelida,Eupolymnia,N,37.858591,-122,L,200,7,37.858591,0.078173553,13.09209061,McHugh 1993,ott1037983
+Neoamphitrite robusta,Neoamphitrite robusta,Terebellidae,Terebellida,Polychaeta,Annelida,Neoamphitrite,N,38,-123,L,180,NA,38,0.165433632,11.53059006,McHugh 1993,ott961528
+Thelepus crispus,Thelepus crispus,Terebellidae,Terebellida,Polychaeta,Annelida,Thelepus,N,48,-123,L,400,2,48,0.136874763,9.787690163,McHugh 1993,ott784741
+Nassarius (Niotha) paupe,Nassarius pauperatus,Nassariidae,Neogastropoda,Gastropoda,Mollusca,Nassarius,S,-34,138,P,145,NA,34,0.144487574,17.60709953,McKillup 1979,ott700420
+Eucidaris tribuloides,Eucidaris tribuloides,Cidaridae,Cidaroida,Asteroidea,Echinodermata,Eucidaris,N,25,-80,P,70,25,25,1.304444019,26.89179039,McPherson 1968,ott146860
+Owenia fusiformis,Owenia fusiformis,Oweniidae,Sabellida,Polychaeta,Annelida,Owenia,N,48.645613,-2,P,110,NA,48.645613,0.07694893,12.45040989,Menard et al. 1989; Gentil et al. 1990,ott941629
+Actinopyga serratidens,Actinopyga serratidens,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Actinopyga,N,27,33,P,NA,28,27,0.387832071,25.39011002,Mercier et al 2013,ott957430
+Actinopyga echinites,Actinopyga echinites,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Actinopyga,N,25,121,P,165,18,25,0.17659565,23.58040047,Mercier et al 2013,ott957430
+Amphiura chiajei,Amphiura chiajei,Amphiuridae,Ophiurida,Ophiuroidea,Echinodermata,Amphiura,N,43,7,L,150,7,43,0.291258875,17.17739105,Mercier et al 2013,ott508533
+Apostichopus japonicus,Apostichopus japonicus,Stichopodidae,Aspidochirotida,Holothuroid,Echinodermata,Apostichopus,N,37,120,P,145,14,37,0.06231897,12.4236908,Mercier et al 2013,ott956276
+Arbacia punctulata,Arbacia punctulata,Curculionoidea,Arbacioida,Echinoidea,Echinodermata,Arbacia,N,36,-122,P,75,24,36,0.044639694,13.85679054,Mercier et al 2013,ott146854
+Aslia lefevrei,Aslia lefevrei,Cucumariidae,Dendrochirotida,Holothuroid,Echinodermata,Aslia,N,42,-8,L,525,49,42,0.098998443,15.94909,Mercier et al 2013,ott482195
+Asterias forbesi,Asterias forbesi,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Asterias,N,41,-70,P,110,25,41,0.031781489,10.3125906,Mercier et al 2013,ott721269
+Asteropsis carinifera,Asteropsis carinifera,Poraniidae,Spinulodisa,Asteroidea,Echinodermata,Asteropsis,N,27,33,L,200,30,27,0.387832071,25.39011002,Mercier et al 2013,ott714499
+Astriclypeus manni,Astriclypeus mannii,,Clypeasteroida,Echinoidea,Echinodermata,Astriclypeus,N,34,136,P,190,25,34,0.133242163,20.75889015,Mercier et al 2013,ott3651033
+Astropecten velitaris,Astropecten velitaris,Astropectinidae,Paxillosida,Asteroidea,Echinodermata,Astropecten,N,27,33,L,NA,5.5,27,0.387832071,25.39011002,Mercier et al 2013,ott269237
+Astropecten polyacanthus,Astropecten polyacanthus,Astropectinidae,Paxillodisa,Asteroidea,Echinodermata,Astropecten,N,27,33,P,165,3.5,27,0.387832071,25.39011002,Mercier et al 2013,ott269237
+Certonardoa semiregulari,Certonardoa semiregularis,Ophidiasteridae,Valvatida,Asteroidea,Echinodermata,Certonardoa,N,36,137,L,930,21,36,0.341048248,17.86301041,Mercier et al 2013,ott987827
+Patiriella pseudoexigua,Cryptasterina pentagona,Asterinidae,Spinulosida,Asteroidea,Echinodermata,Cryptasterina,N,22,120,L,378,10,22,0.271779987,26.84609032,Mercier et al 2013,ott831359
+Cucumaria piperata,Cucumaria piperata,Cucumariiadae,Dendrochirotida,Holothuroid,Echinodermata,Cucumaria,N,48,-123,L,532,8.5,48,0.136874763,9.787690163,Mercier et al 2013,ott891878
+Cucumaria frondosa,Cucumaria frondosa,Cucumariidae,Dendrochirotida,Holothuroid,Echinodermata,Cucumaria,N,48,-68,L,750,46,48,0.056807672,4.484089851,Mercier et al 2013,ott891878
+Diadema setosum,Diadema setosum,Diadematidae,Diadematoida,Echinoidea,Echinodermata,Diadema,N,27,33,P,92,45,27,0.387832071,25.39011002,Mercier et al 2013,ott631176
+Echinaster purpureus,Echinaster purpureus,Echinasteridae,Spinulosida,Asteroidea,Echinodermata,Echinaster,N,27,33,L,NA,4,27,0.387832071,25.39011002,Mercier et al 2013,ott893170
+Echinocardium cordatum,Echinocardium cordatum,Loveniidae,Spatangoida,Echinoidea,Echinodermata,Echinocardium,N,55,-5,P,125,27,55,0.079657719,10.16559029,Mercier et al 2013,ott685342
+Eucidaris metularia,Eucidaris metularia,Cidaridae,Cidaroida,Asteroidea,Echinodermata,Eucidaris,N,27,33,P,90,30,27,0.387832071,25.39011002,Mercier et al 2013,ott146860
+Eucidaris thouarsii,Eucidaris thouarsii,Cidaridae,Cidaroida,Asteroidea,Echinodermata,Eucidaris,N,9,-80,P,86,30,9,0.705341927,27.9847908,Mercier et al 2013,ott146860
+Eupentacta fraudatrix,Eupentacta fraudatrix,Sclerodactylida,Dendrochirotida,Holothuroid,Echinodermata,Eupentacta,N,42,131,L,350,6.5,42,0.074489459,9.158800125,Mercier et al 2013,ott1011869
+Eupentacta quinquesemita,Eupentacta quinquesemita,Sclerodactylida,Dendrochirotida,Holothuroid,Echinodermata,Eupentacta,N,48,-123,L,397,7,48,0.136874763,9.787690163,Mercier et al 2013,ott1011869
+Fromia ghardaqana,Fromia ghardaqana,Ophidiasteridae,Valvatida,Asteroidea,Echinodermata,Fromia,N,32,35,L,100,24,32,0.3087705,22.63718987,Mercier et al 2013,ott240396
+Henricia sanguinolenta,Henricia sanguinolenta,Echinasteridae,Spinulodisa,Asteroidea,Echinodermata,Henricia,N,46,-46,L,1050,42,46,0.125006757,8.030990601,Mercier et al 2013,ott461250
+Henricia lisa,Henricia lisa,Echinasteridae,Spinulosida,Asteroidea,Echinodermata,Henricia,N,46,-46,L,1100,45,46,0.125006757,8.030990601,Mercier et al 2013,ott461250
+Heterocentrotus mammilla,Heterocentrotus mamillatus,Echinometridae,Echinoida,Echinoidea,Echinodermata,Heterocentrotus,N,27,33,P,100,8,27,0.387832071,25.39011002,Mercier et al 2013,ott631179
+Holothuria (Thymiosycia),Holothuria,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Holothuria,N,27,33,P,100,14,27,0.387832071,25.39011002,Mercier et al 2013,ott924443
+Holothuria (Thymiosycia),Holothuria,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Holothuria,N,27,33,P,NA,28,27,0.387832071,25.39011002,Mercier et al 2013,ott924443
+Holothuria (Thymiosycia),Holothuria,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Holothuria,N,27,33,P,NA,28,27,0.387832071,25.39011002,Mercier et al 2013,ott924443
+Holothuria (Thymiosycia),Holothuria,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Holothuria,N,27,33,P,100,14,27,0.387832071,25.39011002,Mercier et al 2013,ott924443
+Holothuria (Theelothuria,Holothuria,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Holothuria,N,8,78,P,145,15,8,0.095602938,27.88350868,Mercier et al 2013,ott924443
+Holothuria (Platyperona),Holothuria,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Holothuria,N,27,33,P,100,12,27,0.387832071,25.39011002,Mercier et al 2013,ott924443
+Iconaster longimanus,Iconaster longimanus,Goniasteridae,Valvatida,Asteroidea,Echinodermata,Iconaster,N,1,103,L,960.5,10,1,0.450086554,29.12890053,Mercier et al 2013,ott3657773
+Laganum depressum,Jacksonaster depressum,Laganidae,Clypeasteroida,Echinoidea,Echinodermata,Jacksonaster,N,27,33,P,100,14,27,0.387832071,25.39011002,Mercier et al 2013,ott3650801
+Labidoplax buskii,Labidoplax buskii,Synaptidae,Apodida,Holothuroid,Echinodermata,Labidoplax,N,58,11,L,150,11.5,58,0.036005907,9.550909996,Mercier et al 2013,ott431590
+Leptopentacta elongata,Leptopentacta elongata,Cucumariidae,Dendrochirotida,Holothuroid,Echinodermata,Leptopentacta,N,55,-1,L,350,9,55,0.081551171,9.94230938,Mercier et al 2013,ott3653081
+Loxechinus albus,Loxechinus albus,Parechinidae,Camarodonta,Echinoidea,Echinodermata,Loxechinus,S,-33,-71,P,116,26.5,33,0.066749525,14.6225996,Mercier et al 2013,ott555685
+Luidia alternata,Luidia alternata,Luidiidae,Paxillosida,Asteroidea,Echinodermata,Luidia,N,27,-82,P,193,13,27,0.107439493,24.29841042,Mercier et al 2013,ott367769
+Luidia senegalensis,Luidia senegalensis,Luidiidae,Paxillosida,Asteroidea,Echinodermata,Luidia,N,26,-81,P,197,18,26,0.472222748,25.55570984,Mercier et al 2013,ott367769
+Luidia quinaria,Luidia quinaria,Luidiidae,Paxillodisa,Asteroidea,Echinodermata,Luidia,N,36,137,P,124,36,36,0.341048248,17.86301041,Mercier et al 2013,ott367769
+Luidia ciliaris,Luidia ciliaris,Luidiidae,Paxillodisa,Asteroidea,Echinodermata,Luidia,N,27,-82,P,170,28,27,0.107439493,24.29841042,Mercier et al 2013,ott367769
+Luidia savignyi,Luidia savignyi,Luidiidae,Paxillosida,Asteroidea,Echinodermata,Luidia,N,27,33,P,NA,12,27,0.387832071,25.39011002,Mercier et al 2013,ott367769
+Luidia clathrata,Luidia clathrata,Luidiidae,Paxillosida,Asteroidea,Echinodermata,Luidia,N,27,-82,P,168,28,27,0.107439493,24.29841042,Mercier et al 2013,ott367769
+Lytechinus pictus,Lytechinus pictus,Toxopneustidae,Temnopleuroida,Echinoidea,Echinodermata,Lytechinus,N,37,-120,P,NA,24,37,0.073368934,13.02889061,Mercier et al 2013,ott561246
+Patiriella gunnii,Meridiastra gunnii,Asterinidae,Valvatida,Asteroidea,Echinodermata,Meridiastra,S,-33,151,L,360,14,33,0.585780803,20.54590988,Mercier et al 2013,ott658924
+Patiriella calcar,Meridiastra calcar,Asterinidae,Valvatida,Asteroidea,Echinodermata,Meridiastra,S,-33,151,L,400,14,33,0.585780803,20.54590988,Mercier et al 2013,ott658924
+Metacrinus rotundus,Metacrinus rotundus,Isselicrinidae,Isocrinida,Crinoidea,Echinodermata,Metacrinus,N,34,138,L,350,11,34,0.244204581,20.59139061,Mercier et al 2013,ott617216
+Molpadia intermedia,Molpadia intermedia,Molpadiidae,Molpadiida,Holothuroid,Echinodermata,Molpadia,N,48,-123,L,267,6.5,48,0.136874763,9.787690163,Mercier et al 2013,ott124187
+Nudechinus gravieri,Nudechinus gravieri,Toxopneustidae,Camarodonta,Echinoidea,Echinodermata,Nudechinus,N,27,33,P,90,15,27,0.387832071,25.39011002,Mercier et al 2013,NA
+Ophiocomina nigra,Ophiocomina nigra,Ophiocomidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiocomina,N,50,-4,P,100,37.5,50,0.167980313,12.54950047,Mercier et al 2013,ott368805
+Ophioderma brevispina,Ophioderma brevispina,Ophiodermatidae,Ophiurida,Ophiuroidea,Echinodermata,Ophioderma,N,41,-70,L,325,5,41,0.031781489,10.3125906,Mercier et al 2013,ott893176
+Ophiomaza cacaotica,Ophiomaza cacaotica,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiomaza,N,27,33,P,100,13,27,0.387832071,25.39011002,Mercier et al 2013,ott357020
+Ophioplocus japonicus,Ophioplocus japonicus,Ophiolepididae,Ophiurida,Ophiuroidea,Echinodermata,Ophioplocus,N,36,137,L,300,6,36,0.341048248,17.86301041,Mercier et al 2013,ott208880
+Ophiothrix (Ophiothrix),Ophiothrix,Ophiotrichidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiothrix,N,27,33,P,100,21,27,0.387832071,25.39011002,Mercier et al 2013,ott768174
+Ophiothrix fragilis,Ophiothrix fragilis,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiothrix,N,55,11,P,100,26,55,0.031193264,9.359490395,Mercier et al 2013,ott768174
+Caudina chilensis,Paracaudina chilensis,Caudinidae,Molpadida,Holothuroid,Echinodermata,Paracaudina,N,40,141,L,572,13,40,0.278627603,11.66199017,Mercier et al 2013,ott398505
+Parechinus angulosus,Parechinus angulosus,Echinidae,Echinoida,Echinoidea,Echinodermata,Parechinus,S,-34,18,P,90,56,34,0.242082597,16.42539024,Mercier et al 2013,ott561286
+Patiria miniata,Patiria miniata,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Patiria,N,36,-121,P,185,38,36,0.053637051,13.29309082,Mercier et al 2013,ott157861
+Pentamera populifera,Pentamera populifera,Phyllophoridae,Dendrochirotida,Holothuroid,Echinodermata,Pentamera,N,48,-123,L,372,6.5,48,0.136874763,9.787690163,Mercier et al 2013,ott1011872
+Prionocidaris baculosa,Prionocidaris baculosa,Cidaridae,Cidaroida,Asteroidea,Echinodermata,Prionocidaris,N,27,33,P,150,25,27,0.387832071,25.39011002,Mercier et al 2013,ott625257
+Psammechinus miliaris,Psammechinus miliaris,Echinidae,Echinoida,Echinoidea,Echinodermata,Psammechinus,N,50,-4,P,97,58,50,0.167980313,12.54950047,Mercier et al 2013,ott43153
+Pseudocnus echinatus,Pseudocnus echinatus,Cucumariidae,Dendrochirotida,Holothuroid,Echinodermata,Pseudocnus,N,35,140,L,445,7.5,35,0.38873975,20.93688965,Mercier et al 2013,ott435100
+Psolus fabricii,Psolus fabricii,Psolidae,Dendrochirotida,Holothuroid,Echinodermata,Psolus,N,47,-52,L,500,55,47,0.056388499,5.006690025,Mercier et al 2013,ott478660
+Psolus phantapus,Psolus phantapus,Psolidae,Dendrochirotida,Holothuroid,Echinodermata,Psolus,N,47,-52,L,550,58.5,47,0.056388499,5.006690025,Mercier et al 2013,ott478660
+Scaphechinus mirabilis,Scaphechinus mirabilis,Scutellidae,Clypeasteroida,Echinoidea,Echinodermata,Scaphechinus,N,42,132,P,NA,29,42,0.027145034,8.128600121,Mercier et al 2013,ott3651041
+Solaster endeca,Solaster endeca,Solasteridae,Spinulodisa,Asteroidea,Echinodermata,Solaster,N,47,-52,L,800,76,47,0.056388499,5.006690025,Mercier et al 2013,ott977091
+Stichopus sp.,Stichopus,Stichopodidae,Aspidochirotida,Holothuroid,Echinodermata,Stichopus,N,21,109,P,175,12,21,0.016408049,24.52149963,Mercier et al 2013,ott262458
+Strongylocentrotus inter,Strongylocentrotus intermedius,Strongylocentro,Echinoida,Echinoidea,Echinodermata,Strongylocentrotus,N,42,132,P,90,32.5,42,0.027145034,8.128600121,Mercier et al 2013,ott564714
+Tetrapygus niger,Tetrapygus niger,Arbaciidae,Arbacioida,Echinoidea,Echinodermata,Tetrapygus,S,-33,-71,P,94.2,107,33,0.066749525,14.6225996,Mercier et al 2013,ott566761
+Tripneustes gratilla,Tripneustes gratilla,Toxopneustidae,Temnopleuroida,Echinoidea,Echinodermata,Tripneustes,N,27,33,P,90,18,27,0.387832071,25.39011002,Mercier et al 2013,ott43571
+Lobophytum compactum,Lobophytum compactum,Alcyoniidae,Alcyonacea,Anthozoa,Cnidaria,Lobophytum,S,-18,146,L,631.85,5.5,18,0.257141842,26.75159073,Michalek-Wagner & Willis 2001,ott11325
+Costasiella sp.,Costasiella,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Costasiella,N,25,-80,P,76.6,NA,25,1.304444019,26.89179039,Miles & Clark 2002,ott639889
+Vermetus sp,Vermetus,Vermetidae,Mesogastropoda,Gastropoda,Mollusca,Vermetus,N,10,-69,L,240,1,10,0.244787466,27.00299072,Miloslavich & Penchaszadeh 1992,ott348005
+Leodia sexiesperforata,Leodia sexiesperforata,Mellitidae,Clypeasteroida,Echinoidea,Echinodermata,Leodia,N,24,-80,P,200,5,24,0.147893152,26.96759033,Miner et al. 2005,ott3651071
+Mellita tenuis,Mellita tenuis,Mellitidae,Clypeasteroida,Echinoidea,Echinodermata,Mellita,N,29,-83,P,125,10,29,0.194355911,22.07670021,Miner et al. 2005,ott3650890
+Hydroides ezoensis,Hydroides ezoensis,Serpulidae,Sabellida,Polychaeta,Annelida,Hydroides,N,35.178158,139,P,50,NA,35.178158,0.145500726,19.55449104,Miura & Kajihara 1984,ott327392
+Florometra serratissima,Florometra serratissima,Antedonidae,Comatulida,Crinoida,Echinodermata,Florometra,N,48,-125,L,207,5,48,0.016401874,11.12270927,Mladenov & Chia 1983,ott816163
+Ophiothrix oerstedii,Ophiothrix oerstedii,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiothrix,N,13,-59,L,250,4.3,13,0.069356002,27.54010963,Mladenov 1979,ott768174
+Ophiocoma pumila,Ophiocoma pumila,Ophiocomidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiocoma,N,18,-77,P,73,90,18,0.120459857,27.76840973,Mladenov 1985a,ott669483
+Ophiothrix suensonii,Ophiothrix (Acanthophiothrix) suensoni,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiothrix,N,13,-59,P,130,NA,13,0.069356002,27.54010963,Mladenov 1985b,ott768174
+Conopea galeata,Conopea galeata,Archaeobalanida,Sessilia,Maxillopoda,Arthropoda,Conopea,N,33,-117,L,NA,11.5,33,0.188343445,17.45948982,Molenock & Gomez 1972,NA
+Tegula funebralis,Tegula funebralis,Trochidae,Archaeogastropo,Gastropoda,Mollusca,Tegula,N,36,-121,L,190,5,36,0.053637051,13.29309082,Moran 1997,ott717805
+Holopneustes purpurescen,Holopneustes purpurascens,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Holopneustes,S,-33,151,L,580,8,33,0.585780803,20.54590988,Morris 1995,ott9415
+Ophiodromus pugettensis,Oxydromus pugettensis,Hesionidae,Phyllodocida,Polychaeta,Annelida,Oxydromus,N,38.24627,-123,L,100,NA,38.24627,0.165433632,11.53059006,Morris et al. 1980,ott4166884
+Platynereis bicanalicula,Platynereis bicanalicula,Nereidae,Phyllodocida,Polychaeta,Annelida,Platynereis,N,38,-122,L,168,NA,38,0.078173553,13.09209061,Morris et al. 1980,ott268486
+Euasterias troscheli,Evasterias troschelii,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Evasterias,N,50,-123,P,150,NA,50,0.040957509,10.82119083,Mortensen 1921,ott197639
+Ophidiaster guildingii,Ophidiaster guildingi,Ophidiasteridae,Valvatida,Asteroidea,Echinodermata,Ophidiaster,N,20,-61,P,115,NA,20,0.044976986,26.88670921,Mortensen 1921,ott761414
+Polinices (Conuber) sord,Conuber sordidum,Naticidae,Neotaenioglossa,Gastropoda,Mollusca,Conuber,S,-21,153,P,250,NA,21,0.466508095,25.72969055,Murray 1964,ott943352
+Clymenella torquata,Clymenella torquata,Maldanidae,,Polychaeta,Annelida,Clymenella,N,51.356346,1,L,280,NA,51.356346,0.175313729,11.81680012,Newell 1951,ott148575
+Pectinaria koreni,Lagis koreni,Pectinariidae,Terebellida,Polychaeta,Annelida,Lagis,N,53,-3,P,63,NA,53,0.220461658,10.6304903,Nicolaidou 1983,ott4975358
+Salmacina dysteri,Salmacina dysteri,Serpulidae,Sabellida,Polychaeta,Annelida,Salmacina,N,27,128,L,150,NA,27,0.039069915,24.96710968,Nishi & Yamasu 1992a,ott968520
+Rhodopsis pusilla,Rhodopsis pusilla,Serpulidae,Sabellida,Polychaeta,Annelida,Rhodopsis,N,27,128,L,78,NA,27,0.039069915,24.96710968,Nishi & Yamasu 1992b,ott999802
+Dexiospira foraminosa,Neodexiospira foraminosa,Spirorbidae,Sabellida,Polychaeta,Annelida,Neodexiospira,N,27,128,L,80,NA,27,0.039069915,24.96710968,Nishi & Yamasu 1992d,ott617646
+Paraprotis dendrova,Paraprotis dendrova,Serpulidae,Sabellida,Polychaeta,Annelida,Paraprotis,N,27,128,L,87,NA,27,0.039069915,24.96710968,Nishi 1992; Nishi & Yamasu 1992c,ott54082
+Peronella japonica,Peronella japonica,Laganidae,Clypeasteroida,Echinoidea,Echinodermata,Peronella,N,35,132,L,300,2,35,0.311764291,19.13350868,Okazaki & Dan 1954,ott3650810
+Leitoscoloplos kerguelen,Leitoscoloplos kerguelensis,Orbiniidae,,Polychaeta,Annelida,Leitoscoloplos,N,43.053837,145,L,200,NA,43.053837,0.120237565,7.272409916,Okuda 1946,ott760483
+Neanthes sp.,Neanthes,Nereidae,Phyllodocida,Polychaeta,Annelida,Neanthes,N,43.053837,145,L,280,NA,43.053837,0.120237565,7.272409916,Okuda 1946,ott563194
+Spirorbis nipponicus,Neodexiospira alveolata,Spirorbidae,Sabellida,Polychaeta,Annelida,Neodexiospira,N,43.053837,145,L,175,NA,43.053837,0.120237565,7.272409916,Okuda 1946,ott617646
+Chone ecaudata (as teres,Paradialychone ecaudata,Sabellidae,Sabellida,Polychaeta,Annelida,Paradialychone,N,43.053837,145,L,200,NA,43.053837,0.120237565,7.272409916,Okuda 1946,ott4987208
+Potamilla myriopsis,Pseudopotamilla myriops,Sabellidae,Sabellida,Polychaeta,Annelida,Pseudopotamilla,N,43.053837,145,L,140,NA,43.053837,0.120237565,7.272409916,Okuda 1946,ott624591
+Spio filicornis,Spio filicornis,Spionidae,Spionida,Polychaeta,Annelida,Spio,N,43.053837,145,L,300,NA,43.053837,0.120237565,7.272409916,Okuda 1946,ott317330
+Phyllacanthus imperialis,Phyllacanthus imperialis,Cidaridae,Cidaroida,Echinoidea,Echinodermata,Phyllacanthus,S,-14,145,L,507,4,14,0.389974561,26.9333992,Olson et al 1993,ott754483
+Echinometra mathaei,Echinometra mathaei,Echinometridae,Echinoida,Echinoidea,Echinodermata,Echinometra,N,36,136,P,NA,40,36,0.343598613,17.91299057,Onoda 1936,ott631177
+Anthocidaris crassispina,Heliocidaris crassispina,Echinometridae,Echinoida,Echinoidea,Echinodermata,Heliocidaris,N,34,136,P,90,37,34,0.133242163,20.75889015,Onoda 1936,ott146857
+Mespilia globulus,Mespilia globulus,Temnopleuridae,Temnopleuroida,Echinoidea,Echinodermata,Mespilia,N,34,136,P,80,35,34,0.133242163,20.75889015,Onoda 1936,ott335255
+Cypraea caputdraconis,Monetaria caputdraconis,Cypraeidae,Mesogastropoda,Gastropoda,Mollusca,Monetaria,S,-27,-109,P,112,NA,27,0.017834284,22.47299957,Osorio et al. 1992,ott190593
+Ophryotrocha cosmetandra,Ophryotrocha cosmetandra,Dorvilleidae,Eunicida,Polychaeta,Annelida,Ophryotrocha,N,69.648491,19,L,350,NA,69.648491,0.0395933,6.084489822,Oug 1990,NA
+Hymenaster membranaceus,Hymenaster pellucidus,Pterasteridae,Spinulodisa,Asteroidea,Echinodermata,Hymenaster,N,50,-11,L,1100,NA,50,0.073292704,13.10670948,Pain et al. 1982,ott32680
+Hymenaster gennaeus,Hymenaster rex,Pterasteridae,Spinulodisa,Asteroidea,Echinodermata,Hymenaster,N,50,-11,L,1200,NA,50,0.073292704,13.10670948,Pain et al. 1982,ott32680
+Antipathes fiordensis,Antipathella fiordensis,Antipathida,Antipatharia,Anthozoa,Cnidaria,Antipathella,S,-45,167,P,120,NA,45,0.365241075,13.37790012,Parker et al. 1997,ott791344
+Pecten maximus,Pecten maximus,Pectinidae,Osteroida,Bivalvia,Mollusca,Pecten,N,48,-4,P,66.13,26,48,0.12954893,13.6171999,Paulet et al 1988,ott449047
+Onuphis mariahirsuta,Hirsutonuphis mariahirsuta,Onuphidae,Eunicida,Polychaeta,Annelida,Hirsutonuphis,S,-33,151.300449,L,230,NA,33,0.585780803,20.54590988,Paxton 1979,ott4979887
+Onuphis taeniata,Kinbergonuphis taeniata,Onuphidae,Eunicida,Polychaeta,Annelida,Kinbergonuphis,S,-33,151.300449,L,230,NA,33,0.585780803,20.54590988,Paxton 1979,ott4979979
+Polinices lewisii,Neverita lewisii,Naticidae,Mesogastropoda,Gastropoda,Mollusca,Neverita,N,49,-123,P,250,35,49,0.220556316,10.03800964,Pederson & Page 2000,ott420481
+Arctinoe vittata,Arctonoe vittata,Polynoidae,Phyllodocida,Polychaeta,Annelida,Arctonoe,N,48.537522,-123,P,80,NA,48.537522,0.220556316,9.867109299,Pernet 1999,ott718759
+Arctinoe fragilis,Arctonoe fragilis,Polynoidae,Phyllodocida,Polychaeta,Annelida,Arctonoe,N,48.537522,-123,P,80,NA,48.537522,0.220556316,9.867109299,Pernet 1999,ott718759
+Arctonoe vittata,Arctonoe vittata,Polynoidae,Phyllodocida,Polychaeta,Annelida,Arctonoe,N,42,132,P,83,NA,42,0.027145034,8.128600121,Pernet 1999,ott718759
+Arctinoe pulchra,Arctonoe pulchra,Polynoidae,Phyllodocida,Polychaeta,Annelida,Arctonoe,N,48.537522,-123,P,80,NA,48.537522,0.220556316,9.867109299,Pernet 1999,ott718759
+Conus obscurus,Conus obscurus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,147,NA,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus leopardus,Conus leopardus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,230,NA,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus ebraeus,Conus ebraeus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,170,NA,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus pertusus,Conus pertusus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,132,NA,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus lividus,Conus lividus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,150,50,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus marmoreus,Conus marmoreus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,344,10,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus textile,Conus textile,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,260,16,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus sponsalis nanus,Conus sponsalis,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,135,NA,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus abbreviatus,Conus abbreviatus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,170,32,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus striatus,Conus striatus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,250,20,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus quercinus,Conus quercinus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,190,30,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus flavidus,Conus flavidus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,21,-157,P,180,23,21,0.111114649,25.24470901,Perron 1981,ott126315
+Conus rattus,Conus rattus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-4,55,P,120,NA,4,0.019371393,27.92080879,Perron 1981,ott126315
+Conus pulicarius,Conus pulicarius,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,S,-14,145,P,150,NA,14,0.389974561,26.9333992,Perron 1981,ott126315
+Marphysa borradailei,Marphysa borradailei,Eunicidae,Eunicida,Polychaeta,Annelida,Marphysa,N,7,80,L,170,NA,7,0.201992295,28.06871033,Pillai 1958,ott260032
+Sclerasterias mollis,Sclerasterias mollis,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Sclerasterias,S,-45,170,P,123.5,NA,45,0.176604439,10.92850971,Poorbagher et al. 2010,ott173130
+Acropora millepora,Acropora millepora,Acroporidae,Scleractinia,Anthozoa,Cnidaria,Acropora,S,-18,146,L,541,NA,18,0.257141842,26.75159073,Pratchett et al. 2002,ott712401
+Acropora humilis,Acropora humilis,Acroporidae,Scleractinia,Anthozoa,Cnidaria,Acropora,S,-18,146,L,532,NA,18,0.257141842,26.75159073,Pratchett et al. 2002,ott712401
+Meridiastra gunnii,Meridiastra gunnii,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Meridiastra,S,-35,138,L,431,NA,35,0.184791095,17.22859001,Prowse et al. 2008,ott658924
+Meridiastra oriens,Meridiastra oriens,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Meridiastra,S,-33,115,L,399,NA,33,0.563703635,20.26589966,Prowse et al. 2008,ott658924
+Meridiastra mortenseni,Meridiastra mortenseni,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Meridiastra,S,-36,174,P,239,NA,36,0.091147681,17.83588982,Prowse et al. 2008,ott658924
+Meridiastra calcar,Meridiastra calcar,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Meridiastra,S,-33,115,L,415,NA,33,0.563703635,20.26589966,Prowse et al. 2008,ott658924
+Parvulastra exigua,Parvulastra exigua,Asterinidae,Spinulodisa,Asteroidea,Echinodermata,Parvulastra,S,-33,115,L,384,NA,33,0.563703635,20.26589966,Prowse et al. 2008,ott881870
+Nerita atramentosa,Nerita atramentosa,Neritidae,Mesogastropoda,Gastropoda,Mollusca,Nerita,S,-33,151,P,140,NA,33,0.585780803,20.54590988,Przeslawski 2008,ott829979
+Raphidrilus nemasoma,Raphidrilus nemasoma,Ctenodrilidae,Terebellida,Polychaeta,Annelida,Raphidrilus,N,48.835063,-125,L,135,NA,48.835063,0.040957509,10.50179005,Qian & Chia 1989,ott4975852
+Polydora rickettsi,Polydora rickettsi,Spionidae,Spionida,Polychaeta,Annelida,Polydora,S,-39,-73,L,100,NA,39,0.24873594,12.88350964,Radashevsky & Cárdenas 2004,ott918307
+Laonice petersenae,Laonice brevicornis,Spionidae,Spionida,Polychaeta,Annelida,Laonice,S,-25,-48,P,200,NA,25,0.302711934,22.77589035,Radashevsky & Lana 2009,ott568402
+Laonice branchiata,Laonice branchiata,Spionidae,Spionida,Polychaeta,Annelida,Laonice,S,-25,-48,P,200,NA,25,0.302711934,22.77589035,Radashevsky & Lana 2009,ott568402
+Pseudopolydora rosebelae,Pseudopolydora rosebelae,Spionidae,Spionida,Polychaeta,Annelida,Pseudopolydora,S,-23,-45,L,150,NA,23,0.325882271,23.53919029,Radashevsky & Migotto 2009,ott328224
+Dipolydora armata,Dipolydora armata,Spionidae,Spionida,Polychaeta,Annelida,Dipolydora,S,-23,-45,L,90,NA,23,0.325882271,23.53919029,Radashevsky & Nogueira 2003,ott382879
+Polydora uncinata,Polydora hoplura,Spionidae,Spionida,Polychaeta,Annelida,Polydora,S,-29,-71,L,175,NA,29,0.189988427,14.66839027,Radashevsky & Olivaves 2005,ott918307
+Polydora calcarea,Polydora calcarea,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,42,132,L,99,NA,42,0.027145034,8.128600121,Radashevsky 1986,ott918307
+Polydora spongicola,Polydora spongicola,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,42,132,L,120,NA,42,0.027145034,8.128600121,Radashevsky 1988,ott918307
+Dipolydora commensalis,Dipolydora commensalis,Spionidae,Spionida,Polychaeta,Annelida,Dipolydora,N,42,132,L,135,NA,42,0.027145034,8.128600121,Radashevsky 1989,ott382879
+Polydora glycymerica,Polydora glycymerica,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,42,132,L,135,NA,42,0.027145034,8.128600121,Radashevsky 1989,ott918307
+Polydora curiosa,Polydora curiosa,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,43,146,L,330,NA,43,0.253851782,7.105989933,Radashevsky 1994,ott918307
+Polydora ligni,Polydora cornuta,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,43.691708,-70,P,120,NA,43.691708,0.050230938,9.315690041,Radashevsky 2005,ott918307
+Polydora cornuta,Polydora cornuta,Spionidae,Spionida,Polychaeta,Annelida,Polydora,S,-25,-48,L,110,NA,25,0.302711934,22.77589035,Radashevsky 2005,ott918307
+Rhynchospio nhatrangi,Rhynchospio nhatrangi,Spionidae,Spionida,Polychaeta,Annelida,Rhynchospio,N,12,109,L,120,NA,12,0.728665869,27.01679039,Radashevsky 2007,ott4976597
+Polydora carinhosa,Polydora carinhosa,Spionidae,Spionida,Polychaeta,Annelida,Polydora,S,-25,-48,L,110,NA,25,0.302711934,22.77589035,Radashevsky et al. 2006a,ott918307
+Polydora ecuadoriana,Polydora ecuadoriana,Spionidae,Spionida,Polychaeta,Annelida,Polydora,S,-25,-48,L,110,NA,25,0.302711934,22.77589035,Radashevsky et al. 2006a,ott918307
+Prionospio patagonica,Prionospio patagonica,Spionidae,Spionida,Polychaeta,Annelida,Prionospio,S,-39,-73,P,92,NA,39,0.24873594,12.88350964,Radashevsky et al. 2006b,ott275106
+Holothuria scabra,Holothuria (Metriatyla) scabra,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Holothuria,S,-8,157,P,156.4,15.5,8,0.053644583,29.17811012,Ramofafia et al 2003,ott924443
+Actinopyga mauritiana,Actinopyga mauritiana,Holothuriidae,Aspidochirotida,Holothuroid,Echinodermata,Actinopyga,S,-9,159,P,156.4,NA,9,0.137619465,29.08510971,Ramofafia et al. 2003,ott957430
+Heteromastus filiformis,Heteromastus filiformis,Capitellidae,,Polychaeta,Annelida,Heteromastus,N,45.073521,-67,P,110,NA,45.073521,0.226419579,7.355999947,Rasmussen 1956,ott849195
+Magalia perarmata,Syllidia armata,Hesionidae,Phyllodocida,Polychaeta,Annelida,Syllidia,N,55,11,L,58,NA,55,0.031193264,9.359490395,Rasmussen 1956,ott64306
+Nereis falcaria,Nereis falcaria,Nereidae,Phyllodocida,Polychaeta,Annelida,Nereis,S,-41,174.726563,L,380,NA,41,0.111596811,13.47710991,Read 1974,ott305738
+Neanthes caudata,Neanthes acuminata,Nereidae,Phyllodocida,Polychaeta,Annelida,Neanthes,N,33,-117,P,470,NA,33,0.188343445,17.45948982,Reish 1957,ott563194
+Dorvillea rudolphi,Schistomeringos rudolphi,Dorvilleidae,Eunicida,Polychaeta,Annelida,Schistomeringos,N,38.24627,-123,L,110,NA,38.24627,0.165433632,11.53059006,Richards 1967,ott141784
+Schistomeringos rudolphi,Schistomeringos rudolphi,Dorvilleidae,Eunicida,Polychaeta,Annelida,Schistomeringos,N,34,-118,P,100,8,34,0.142537474,17.26959991,Richards 1967,ott141784
+Dendronotus albopunctatu,Dendronotus albopunctatus,Dendronotidae,Nudibranchia,Gastropoda,Mollusca,Dendronotus,N,48,-122,P,108,NA,48,0.136874763,10.07400036,Robilliard 1972,ott553083
+Platynereis bicanaculata,Platynereis bicanaliculata,Nereidae,Phyllodocida,Polychaeta,Annelida,Platynereis,N,48.537522,-123,L,130,NA,48.537522,0.220556316,9.867109299,Roe 1975,ott268486
+Phialidium gregarium,Clytia gregaria,Campanulariidae,Hydroida,Hydrozoa,Cnidaria,Clytia,N,48,-123,P,173,7.5,48,0.136874763,9.787690163,Roosen-Runge 1970,ott259585
+Austraeolis ornata,Austraeolis ornata,Glaucidae,Nudibranchia,Gastropoda,Mollusca,Austraeolis,S,-33,151,P,78,NA,33,0.585780803,20.54590988,Rose 1985,ott1098435
+Bornella digitata,Bornella stellifera,Bornellidae,Nudibranchia,Gastropoda,Mollusca,Bornella,S,-33,151,L,160,NA,33,0.585780803,20.54590988,Rose 1985,ott1092239
+Bullina lineata,Bullina lineata,Bullinidae,Cephalaspidea,Gastropoda,Mollusca,Bullina,S,-33,151,P,67,NA,33,0.585780803,20.54590988,Rose 1985,ott272323
+Hoplodoris nodulosa,Carminodoris nodulosa,Dorididae,Nudibranchia,Gastropoda,Mollusca,Carminodoris,S,-33,151,L,139,NA,33,0.585780803,20.54590988,Rose 1985,ott2876334
+Chelidonura hirundinina,Chelidonura hirundinina,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Chelidonura,S,-14,145,P,58.5,NA,14,0.389974561,26.9333992,Rose 1985,ott823227
+Chelidonura inornata,Chelidonura inornata,Aglajidae,Cephalaspidea,Gastropoda,Mollusca,Chelidonura,S,-14,145,P,55,NA,14,0.389974561,26.9333992,Rose 1985,ott823227
+Dendrodoris nigra (form,Dendrodoris nigra,Dendrodorididae,Nudibranchia,Gastropoda,Mollusca,Dendrodoris,S,-33,151,P,125,NA,33,0.585780803,20.54590988,Rose 1985,ott57709
+Dendrodoris nigra (form,Dendrodoris nigra,Dendrodorididae,Nudibranchia,Gastropoda,Mollusca,Dendrodoris,S,-33,151,P,75,NA,33,0.585780803,20.54590988,Rose 1985,ott57709
+Dendrodoris gemmacea,Dendrodoris krusensternii,Dendrodorididae,Nudibranchia,Gastropoda,Mollusca,Dendrodoris,S,-33,151,P,105,NA,33,0.585780803,20.54590988,Rose 1985,ott57709
+Dendrodoris nigra (form,Dendrodoris nigra,Dendrodorididae,Nudibranchia,Gastropoda,Mollusca,Dendrodoris,S,-33,151,P,125,NA,33,0.585780803,20.54590988,Rose 1985,ott57709
+Dendrodoris nigra (form,Dendrodoris nigra,Dendrodorididae,Nudibranchia,Gastropoda,Mollusca,Dendrodoris,S,-33,151,P,75,NA,33,0.585780803,20.54590988,Rose 1985,ott57709
+Discodoris palma,Discodoris palma,Discodorididae,,Gastropoda,Mollusca,Discodoris,S,-33,151,P,75,NA,33,0.585780803,20.54590988,Rose 1985,ott662110
+Casella atromarginata,Doriprismatica atromarginata,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Doriprismatica,S,-33,151,P,132,NA,33,0.585780803,20.54590988,Rose 1985,ott572198
+Elysia maoria,Elysia maoria,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,S,-33,151,P,70,NA,33,0.585780803,20.54590988,Rose 1985,ott322154
+Elysia australis,Elysia australis,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,S,-33,151,P,64,NA,33,0.585780803,20.54590988,Rose 1985,ott322154
+Hydatina physis,Hydatina physis,Aplustridae,,Gastropoda,Mollusca,Hydatina,S,-33,151,P,75,NA,33,0.585780803,20.54590988,Rose 1985,ott674163
+Jorunna sp.,Jorunna,Dorididae,Nudibranchia,Gastropoda,Mollusca,Jorunna,S,-33,151,P,74,NA,33,0.585780803,20.54590988,Rose 1985,ott32022
+Jorunna pantherina,Jorunna pantherina,Dorididae,Nudibranchia,Gastropoda,Mollusca,Jorunna,S,-33,151,P,77,NA,33,0.585780803,20.54590988,Rose 1985,ott32022
+Nembrotha sp.,Nembrotha,Polyceridae,Nudibranchia,Gastropoda,Mollusca,Nembrotha,S,-33,151,P,62,NA,33,0.585780803,20.54590988,Rose 1985,ott119022
+Oxynoe viridis,Oxynoe viridis,Oxynoidae,Sacoglossa,Gastropoda,Mollusca,Oxynoe,S,-33,151,P,56,NA,33,0.585780803,20.54590988,Rose 1985,ott588314
+Plocamopherus imperialis,Plocamopherus imperialis,Polyceridae,Nudibranchia,Gastropoda,Mollusca,Plocamopherus,S,-33,151,P,NA,NA,33,0.585780803,20.54590988,Rose 1985,ott917809
+Rostanga muscula,Rostanga muscula,Dorididae,Nudibranchia,Gastropoda,Mollusca,Rostanga,S,-33,151,P,70,NA,33,0.585780803,20.54590988,Rose 1985,ott779149
+Sclerodoris apiculata,Sclerodoris apiculata,Dorididae,Nudibranchia,Gastropoda,Mollusca,Sclerodoris,S,-33,151,P,77,NA,33,0.585780803,20.54590988,Rose 1985,ott2876265
+Fabricinula trilobata,Fabricinuda trilobata,Sabellidae,Sabellida,Polychaeta,Annelida,Fabricinuda,N,27,-80,L,103,NA,27,1.475588376,26.87420082,Rouse & Fitzhugh 1994,ott438514
+Amphiglena nathae,Amphiglena nathae,Sabellidae,Sabellida,Polychaeta,Annelida,Amphiglena,S,-9,46.417236,L,130,NA,9,0.283761606,27.06888962,Rouse & Gambi 1998,ott702959
+Amphiglena terebro,Amphiglena terebro,Sabellidae,Sabellida,Polychaeta,Annelida,Amphiglena,S,-33,151,L,237,NA,33,0.585780803,20.54590988,Rouse 1993,ott702959
+Perkinsiana riwo,Aracia riwo,Sabellidae,Sabellida,Polychaeta,Annelida,Aracia,S,-5,145.800419,L,200,NA,5,0.40838437,28.97249031,Rouse 1996,ott4987264
+Berthelinia ganapati,Berthelinia ganapati,Juliidae,Sacoglossa,Gastropoda,Mollusca,Berthelinia,N,15,80,P,50,NA,15,0.064944235,28.26601028,Sarma 1975,ott5719938
+Polydora variegata,Polydora variegata,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,44,144,P,160,NA,44,0.509563383,6.576089859,Sato-Okoshi et al. 1990,ott918307
+Echinaster morph 1,Echinaster,Echinoasteridae,Spinulosida,Asteroidea,Echinodermata,Echinaster,N,27,-82,L,840,NA,27,0.107439493,24.29841042,Scheibling & Lawrence 1982,ott893170
+Hydroides dianthus,Hydroides dianthus,Serpulidae,Sabellida,Polychaeta,Annelida,Hydroides,N,41.514747,-71,P,45,5,41.514747,0.071645968,11.21480942,Scheltema et al 1981,ott327392
+Hermaea bifida,Hermaea bifida,Hermaeidae,Sacoglossa,Gastropoda,Mollusca,Hermaea,N,40,0,P,48,NA,40,0.145182515,18.75199127,Schmekel & Portmann 1982,ott231028
+Littorina planaxis,Littorina keenae,Vespoidea,Neotaenioglossa,Gastropoda,Mollusca,Littorina,N,33,-118,P,90,NA,33,0.018636925,17.13749123,Schmitt 1979,ott622240
+Anthophiura ingolfi,Anthophiura ingolfi,Ophiurudae,Ophiurida,Ophiuroidea,Echinodermata,Anthophiura,N,39,-70,L,300,NA,39,0.065572906,17.76619911,Schoener 1972,ott3655439
+Ophiomusium lymani,Ophiomusa lymani,Ophiurudae,Ophiurida,Ophiuroidea,Echinodermata,Ophiomusa,N,39,-70,L,600,NA,39,0.065572906,17.76619911,Schoener 1972,NA
+Nereimyra punctata,Nereimyra punctata,Hesionidae,Phyllodocida,Polychaeta,Annelida,Nereimyra,N,59.474384,10,P,100,NA,59.474384,0.157437,9.339609146,Schram & Haaland 1984,ott253847
+Pomatoceros triqueter,Spirobranchus triqueter,Serpulidae,Sabellida,Polychaeta,Annelida,Spirobranchus,N,54.498758,-1,P,75,21,54.498758,0.081551171,9.936690331,Segrove 1941,ott906173
+Loimia medusa,Loimia medusa,Terebellidae,Terebellida,Polychaeta,Annelida,Loimia,N,39.400122,-76,P,180,30,39.400122,0.004972823,13.88989067,Seitz & Schaffer,ott674704
+Ophiothrix spongicola,Macrophiothrix spongicola,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Macrophiothrix,S,-34,150,P,128,30,34,0.498828831,19.78570938,Selvakumaraswamy & Byrne 2000,ott763535
+Ophiactis resiliens,Ophiactis resiliens,Ophiactidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiactis,S,-34,150,P,83,60,34,0.498828831,19.78570938,Selvakumaraswamy & Byrne 2000,ott66287
+Ophionereis schayeri,Ophionereis schayeri,Ophionereididae,Ophiurida,Ophiuroidea,Echinodermata,Ophionereis,S,-34,150,L,200,6.5,34,0.498828831,19.78570938,Selvakumaraswamy & Byrne 2000,ott34969
+Ophiothrix ciliaris,Ophiothrix (Ophiothrix) ciliaris,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiothrix,S,-34,150,P,98,NA,34,0.498828831,19.78570938,Selvakumaraswamy & Byrne 2000,ott768174
+Ophiothrix caespitosa,Ophiothrix (Ophiothrix) caespitosa,Ophiotricidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiothrix,S,-34,150,P,105,NA,34,0.498828831,19.78570938,Selvakumaraswamy & Byrne 2000,ott768174
+Ctenodiscus crispatus,Ctenodiscus crispatus,Goniopectinidae,Paxillodisa,Asteroidea,Echinodermata,Ctenodiscus,N,43,-69,L,400,NA,43,0.024533608,9.713000298,Shick et al. 1981,ott605966
+Glycera dibranchiata,Glycera dibranchiata,Glyceridae,Phyllodocida,Polychaeta,Annelida,Glycera,N,38,-76,P,140,NA,38,0.161090425,14.56690025,Simpson 1962,ott941631
+Brevibranchum maculatum,Brevibrachium maculatum,Onuphidae,Eunicida,Polychaeta,Annelida,Brevibrachium,S,-37,144.755859,L,500,NA,37,0.474807541,15.60149002,Smith & Jensz 1968,ott4979913
+Spirobranchus corniculat,Spirobranchus corniculatus,Serpulidae,Sabellida,Polychaeta,Annelida,Spirobranchus,S,-14,145.456753,P,80,NA,14,0.366696766,26.92790985,Smith 1984,ott906173
+Asterina miniata,Patiria miniata,Asterinidae,Valvatida,Asteroidea,Echinodermata,Patiria,N,37,-122,P,174.6,NA,37,0.073368934,13.02889061,Snyder 1925,ott157861
+Littorina brevicula,Littorina brevicula,Littorinidae,Littorinimorpha,Gastropoda,Mollusca,Littorina,N,35,129,L,135,7,35,0.158288341,18.72429085,Son & Hong 1998,ott622240
+Ophiolepis elegans,Ophiolepis elegans,Ophiurudae,Ophiurida,Ophiuroidea,Echinodermata,Ophiolepis,N,27,-82,L,250,2,27,0.107439493,24.29841042,Stancyk 1973,ott3654979
+Ophiolepis elegans,Ophiolepis elegans,Ophiurudae,Ophiurida,Ophiuroidea,Echinodermata,Ophiolepis,N,27,-82,L,250,2,27,0.107439493,24.29841042,Stancyk 1973,ott3654979
+Astrobrachion constrictu,Astrobrachion constrictum,Asteroschematid,Euryalida,Ophiuroidea,Echinodermata,Astrobrachion,S,-45,167,L,415,NA,45,0.365241075,13.37790012,Stewart & Mladenov 1994,ott893828
+Axiothella rubrocincta,Axiothella rubrocincta,Maldanidae,,Polychaeta,Annelida,Axiothella,N,48.537522,-123,L,250,NA,48.537522,0.220556316,9.867109299,Stranthmann 1987,ott694251
+Crucigera zygophora,Crucigera zygophora,Serpulidae,Sabellida,Polychaeta,Annelida,Crucigera,N,48.537522,-123,P,70,NA,48.537522,0.220556316,9.867109299,Stranthmann 1987,ott44732
+Onuphis irridescens,Onuphis iridescens,Onuphidae,Eunicida,Polychaeta,Annelida,Onuphis,N,48.537522,-123,L,250,NA,48.537522,0.220556316,9.867109299,Stranthmann 1987,ott433141
+Phylodoce williamsi,Phyllodoce williamsi,Phyllodocidae,Phyllodocida,Polychaeta,Annelida,Phyllodoce,N,48.537522,-123,P,90,NA,48.537522,0.220556316,9.867109299,Stranthmann 1987,ott398723
+Sternaspis fossor,Sternaspis fossor,Sternaspidae,Terebellida,Polychaeta,Annelida,Sternaspis,N,48.537522,-123,L,170,NA,48.537522,0.220556316,9.867109299,Stranthmann 1987,ott740617
+Orthasterias koehleri,Orthasterias koehleri,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Orthasterias,N,50,-123,P,160,NA,50,0.040957509,10.82119083,Strathmann 1974,ott658129
+Parastichopus californic,Apostichopus californicus,Stichopodidae,Aspidochirotida,Holothuroid,Echinodermata,Apostichopus,N,48,-123,P,204,71,48,0.136874763,9.787690163,Strathmann 1978,ott956276
+Dendraster excentricus,Dendraster excentricus,Dendrasteridae,Clypeasteroida,Echinoidea,Echinodermata,Dendraster,N,48,-123,P,118,115,48,0.136874763,9.787690163,Strathmann 1978,ott3650884
+Luidia foliolata,Luidia foliolata,Luidiidae,Paxillodisa,Asteroidea,Echinodermata,Luidia,N,50,-124,P,170,100.5,50,0.144484803,10.53579044,Strathmann 1978,ott367769
+Ophiopholis aculeata,Ophiopholis aculeata,Ophiactidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiopholis,N,60,5,P,120,30,60,0.177727211,9.371790886,Strathmann 1978,ott208887
+Pisaster ochraceus,Pisaster ochraceus,Asteriidae,Forcipulatida,Asteroidea,Echinodermata,Pisaster,N,50,-123,P,165,152,50,0.040957509,10.82119083,Strathmann 1978,ott76841
+Amphiodia occidentalis,Amphiodia occidentalis,Amphiuridae,Ophiurida,Ophiuroidea,Echinodermata,Amphiodia,N,36,-121,P,97,NA,36,0.053637051,13.29309082,Strathmann et al. 1992,ott573285
+Ascidia callosa,Ascidia callosa,Ascidiidae,Phlebobranchia,Ascidiacea,Chordata,Ascidia,N,48,-123,L,165,NA,48,0.136874763,9.787690163,Strathmann et al. 1992,ott1033778
+Cucumaria fallax,Cucumaria fallax,Cucumariiadae,Dendrochirotida,Holothuroid,Echinodermata,Cucumaria,N,48,-123,L,504,NA,48,0.136874763,9.787690163,Strathmann et al. 1992,ott891878
+Cucumaria miniata,Cucumaria miniata,Cucumariiadae,Dendrochirotida,Holothuroid,Echinodermata,Cucumaria,N,48,-123,L,520,NA,48,0.136874763,9.787690163,Strathmann et al. 1992,ott891878
+Dermasterias imbricata,Dermasterias imbricata,Poraniidae,Spinulodisa,Asteroidea,Echinodermata,Dermasterias,N,43,-124,P,200,NA,43,0.071941822,11.41149998,Strathmann et al. 1992,ott451015
+Sarsia tubulosa,Sarsia tubulosa,Corynidae,Hydroida,Hydrozoa,Cnidaria,Sarsia,N,48,-123,P,92,NA,48,0.136874763,9.787690163,Strathmann et al. 1992,ott551392
+Sarsia species L,Sarsia,Corynidae,Hydroida,Hydrozoa,Cnidaria,Sarsia,N,48,-123,P,129,NA,48,0.136874763,9.787690163,Strathmann et al. 1992,ott551392
+Sarsia princeps,Sarsia princeps,Corynidae,Hydroida,Hydrozoa,Cnidaria,Sarsia,N,48,-123,P,107,NA,48,0.136874763,9.787690163,Strathmann et al. 1992,ott551392
+Thyone benti,Thyone benti,Phyllophoridae,Dendrochirotida,Holothuroid,Echinodermata,Thyone,N,48,-123,L,535,NA,48,0.136874763,9.787690163,Strathmann et al. 1992,ott3652599
+Chlamys bifrons,Equichlamys bifrons,Pectinidae,Pteroida,Bivalvia,Mollusca,Equichlamys,S,-34,138,P,116.5,NA,34,0.144487574,17.60709953,Styan & Butler 2000,ott6370355
+Chlamys asperrima,Mimachlamys sanguinea,Pectinidae,Pteroida,Bivalvia,Mollusca,Mimachlamys,S,-34,138,P,71.2,NA,34,0.144487574,17.60709953,Styan & Butler 2000,ott6370576
+Ascidia mentula,Ascidia mentula,Ascidiidae,Phlebobranchia,Ascidiacea,Chordata,Ascidia,N,58,11,L,200,NA,58,0.036005907,9.550909996,Svane 1983,ott1033778
+Boltenia echinata,Boltenia echinata,Pyuridae,Pleurogona,Ascidiacea,Chordata,Boltenia,N,58,11,L,200,NA,58,0.036005907,9.550909996,Svane 1983,ott1041106
+Pyura tessellata,Pyura tessellata,Pyuridae,Pleurogona,Ascidiacea,Chordata,Pyura,N,58,11,L,200,NA,58,0.036005907,9.550909996,Svane 1983,ott176549
+Aplysia  dactylomela,Aplysia dactylomela,Aplysiidae,Anaspidea,Gastropoda,Mollusca,Aplysia,N,48,-123,P,90,30,48,0.136874763,9.787690163,Switzer-Dunlap & Hadfield 1977,ott126322
+Aplysia juliana,Aplysia juliana,Aplysiidae,Anaspidea,Gastropoda,Mollusca,Aplysia,N,21,-157,P,77,28,21,0.111114649,25.24470901,Switzer-Dunlap & Hadfield 1977,ott126322
+Dolabella auricularia,Dolabella auricularia,Aplysiidae,Anaspidea,Gastropoda,Mollusca,Dolabella,N,21,-157,P,92,31,21,0.111114649,25.24470901,Switzer-Dunlap & Hadfield 1977,ott399036
+Stylocheilus longicauda,Stylocheilus longicauda,Aplysiidae,Anaspidea,Gastropoda,Mollusca,Stylocheilus,N,21,-157,P,66,30,21,0.111114649,25.24470901,Switzer-Dunlap & Hadfield 1977,ott171918
+Protula sp.,Protula,Serpulidae,Sabellida,Polychaeta,Annelida,Protula,N,9,79,L,80,NA,9,0.108489224,28.07840919,Tampi 1960,ott440706
+Echinocyamus pusillus,Echinocyamus pusillus,Fibulariidae,Clypeasteroida,Echinoidea,Echinodermata,Echinocyamus,N,58,18,P,100,45,58,0.105568228,7.649509907,Theel 1892,ott3650851
+Thuridilla hopeii,Thuridilla hopei,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Thuridilla,N,42,3,L,100,NA,42,0.057204852,16.71149063,Thompson & Salghettidrioli 1984,ott578609
+Astropecten irregularis,Astropecten irregularis,Astropectinidae,Paxillodisa,Asteroidea,Echinodermata,Astropecten,N,52,4,P,110,NA,52,0.047491849,11.50310993,Thorson 1946,ott269237
+Archidoris pseudoargus,Doris pseudoargus,Archidorididae,Nudibranchia,Gastropoda,Mollusca,Doris,N,56,-2,P,148.8,37,56,0.076619115,9.520909309,Todd & Havenhand 1985,ott860557
+Onchidoris muricata,Onchidoris muricata,Onchidorididae,Nudibranchia,Gastropoda,Mollusca,Onchidoris,N,54,-1,P,90.8,58.5,54,0.079657719,9.85999012,Todd & Havenhand 1985,ott208593
+Ophiodaphne formata,Ophiodaphne formata,Ophiactidae,Ophiurida,Ophiuroidea,Echinodermata,Ophiodaphne,N,35,136,P,90,21.125,35,0.415158452,18.08909035,Tominaga et al 2004,ott3654054
+Ercolania felina,Ercolania felina,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Ercolania,S,-36,175,P,56,NA,36,0.10901096,17.47450066,Trowbridge 1995,ott1076308
+Echinometra viridis,Echinometra viridis,Echinometridae,Echinoida,Echinoidea,Echinodermata,Echinometra,N,18,-67,P,91,14,18,0.032271248,27.12110901,Trowbridge 2000,ott631177
+Elysia viridis,Elysia viridis,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,56,-6,P,73,30,56,0.141174508,10.13709068,Trowbridge 2000,ott322154
+Tripneustes ventricosus,Tripneustes ventricosus,Toxopneustidae,Temnopleuroida,Echinoidea,Echinodermata,Tripneustes,N,18,-67,P,79,28,18,0.032271248,27.12110901,Trowbridge 2000,ott43571
+Stiliger berghi,Stiliger berghi,Limapontiidae,Sacoglossa,Gastropoda,Mollusca,Stiliger,N,35,139,P,65,NA,35,0.030597547,19.55449104,Trowbridge et al. 2010,ott903299
+Drupella cornus,Drupella cornus,Muricidae,Neogastropoda,Gastropoda,Mollusca,Drupella,S,-21,114,P,170,NA,21,0.138358312,25.67218971,Turner 1992,ott265001
+Poriocidaris purpurata,Histocidaris purpurata,Cidaridae,Cidaroida,Asteroidea,Echinodermata,Histocidaris,N,57,-10,L,1500,NA,57,0.070035989,11.3216095,Tyler & Gage 1984,ott186510
+Paragonaster subtilis,Paragonaster subtilis,Goniasteridae,Valvatida,Asteroidea,Echinodermata,Paragonaster,N,55,-10,L,900,NA,55,0.090463239,11.63520908,Tyler & Paine 1982,ott3657616
+Pseudarchaster parelii,Pseudarchaster parelii,Goniasteridae,Valvatida,Asteroidea,Echinodermata,Pseudarchaster,N,55,-10,L,1000,NA,55,0.090463239,11.63520908,Tyler & Paine 1982,ott246177
+Freyella spinosa,Freyella elegans,Brisingidae,Forcipulatida,Asteroidea,Echinodermata,Freyella,N,49,-14,L,1250,NA,49,0.033094763,13.62450981,Tyler et al. 1984,ott178393
+Zoroaster fulgens,Zoroaster fulgens,Zoroasteridae,Forcipulatida,Asteroidea,Echinodermata,Zoroaster,N,56,-10,L,950,NA,56,0.052702578,11.5486002,Tyler et al. 1984,ott1018363
+Hydroides diramphus,Hydroides dirampha,Serpulidae,Sabellida,Polychaeta,Annelida,Hydroides,S,-28,153,P,60.7,10,28,0.494853544,23.33551025,Unpublished data,ott327392
+Styela plicata,Styela plicata,Styelidae,Stolidobranchia,Ascidiacea,Chordata,Styela,S,-28,153,L,163,1,28,0.494853544,23.33551025,Unpublished data,ott750982
+Uniophora granifera,Uniophora granifera,,,Asteroidea,Echinodermata,Uniophora,S,-37,144,L,521,4,37,0.692250769,15.60149002,Unpublished data,ott727969
+Crucibulum quirqinae,Crucibulum quiriquinae,Calyptraeidae,Mesogastropoda,Gastropoda,Mollusca,Crucibulum,S,-31,-71,P,325.8,NA,31,0.175528662,14.74080944,Véliz et al. 2001,ott737388
+Branchypolynoe seepensis,Branchipolynoe seepensis,Polynoidae,Phyllodocida,Polychaeta,Annelida,Branchipolynoe,N,37,-33,L,390,NA,37,0.039508598,19.78399086,Van Dover et al. 1999,ott618024
+Pilumnus lumpinus,Pilumnus lumpinus,Pilumnidae,Decapoda,Malacostrac,Arthropoda,Pilumnus,S,-42,174,L,NA,NA,42,0.220130563,13.87730026,Wear 1967,ott284329
+Pilumnus novaezealandiae,Pilumnus novaezealandiae,Pilumnidae,Decapoda,Malacostrac,Arthropoda,Pilumnus,S,-41,175,L,NA,NA,41,0.115345572,15.0241003,Wear 1967,ott284329
+Haliotis cracheroidii,Haliotis cracherodii,Haliotidae,,Gastropoda,Mollusca,Haliotis,N,36,-121,L,160,NA,36,0.053637051,13.29309082,Webber & Giese 1969,ott228119
+Notomithrax peronii,Notomithrax peronii,Majidae,Decapoda,Malacostrac,Arthropoda,Notomithrax,S,-41,172,P,NA,34,41,0.182413234,15.83181,Webber & Wear 1981,ott4667587
+Bugula neritina,Bugula neritina,Bugulidae,Cheilostomata,Gymnolaemat,Bryozoa,Bugula,N,27,-80,L,NA,0.5,27,1.475588376,26.87420082,Wendt 1996,ott595315
+Bugula stolonifera,Bugulina stolonifera,Bugulidae,Cheilostomata,Gymnolaemat,Bryozoa,Bugulina,N,42,-71,L,NA,0.5,42,0.081752637,10.29349041,Wendt 2000,ott4152865
+Bugula simplex,Bugulina simplex,Bugulidae,Cheilostomata,Gymnolaemat,Bryozoa,Bugulina,N,42,-71,L,NA,0.5,42,0.081752637,10.29349041,Wendt 2000,ott4152865
+Elysia chlorotica (plank,Elysia chlorotica,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,41,-71,P,79.3,14.5,41,0.02300504,11.30280972,West et al 1984,ott322154
+Elysia chlorotica (benth,Elysia chlorotica,Plakobranchidae,Sacoglossa,Gastropoda,Mollusca,Elysia,N,42,-70,L,96,NA,42,0.077914097,10.25989056,West et al 1984,ott322154
+Heliocidaris erythrogram,Heliocidaris erythrogramma,Echinometridae,Camarodonta,Echinoidea,Echinodermata,Heliocidaris,S,-33,151,L,400,4.35,33,0.585780803,20.54590988,Williams & Anderson 1975,ott146857
+Polydora neocaeca,Polydora neocaeca,Spionidae,Spionida,Polychaeta,Annelida,Polydora,N,41,-71,L,125,NA,41,0.02300504,11.30280972,Williams & Radashevsky 1999,ott918307
+Sabellaria spinulosa,Sabellaria spinulosa,Sabellariidae,Terebellida,Polychaeta,Annelida,Sabellaria,N,50.348089,-4,P,90,NA,50.348089,0.123523186,12.54950047,Wilson 1929,ott638889
+Branchiomma vesicolosum,Branchiomma vesicolosum,Sabellidae,Sabellida,Polychaeta,Annelida,Branchiomma,N,50.219973,-3,L,150,NA,50.219973,0.123523186,12.29090023,Wilson 1936,ott1015093
+Ophelia bicornis,Ophelia bicornis,Opheliidae,,Polychaeta,Annelida,Ophelia,N,50,-4,L,95,5.5,50,0.167980313,12.54950047,Wilson 1948,ott336914
+Chromodoris elisabethina,Chromodoris elisabethina,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Chromodoris,S,-26,153,P,93,NA,26,0.058383583,23.98641014,Wilson 2002,ott981724
+Chromodoris strigata,Chromodoris strigata,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Chromodoris,S,-23,151,P,80,NA,23,0.345124494,23.94630051,Wilson 2002,ott981724
+Chromodoris lochi,Chromodoris lochi,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Chromodoris,S,-27,153,P,NA,NA,27,0.057735343,23.96480942,Wilson 2002,ott981724
+Diversidoris aurantionod,Diversidoris aurantionodulosa,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Diversidoris,S,-27,153,L,NA,NA,27,0.057735343,23.96480942,Wilson 2002,ott1093154
+Chromodoris geometrica,Goniobranchus geometricus,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Goniobranchus,S,-26,153,P,82,NA,26,0.058383583,23.98641014,Wilson 2002,ott900993
+Chromodoris daphne,Goniobranchus daphne,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Goniobranchus,S,-27,153,P,128,NA,27,0.057735343,23.96480942,Wilson 2002,ott900993
+Chromodoris kuniei,Goniobranchus kuniei,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Goniobranchus,S,-23,151,P,109,NA,23,0.345124494,23.94630051,Wilson 2002,ott900993
+Chromodoris roboi,Goniobranchus roboi,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Goniobranchus,S,-23,151,P,101,NA,23,0.345124494,23.94630051,Wilson 2002,ott900993
+Chromodoris leopardus,Goniobranchus leopardus,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Goniobranchus,S,-26,153,P,104,NA,26,0.058383583,23.98641014,Wilson 2002,ott900993
+Hypselodoris obscura,Hypselodoris obscura,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Hypselodoris,S,-27,153,P,104,NA,27,0.057735343,23.96480942,Wilson 2002,ott32015
+Noumea norba,Verconia norba,Chromodorididae,Nudibranchia,Gastropoda,Mollusca,Verconia,S,-26,153,P,83,NA,26,0.058383583,23.98641014,Wilson 2002,ott846107
+Haliotis coccoradiata,Haliotis coccoradiata,Haliotidae,,Gastropoda,Mollusca,Haliotis,S,-33,152,L,175,5,33,0.649368987,20.55579948,Wong et al 2010,ott228119
+Ophidiaster robillardi,Ophidiaster cribrarius,Ophidiasteridae,Valvatida,Asteroidea,Echinodermata,Ophidiaster,N,13,144,P,130,NA,13,0.166330757,28.4860096,Yamaguchi & Lucas 1984,ott761414
+Ophidiaster granifer,Ophidiaster granifer,Ophidiasteridae,Valvatida,Asteroidea,Echinodermata,Ophidiaster,N,13,144,L,600,9,13,0.166330757,28.4860096,Yamaguchi & Lucas 1984,ott761414
+Culcita novaeguineae,Culcita novaeguineae,Oreasteridae,Valvatida,Asteroidea,Echinodermata,Culcita,N,13,144,P,190,17,13,0.166330757,28.4860096,Yamaguchi 1973,ott58289
+Gomophia egyptiaca,Gomophia egyptiaca,Ophidiasteridae,Valvatida,Asteroidea,Echinodermata,Gomophia,N,15,144,L,650,4,15,0.062736138,28.45660019,Yamaguchi 1974,ott3656289
+Leiaster leachi,Leiaster leachi,Ophidiasteridae,Valvatida,Asteroidea,Echinodermata,Leiaster,N,13,144,P,140,NA,13,0.166330757,28.4860096,Yamaguchi 1975,ott750573
+Ophidiaster squameus,Ophidiaster hemprichi,Ophidiasteridae,Valvatida,Asteroidea,Echinodermata,Ophidiaster,N,13,144,P,130,NA,13,0.166330757,28.4860096,Yamaguchi 1975,ott761414
+Tubularia mesenbryanthem,Ectopleura crocea,Tubulariidae,Hydroida,Hydrozoa,Cnidaria,Ectopleura,N,35,139,L,305,1,35,0.030597547,19.55449104,Yamashita et al 2003,ott183503
+Serpula columbiana,Serpula columbiana,Serpulidae,Sabellida,Polychaeta,Annelida,Serpula,N,48.537522,-123,P,60,NA,48.537522,0.220556316,9.867109299,Young & Chia 1982,ott566285
+Aurospio dibranchiata,Aurospio dibranchiata,Spionidae,Spionida,Polychaeta,Annelida,Aurospio,N,35,-73,P,110,NA,35,0.079149415,24.01861,Young 2003,ott752046
+Aurospio dibranchiata,Aurospio dibranchiata,Spionidae,Spionida,Polychaeta,Annelida,Aurospio,N,35,-73,P,110,NA,35,0.079149415,24.01861,Young 2003,ott752046
+Chone duneri,Chone duneri,Sabellidae,Sabellida,Polychaeta,Annelida,Chone,N,32,130,L,175,NA,32,0.135521512,20.54759026,Yun & Kikuchi 1991,ott1015097
+Conus biliosus,Conus biliosus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,24,67,P,172,26,24,0.125220518,26.44320869,Zehra & Perveen 1991,ott126315
+Conus coronatus,Conus coronatus,Conidae,Caenogastropoda,Gastropoda,Mollusca,Conus,N,24,67,P,160,27,24,0.125220518,26.44320869,Zehra & Perveen 1991,ott126315
+Amphicteis floridus,Hobsonia florida,Ampharetidae,Ophiurida,Ophiuroidea,Echinodermata,Hobsonia,N,41.514747,-71,L,170,NA,41.514747,0.071645968,11.21480942,Zotolli 1974,ott127497
