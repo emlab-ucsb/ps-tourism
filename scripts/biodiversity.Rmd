@@ -1,0 +1,177 @@
+---
+title: "Biodiveristy - MPAs model"
+author: "*Compiled on `r date()` by `r Sys.info()['user']`*"
+output: 
+  html_document:
+    code_folding: show
+    toc: true
+    toc_depth: 1
+    toc_float: yes
+    number_sections: false
+    theme: cerulean
+    highlight: haddock
+---
+
+```{r}
+library(raster)
+library(sf)
+library(tidyverse)
+library(ggspatial)
+
+gocp_project_dir <- "~/juanmayorga@ucsb.edu - Google Drive/Shared drives/emlab/projects/current-projects/ocean-conservation-priorities"
+
+emlab_data_dir <- "~/juanmayorga@ucsb.edu - Google Drive/Shared drives/emlab/data"
+
+load(file.path(emlab_data_dir, "ocean-conservation-priorities","inputs", "national_analyses","common_inputs.RData"))
+```
+
+
+# Read biodiversity features
+
+```{r, eval = F}
+z_bio <- 0.25
+
+spp_files <- tibble(filepath = list.files(c(file.path(gocp_project_dir, "data", "02_processed", "species_distributions", "birdlife"),
+                                            file.path(gocp_project_dir, "data", "02_processed", "species_distributions", "aquamaps")),
+                                          full.names = T),
+                    valid_sci_name = str_replace_all(str_remove(basename(filepath), "\\.tif"), "_", " ")) %>% 
+  arrange(valid_sci_name)
+
+smts_info <- tibble(filepath = list.files(file.path(gocp_project_dir, "data", "02_processed","seamounts"), full.names = T)) 
+
+provs_info <- tibble(filepath = list.files(file.path(gocp_project_dir, "data", "02_processed", "biogeography"), full.names = T, pattern = "\\.tif"))
+
+biodiversity_df <- stack(c(spp_files$filepath, smts_info$filepath, provs_info$filepath)) %>%
+  raster::as.data.frame(xy = T)
+
+biodiversity_df <- biodiversity_df %>% 
+  rename("lon" = "x", "lat" = "y") %>% 
+  inner_join(ocean_df %>% 
+               select(lon, lat, cell_id)) %>%
+  select(lon, lat, cell_id, everything()) %>%
+  as_tibble() 
+
+bio_feature_names <- colnames(biodiversity_df)[-c(1:3)]
+```
+
+```{r}
+spp_wts <- data.table::fread(file.path(gocp_project_dir, "data", "02_processed", "species_list", "spp_weights.csv")) %>% 
+  as_tibble() %>% 
+  rename(w = spp_weight)
+
+smts_wts <- tibble(filepath = list.files(file.path(gocp_project_dir, "data", "02_processed","seamounts"), full.names = T)) %>% 
+  mutate(w = sum(spp_wts$w)/n())
+
+provs_wts <- tibble(filepath = list.files(file.path(gocp_project_dir, "data", "02_processed", "biogeography"), full.names = T, pattern = "\\.tif")) %>% 
+  mutate(w = sum(spp_wts$w)/n())
+
+bio_features_info <- bind_rows(spp_wts %>% 
+                                 mutate(sub_goal = "species"), 
+                               smts_wts %>% 
+                                 mutate(sub_goal = "seamounts"), 
+                               provs_wts %>% 
+                                 mutate(sub_goal = "provinces"))
+
+n_bio_features <- nrow(bio_features_info)
+```
+
+# Normalize and apply impacts
+
+```{r}
+features_matrix <- features_df %>% 
+  select(-lon,-lat,-cell_id) %>% 
+  as.matrix()
+
+rownames(features_matrix) <- features_df$cell_id
+
+stopifnot(
+  sum(map_lgl(features_df %>%
+                select(-lon,-lat,-cell_id), is.numeric)) == ncol(features_matrix)
+  ) 
+
+norm_features_matrix <- sweep(features_matrix, 2, colSums(features_matrix, na.rm = T), FUN = "/")
+
+stopifnot(
+  sum(colSums(norm_features_matrix, na.rm = T)) == ncol(features_matrix)
+  ) 
+
+norm_features_matrix <- norm_features_matrix[rowSums(is.na(norm_features_matrix)) != ncol(norm_features_matrix), ]
+
+stopifnot(
+  identical(colnames(norm_features_matrix), 
+          features_df %>% 
+            select(-lon,-lat,-cell_id) %>% 
+            colnames())
+  )  # Is the order of the features mantained?
+
+norm_features_matrix[is.na(norm_features_matrix)] <- 0
+```
+
+## Biodiversity impacts
+
+```{r}
+bio_abatable_impacts_df <- raster(file.path(gocp_project_dir, 
+                                            "data", "02_processed", "impacts", "chi", "abatable_impacts_5_yr_avg_log.tif")) %>% 
+  raster::as.data.frame(xy = T) %>% 
+  set_names(c("lon", "lat", "Ia")) %>% 
+  inner_join(ocean_df) %>% 
+  as_tibble() %>% 
+  replace_na(list(Ia = 0))
+
+bio_unabatable_impacts_df <- raster(file.path(gocp_project_dir, 
+                                              "data", "02_processed", "impacts", "chi", "unabatable_impacts_5_yr_avg_log.tif")) %>% 
+  raster::as.data.frame(xy = T) %>% 
+  set_names(c("lon", "lat", "Iu")) %>% 
+  inner_join(ocean_df) %>% 
+  as_tibble()%>% 
+  replace_na(list(Iu = 0)) 
+
+bio_remains_BAU <- norm_features_matrix[, bio_feature_names] %>% 
+  sweep(1, (1 - bio_abatable_impacts_df$Ia), FUN = "*") %>% 
+  sweep(1, (1 - bio_unabatable_impacts_df$Iu), FUN = "*") %>% 
+  colSums(na.rm = T)
+
+sum(bio_remains_BAU^z_bio*bio_weights)/sum(1^z_bio*bio_weights)
+
+bio_remains_MPA <- norm_features_matrix[, bio_feature_names] %>% 
+  sweep(1, (1 - bio_unabatable_impacts_df$Iu), FUN = "*") %>% 
+  colSums(na.rm = T)
+
+bio_diff_matrix <- norm_features_matrix[, bio_feature_names] %>% 
+  sweep(1, (bio_abatable_impacts_df$Ia - bio_abatable_impacts_df$Ia*bio_unabatable_impacts_df$Iu), FUN = "*")
+
+bio_diff_made <- colSums(bio_diff_matrix, na.rm = T)
+
+norm_features_matrix[, bio_feature_names] <- bio_diff_matrix
+```
+
+
+## Initial conditions
+
+```{r}
+z_bio <-  0.25
+
+is_mpa_vect <- ocean_df$f_highly_mpa > 0.5
+
+protected_cell_ids <- ocean_df$cell_id[is_mpa_vect]
+
+protected_cells <- matrix(is_mpa_vect, nrow = 1, ncol = nrow(norm_features_matrix))
+
+unprotected_matrix <- norm_features_matrix[!protected_cells, ]
+
+protected_matrix <- norm_features_matrix[protected_cells, ]
+
+baseline_state <- protected_cells%*%norm_features_matrix
+
+baseline_state[,"carbon"] <- baseline_state[, "carbon"] + carbon_remains_BAU
+
+baseline_state[, bio_feature_names] <- baseline_state[, bio_feature_names] + bio_remains_BAU
+
+max_slopes_bio <- z_bio*baseline_state[, bio_feature_names]^(z_bio - 1)
+
+max_slope_carbon <- 1
+
+names(max_slope_carbon) <- "carbon"
+```
+
+
