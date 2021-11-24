@@ -22,6 +22,8 @@ gocp_project_dir <- "~/juanmayorga@ucsb.edu - Google Drive/Shared drives/emlab/p
 
 emlab_data_dir <- "~/juanmayorga@ucsb.edu - Google Drive/Shared drives/emlab/data"
 
+this_project_dir <- "~/juanmayorga@ucsb.edu - Google Drive/Shared drives/emlab/projects/current-projects/ps-tourism"
+
 # load(file.path(emlab_data_dir, "ocean-conservation-priorities","inputs", "national_analyses","common_inputs.RData"))
 ```
 
@@ -37,7 +39,8 @@ mpatlas <- sf::st_read(file.path(emlab_data_dir, "mpa-atlas", "MPAtlas_20201223_
 mpatlas_info <- mpatlas %>% 
   st_drop_geometry()
 
-mpas_to_include <- c(15907, 14985, 14982, 12864, 9234, 737, 9051, 68813326, 68807894, 68819490, 15624, 68819076, 68818813, 68808197)
+mpas_to_include <- c(15907, 14985, 14982, 12864, 9234, 737, 9051, 68813326, 
+                     68807894, 68819490, 15624, 68819076, 68818813, 68808197)
 
 mpas_to_exclude <- c(68808626, 68808627)
 
@@ -272,13 +275,13 @@ save(ocean_df, highly_mpas, highly_mpas_raster,
      biodiversity_df, bio_features_info, n_bio_features, bio_feature_names, norm_features_matrix, bio_weights, 
      v_in_matrix, v_out_matrix, v_diff_matrix, v_bau_per_species, v_full_mpa_per_species,
      bau_benefit, max_benefit,total_benefit_diff,
-     file = "bio_model_input.RData")
+     file = file.path(this_project_dir,  "data", "02_processed_data", "bio_model_input.RData"))
 ```
 
 # Load processed inputs
 
 ```{r}
-load(file = "bio_model_input.RData")
+load(file = file.path(this_project_dir,  "data", "02_processed_data", "bio_model_input.RData"))
 ```
 
 # Limiting ranking to ROI
@@ -289,7 +292,7 @@ load(file = "bio_model_input.RData")
 #unprotected_matrix <- unprotected_matrix[rownames(unprotected_matrix) %in% tourism_cell_ids,] ## Algorithm can only choose from tourism pixels EEZ. 
 ```
 
-# Benefit Function
+# Benefit Function 
 
 ```{r}
 # Give me a vector of protected cell_ids
@@ -298,7 +301,9 @@ is_mpa_vect <- ocean_df$f_highly_mpa > 0.5
 
 protected_cell_ids <- ocean_df$cell_id[is_mpa_vect]
 
-protected_cells <- matrix(is_mpa_vect, nrow = 1, ncol = length(is_mpa_vect))
+protected_cells <- matrix(is_mpa_vect, 
+                          nrow = 1, 
+                          ncol = length(is_mpa_vect))
 ```
 
 
@@ -320,7 +325,7 @@ b_benefit <- sum(bio_weights*(sum_v_in + sum_v_outs)^z_bio)
 
 ```{r}
 save(v_out_matrix, v_in_matrix, bio_weights, bau_benefit, total_benefit_diff, 
-     file = "minimal_bio_model_input.RData")
+     file =  file.path(this_project_dir,  "data", "02_processed_data", "minimal_bio_model_input.RData"))
 ```
 
 ## Snapshot function
@@ -372,5 +377,35 @@ calculate_relative_bio_benefit(is_mpa_vect = is_mpa_vect,
                                bau_benefit = bau_benefit, 
                                total_benefit_diff = total_benefit_diff)
 ```
+
+# Next best pixel
+
+```{r}
+is_mpa_vect <- ocean_df$f_highly_mpa > 0.5
+
+protected_cell_ids <- ocean_df$cell_id[is_mpa_vect]
+
+protected_cells <- matrix(is_mpa_vect, 
+                          nrow = 1, 
+                          ncol = length(is_mpa_vect))
+
+sum_v_outs <- v_out_matrix[!protected_cells, ] %>% 
+  colSums(na.rm = T)
+  
+sum_v_in <- v_in_matrix[protected_cells, ]%>% 
+  colSums(na.rm = T)
+
+starting_state <- sum_v_outs + sum_v_in
+
+starting_slope <- bio_weights*z_bio*starting_state^(z_bio - 1)
+
+bio_delta_per_pixel <- v_diff_matrix[!protected_cells, ]%*%as.matrix(starting_slope)
+
+bio_delta_per_pixel %>%
+      enframe() %>%
+      set_names(c('cell_id', "delta"))
+```
+
+
 
 
