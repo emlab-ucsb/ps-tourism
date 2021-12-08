@@ -1,0 +1,159 @@
+---
+title: "Create ocean distance matrix"
+author: "*Compiled on `r date()` by `r Sys.info()['user']`*"
+output: 
+  html_document:
+    code_folding: show
+    toc: true
+    toc_depth: 1
+    toc_float: yes
+    number_sections: false
+    theme: cerulean
+    highlight: haddock
+---
+
+```{r setup, message=F, warning=F}
+knitr::opts_chunk$set(fig.width = 6, fig.height = 4, fig.path = 'figs/',message = FALSE, warning = FALSE)
+library(tidyverse)
+library(raster)
+library(doParallel)
+library(parallel)
+library(foreach)
+library(bigstatsr)
+library(igraph)
+library(tictoc)
+
+emLab_shrd_data_dir <- "/Volumes/GoogleDrive/Shared drives/emlab/data"
+emLab_project_dir <- "/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/mpa-fish-flows"
+```
+
+# Small test in Australia
+
+```{r}
+ocean_wgs84 <- raster("/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/ocean-conservation-priorities/data/02_processed/masks/ocean_low_res_wgs84.tif")
+aus <- ocean_wgs84 %>% 
+   raster::crop(extent(c(xmin = 109.64, xmax = 159.86, ymin = -46.23, ymax = -9.95)))
+x <- matrix(ncol = ncell(aus), 
+            nrow = ncell(aus))
+#distance_matrix <- matrix(data = NA, ncol = ncell(ocean), nrow = ncell(ocean))
+for(i in (1:ncell(aus))){
+   
+  og_val <- aus[i]
+  
+  aus[i] <- 999
+  
+  dist_v <- values(raster::gridDistance(aus, 
+                                        origin = 999, 
+                                        omit = NA))
+  
+  aus[i] <- og_val
+  x[,i] <- dist_v
+}
+tictoc::tic()
+aus %>% 
+  setValues(x[,4]) %>% plot()
+tictoc::toc()
+#write_rds(x, file.path(emLab_project_dir, "data", "02_processed", "distance_matrix","aus_dist_matrix.rds"))
+```
+
+```{r}
+distibute_biomass <- function(sigma, pixel_id, roi_raster, distance_raster){
+  
+  dist_mat <- roi_raster %>% 
+    setValues(distance_raster[,pixel_id])
+  
+  A <- 1/(2*pi*sigma^2)
+  
+  g <- A*exp(-(dist_mat^2)/(2*sigma^2))
+  
+  g_norm <- g/sum(values(g), na.rm = T)
+  
+  #g_n <- g/(2*pi*A*sigma^2)
+  return(g_norm)
+  
+}
+```
+
+```{r}
+aus_dist_matrix <- read_rds(file.path(emLab_project_dir, "data", "02_processed", "distance_matrix", "aus_dist_matrix.rds"))
+ocean_wgs84 <- raster("/Volumes/GoogleDrive//Shared drives/emlab/projects/current-projects/ocean-conservation-priorities/data/02_processed/masks/ocean_low_res_wgs84.tif")
+aus <- ocean_wgs84 %>% 
+   raster::crop(extent(c(xmin = 109.64, xmax = 159.86, ymin = -46.23, ymax = -9.95)))
+distibute_biomass(sigma = 10000*40, pixel_id  = 50, roi_raster = aus, distance_raster = aus_dist_matrix) %>% 
+  plot()
+```
+
+# GLOBAL
+
+```{r panama, eval = f}
+ocean <- raster("/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/ocean-conservation-priorities/data/02_processed/masks/ocean_low_res_moll.tif")
+land <- raster("/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/ocean-conservation-priorities/data/02_processed/masks/land_low_res_moll.tif")
+# make all panama cells = 1
+territories_raster_lr <- raster("/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/ocean-conservation-priorities/data/02_processed/masks/territories.tif")
+  
+territories_lut <- read_csv("/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/ocean-conservation-priorities/data/02_processed/masks/territories_lookup.csv")
+panama <- territories_raster_lr %>% 
+  mask(territories_raster_lr == 2249, maskvalue = 0)
+land <- overlay(land, panama, fun = function(x,y){
+  if_else(x > 0.4 & !is.na(y), 1, x)
+}) 
+ocean <- ocean %>% 
+  mask(land >= 0.99, maskvalue = 1)
+#writeRaster(ocean, 
+#            file.path(emLab_project_dir, "data", "02_processed", "masks", "ocean.tiff"),
+#            overwrite = T)
+```
+
+```{r, eval = F}
+compute_distance_matrix <- function(original_raster, n_splits){
+  
+  pixel_ids <- 1:ncell(original_raster)
+  
+  pixel_splits <- split(pixel_ids, cut_number(pixel_ids, n_splits))
+  
+  foreach::foreach(split = pixel_splits) %dopar% {
+    
+    distance_matrix <- FBM(ncol = length(split), 
+                           nrow = ncell(original_raster),
+                           backingfile = file.path("dist_matrix_files", paste0("dist_matrix_", min(split))))
+    
+    for(i in split){
+      
+      original_value <- original_raster[i]
+      
+      original_raster[i] <- 999
+      
+      distance_vector <- values(raster::gridDistance(original_raster, 
+                                                     origin = 999, 
+                                                     omit = NA))
+      
+      original_raster[i] <- original_value
+      
+      pixel_pos <-  i - min(split) + 1
+      
+      distance_matrix[ ,pixel_pos] <- distance_vector
+      
+    }
+    
+   distance_matrix$save()
+    
+  }
+  
+}
+```
+
+```{r, eval = F}
+ocean <- raster(file.path(emLab_project_dir, "data", "02_processed", "masks", "ocean.tif"))
+registerDoParallel(40)
+tictoc::tic()
+ocean_dist_matrix <- tryCatch(compute_distance_matrix(original_raster = ocean, n_splits = 40), error = function(e) print(e))
+tictoc::toc() # 18247.921 sec elapsed
+```
+
+
+```{r}
+ocean <- raster(file.path(emLab_project_dir, "data", "02_processed", "masks", "ocean.tif"))
+ocean_dist_matrix <- big_attach("/Volumes/GoogleDrive/Shared drives/emlab/data/ocean-distance-matrix/dist_matrix_65162.rds")
+distibute_biomass(sigma = 100000*80, pixel_id  = 50, roi_raster = ocean, distance_raster = ocean_dist_matrix) %>% 
+  plot()
+```

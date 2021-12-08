@@ -13,6 +13,7 @@ library(raster)
 library(sf)
 library(tidyverse)
 library(ggspatial)
+library(here)
 
 ### NOTE - you may have to adjust these paths depending on where your computer has mounted the Google Drive files
 # Path to the emLab data directory
@@ -37,7 +38,35 @@ source)
 # Load data files necessary for biodiversity model
 load(file = file.path(this_project_dir,  "data", "02-processed-data", "bio_model_input.RData"))
 
+
+#checks -- remove this later. Just wanted to explore the files.
+head(ocean_df)
+plot(ocean_df$ocean)
+
+
 # I will add other data files here including the P0 raster and the Q0 raster
+head(ocean_df)
+dim(ocean_df)
+
+ocean_df2<-ocean_df %>% filter(ocean==1)
+dim(ocean_df2)
+
+ocean_df2 %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
+
+
+#compare this with my ocean matrix
+CleanCoordmegacell<-readRDS(here("data","CleanCoordmegacell_mollweide.rds"))
+dim(CleanCoordmegacell)
+head(CleanCoordmegacell)
+CleanCoordmegacell %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
+
+CleanCoordmegacell$ren_coord<-1
+
+testme <- left_join(ocean_df, CleanCoordmegacell, by=c("lon","lat"))
+dim(testme) #coordinates do not match
+
+#merge the two --- matches.
+
 
 
 ### -----------------------------------------------

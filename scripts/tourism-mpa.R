@@ -326,7 +326,7 @@ MegaData$bvk_fin<-bvk_calculated$bvk_calc
 nstock<-dim(MegaData)[1]
 ptm <- proc.time()
 registerDoParallel(detectCores()/2)
-stock_include<-which(MegaData$INCLUDE==1)#c(1,3,5)#which(MegaData$INCLUDE==1)#c(1,3,5)#edit this. include only stocks for the analysis
+stock_include<-c(1,3,5)#which(MegaData$INCLUDE==1)#c(1,3,5)#which(MegaData$INCLUDE==1)#c(1,3,5)#edit this. include only stocks for the analysis
 #collate_bvk_equi_merged <- foreach(stock_num=stock_include[1:length(stock_include)], .combine='cbind') %dopar% {
 collate_bvk_equi_merged <- foreach(stock_num=stock_include, .combine='cbind') %dopar% {
   func_evaluateMPA(stock_num, Cleanmegacell,biol_data,distance_mat_full,MegaData)$bvk_equi
