@@ -1,9 +1,13 @@
 #generate stock distributions/geographic range in mollweide and compatible with Juan's coordinate system
-
+#process: convert the geographic range of each stock to mollweide. Use 0.5 as threshold for the presence/absence of a stock.
+#saved the converted file as transformed_stockdistrib.rds. The file has cell ids, coordinates, etc.
 
 ### --------------------------------------------------------
 ### Section 1 - Load packages and set directories ----------
 ### --------------------------------------------------------
+gc()
+rm(list = ls())
+
 library(here)
 library(dplyr)
 library(raster)
@@ -27,6 +31,7 @@ ocean_low_res_moll <- raster::raster(file.path(emlab_data_dir, "ocean-conservati
 
 ##-- Load ocean_df file from juan. The code below also loads files necessary for biodiversity model
 load(file = file.path(this_project_dir,  "data", "02-processed-data", "bio_model_input.RData"))
+stocklayer <- ocean_df %>% select(cell_id,lon,lat,f_highly_mpa)
 head(ocean_df) #ok we have lon lat here
 dim(ocean_df)
 
@@ -40,36 +45,65 @@ dim(Cleanmegacell)
 dim(CleanCoordmegacell) #this is not mollweide
 head(CleanCoordmegacell)
 Cleanmegacell[,1]
+plot(Cleanmegacell[,1]/max(Cleanmegacell[,1]))
 
-stock1<-cbind(CleanCoordmegacell,probability=(Cleanmegacell[,1]>0)*1)
-head(stock1)
-plot(stock1$probability)
+MegaData<-readRDS(here("data","MegaData_Ray.rds"))
+head(MegaData)
+which(MegaData$INCLUDE==1) #these are the stock numbers that will be included in our analysis
 
-#this converts stock 1 to mollweide projection
-mollwide_stock1 <- stock1 %>% 
-  raster::rasterFromXYZ(crs = "+proj=longlat +datum=WGS84") %>% 
-  raster::projectRaster(crs = "+proj=moll") %>% 
-  as.data.frame(xy = T) %>% 
-  #filter(!is.na(probability)) %>%
-  set_names(c("lon", "lat", "probability")) 
+##--plot stock (unconverted coordinate)
+#cbind(CleanCoordmegacell,probability=(Cleanmegacell[,i]/max(Cleanmegacell[,i]))) %>% ggplot(aes(x=lon,y=lat,fill=probability)) + geom_raster()
 
-head(mollwide_stock1)
-plot(mollwide_stock1$probability)
+checkmerged <- ocean_df
+for (i in which(MegaData$INCLUDE==1)){
+#for (i in c(1:2)){
 
-ggplot(stock1,aes(x=lon,y=lat,fill=probability)) + geom_raster()
-ggplot(mollwide_stock1, aes(x=lon,y=lat,fill=probability)) + geom_raster()
+stock<-cbind(CleanCoordmegacell,probability=(Cleanmegacell[,i]/max(Cleanmegacell[,i])))
+#head(stock1)
+#dim(stock1)
+#plot(stock1$probability)
 
-min(mollwide_stock1$lon)
-min(mollwide_stock1$lat)
-min(ocean_df$lon)
-min(ocean_df$lat)
+#convert the probability values to mollweid coordinate. Then add a threshold for the presence-absence map.
+mollwide_stock <- stock %>%
+  raster::rasterFromXYZ(crs = "+proj=longlat +datum=WGS84") %>%
+  raster::projectRaster(ocean_low_res_moll) %>%
+  as.data.frame(xy = T) %>%
+  set_names(c("lon", "lat", "probability")) %>%
+  filter(!is.na(probability), probability>=0.50) %>%
+  mutate(probability=1) #this converts probability to 1.
 
-#merge with oceandf
-checkmerged<-left_join(ocean_df,mollwide_stock1,by=c("lat","lon"))
-min(checkmerged)
-dim(checkmerged)
+names(mollwide_stock) = c("lon","lat",noquote(MegaData$stockid[i]))
+  
+#head(mollwide_stock1)
+#dim(mollwide_stock1)
+
+#dim(ocean_df)
+#head(ocean_df)
+
+#head(mollwide_stock1)
+#plot(mollwide_stock1$probability)
+#max(mollwide_stock1$probability, na.rm=T)
+
+#ggplot(stock1,aes(x=lon,y=lat,fill=probability)) + geom_raster()
+#ggplot(mollwide_stock1, aes(x=lon,y=lat,fill=probability)) + geom_raster()
+
+#min(mollwide_stock1$lon)
+#min(mollwide_stock1$lat)
+#min(ocean_df$lon)
+#min(ocean_df$lat)
+
+##--merge with oceandf
+checkmerged <- left_join(checkmerged,mollwide_stock,by=c("lat","lon"))
+}
+#min(checkmerged)
+#dim(checkmerged)
 head(checkmerged)
 
 ##--check if the coordinates of the two datasets align
-checkmerged$probability[is.na(checkmerged$probability)] <- 0
-sum(checkmerged$probability)>0 #if FALSE, then they are not aligned
+#checkmerged$probability[is.na(checkmerged$probability)] <- 0
+sum(checkmerged$`Fis-29732`, na.rm=T)>0 #if FALSE, then they are not aligned
+ggplot(checkmerged, aes(x=lon,y=lat,fill=`Fis-22832`)) + geom_raster()
+
+#save the file so we do not need to re-run again
+transformed_stockdistrib <- checkmerged
+saveRDS(transformed_stockdistrib, file = here("data","transformed_stockdistrib.rds"))

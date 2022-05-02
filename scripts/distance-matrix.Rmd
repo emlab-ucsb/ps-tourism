@@ -27,6 +27,17 @@ emLab_shrd_data_dir <- "/Volumes/GoogleDrive/Shared drives/emlab/data"
 emLab_project_dir <- "/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/mpa-fish-flows"
 ```
 
+#check
+
+```{r}
+ocean_dist_matrix <- big_attach("/Volumes/GoogleDrive/Shared drives/emlab/data/ocean-distance-matrix/dist_matrix_1.rds")
+dim(ocean_dist_matrix)
+```
+
+plot(ocean_dist_matrix[,2])
+
+
+
 # Small test in Australia
 
 ```{r}

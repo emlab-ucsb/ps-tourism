@@ -38,36 +38,10 @@ source)
 # Load data files necessary for biodiversity model
 load(file = file.path(this_project_dir,  "data", "02-processed-data", "bio_model_input.RData"))
 
-
 #checks -- remove this later. Just wanted to explore the files.
 head(ocean_df)
-plot(ocean_df$ocean)
-
-
-# I will add other data files here including the P0 raster and the Q0 raster
-head(ocean_df)
-dim(ocean_df)
-
-ocean_df2<-ocean_df %>% filter(ocean==1)
-dim(ocean_df2)
-
-ocean_df2 %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
-
-
-#compare this with my ocean matrix
-CleanCoordmegacell<-readRDS(here("data","CleanCoordmegacell_mollweide.rds"))
-dim(CleanCoordmegacell)
-head(CleanCoordmegacell)
-CleanCoordmegacell %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
-
-CleanCoordmegacell$ren_coord<-1
-
-testme <- left_join(ocean_df, CleanCoordmegacell, by=c("lon","lat"))
-dim(testme) #coordinates do not match
-
-#merge the two --- matches.
-
-
+dim(ocean_df) #all ocean
+ocean_df %>%  ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster() #ok, great
 
 ### -----------------------------------------------
 ### Section 3 - Final prep for model run ----------
@@ -80,7 +54,7 @@ z_bio <- 0.25
 # tourism_cell_ids <- #KAT IS STILL WORKING ON THIS, BUT THIS WILL GO HERE
 
 # Vector of protected cell_ids (starting) - this is just an example, this bit would likely be looped eventually such that pixels are iteratively added to the "is mpa" vector
-is_mpa_vect <- ocean_df$f_highly_mpa > 0.5 # select pixels that are at least 50% highly protected
+is_mpa_vect <- ocean_df$f_highly_mpa >= 0.5 # select pixels that are at least 50% highly protected
 
 protected_cell_ids <- ocean_df$cell_id[is_mpa_vect]
 
@@ -92,7 +66,7 @@ protected_cells <- matrix(is_mpa_vect,
 ### Section 4 - Run model ----------
 ### --------------------------------
 
-# Caluclate biodiversity benefit from today's protected cells
+# Calculate biodiversity benefit from today's protected cells
 calculate_relative_bio_benefit(is_mpa_vect = is_mpa_vect,
                                v_out_matrix =  v_out_matrix,
                                v_in_matrix = v_in_matrix, 
