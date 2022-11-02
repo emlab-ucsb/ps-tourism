@@ -1,8 +1,15 @@
+#code for testing the sensitivity of the population model to larval dispersal and adult movement
+#generated figures for the SI
+#Author: Ren Cabral
+#Last update: 24 Aug 2022
+
 gc()
 rm(list = ls())
 
 library(dplyr)
 library(ggplot2)
+library(here)
+
 
 #checking the performance of an equation that quantifies tourism benefits and compare them with our analytic results
 #s <- 0.5
@@ -24,7 +31,10 @@ for (s in seq(0.2,1,0.2)){
   }}
 result_merged <- do.call("rbind",result) 
 
-data.frame(result_merged) %>% dplyr::rename(s=X1,time=X2,biomass=X3) %>% ggplot(aes(time,biomass/K,group=factor(s), shape=factor(s)))+geom_line()+geom_point()+ylim(0,1)+labs(x="Year",y="B/K",shape="s(i->i)")
+varying_adult_mobility <- data.frame(result_merged) %>% dplyr::rename(s=X1,time=X2,biomass=X3) %>% 
+  ggplot(aes(time,biomass/K,group=factor(s), shape=factor(s)))+geom_line()+geom_point()+ylim(0,1)+labs(x="Year",y="B/K",shape=expression(s[i %->% i])) + theme_classic()
+
+ggsave(here("figures","supplementary","varying_adult_mobility.jpg"),varying_adult_mobility, width = 10, height = 8, units = "cm")
 
 data.frame(result_merged) %>% filter(X2==30)#these are steady-state values
 
@@ -62,7 +72,10 @@ for (alphaii in seq(0.2,1,0.2)){
   }}
 result_alphaii_merged <- do.call("rbind",result_alphaii) 
 
-data.frame(result_alphaii_merged) %>% dplyr::rename(alphaii=X1,time=X2,biomass=X3) %>% ggplot(aes(time,biomass/K,group=factor(alphaii), shape=factor(alphaii)))+geom_line()+geom_point()+ylim(0,1)+labs(x="Year",y="B/K",shape="alpha(i->i)")
+varying_larvae_selfseed <- data.frame(result_alphaii_merged) %>% dplyr::rename(alphaii=X1,time=X2,biomass=X3) %>% 
+  ggplot(aes(time,biomass/K,group=factor(alphaii), shape=factor(alphaii)))+geom_line()+geom_point()+ylim(0,1)+labs(x="Year",y="B/K",shape=expression(rho[i %->% i])) + theme_classic()
+
+ggsave(here("figures","supplementary","varying_larvae_selfseed.jpg"),varying_larvae_selfseed, width = 10, height = 8, units = "cm")
 
 #effect of sum_alpja_ji
 s <- 0.8 #fix sii
@@ -84,8 +97,10 @@ for (sum_alpha_ji in seq(0,5,1)){
   }}
 result_sum_alphaji_alphaii_merged <- do.call("rbind",result_sum_alphaji) 
 
-data.frame(result_sum_alphaji_alphaii_merged) %>% dplyr::rename(sum_alphaji=X1,time=X2,biomass=X3) %>% ggplot(aes(time,biomass/K,group=factor(sum_alphaji), shape=factor(sum_alphaji)))+geom_line()+geom_point()+ylim(0,1)+labs(x="Year",y="B/K",shape="sum alpha(j->i)")
+sum_larvae_destination <- data.frame(result_sum_alphaji_alphaii_merged) %>% dplyr::rename(sum_alphaji=X1,time=X2,biomass=X3) %>% 
+  ggplot(aes(time,biomass/K,group=factor(sum_alphaji), shape=factor(sum_alphaji)))+geom_line()+geom_point()+ylim(0,1)+labs(x="Year",y="B/K",shape=expression(Sigma~rho[j %->% i])) + theme_classic()
 
+ggsave(here("figures","supplementary","sum_larvae_destination.jpg"),sum_larvae_destination, width = 10, height = 8, units = "cm")
 
 #Load Costello et al. (2016) database
 CostelloData<-read.csv("/Users/ren/Documents/CODES/FoodProvision/Aquamaps/UnlumpedProjectionData.csv", stringsAsFactors = FALSE)
