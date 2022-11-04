@@ -9,7 +9,6 @@ library(doParallel)
 library(raster)
 library(rgdal)
 library(maptools)
-library(dplyr)
 library(cowplot)
 library(reshape)
 library(scales)
@@ -24,6 +23,7 @@ library(ggspatial)
 library(ggrepel)
 library(bigstatsr)
 library(Hmisc)
+library(dplyr)
 
 #-- Path to the Pristine Seas tourism directory on the emLab Google Drive
 this_project_dir <- "/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/ps-tourism"
@@ -91,7 +91,7 @@ sum(db_with_pld_hrange_filtered$complete,na.rm=T) #610 species out of 811. Check
 MegaData_PLD_hrange <- left_join(MegaData_filtered,db_with_pld_hrange_filtered,by="SciName")
 
 #% of the original biomass considered. 
-MegaData_PLD_hrange %>% filter(complete==1) %>% summarize(sum(Kfin))/sum(MegaData_PLD_hrange$Kfin) #we have data for 81% of the K.
+MegaData_PLD_hrange %>% filter(complete==1) %>% dplyr::summarize(sum(Kfin))/sum(MegaData_PLD_hrange$Kfin) #we have data for 81% of the K.
 
 #max dispersal distance limit (3 sigma larvae)
 3*1.33*(max(MegaData_PLD_hrange$PLD,na.rm=T)^1.3)*sqrt(pi/2) #18K
@@ -120,10 +120,10 @@ min(MegaData_filtered_step_fin$dispersal_distance_limit,na.rm=T)
 # Load the dive suitability layer
 dive_suitability <- read.csv(here("data","dive","dive_suitability_by_cell.csv"))
 head(dive_suitability)
-dim(dive_suitability)#1997 dive sites!!!
+dim(dive_suitability)#2043 dive sites!!!
 #Fraction and absolute size of global ocean suitable for diving
-dim(dive_suitability)[1]*100/dim(transformed_stockdistrib)[1] #this is the fraction of ocean with diving. 1.34%
-dim(dive_suitability)[1]*50*50# 5 million km2. This is the total area of ocean surface with diving.
+dim(dive_suitability)[1]*100/dim(transformed_stockdistrib)[1] #this is the fraction of ocean with diving. 1.37%
+dim(dive_suitability)[1]*50*50# 5.1 million km2. This is the total area of ocean surface with diving.
 
 #Identify the stock that intersects with diving
 head(transformed_stockdistrib)
@@ -152,10 +152,8 @@ Checkme <- MegaData_filtered_step_fin[stocklist,]
 
 ggplot(Checkme, aes(x=mean_observed_PLD, y= mean_predicted_PLD)) + geom_point() + geom_abline(slope=1, intercept=0)
 
-#connectivity matrix, larvae
-run_subset_connectivitymatrix <- 0 #1 for turn on, 0 to switch off
 
-# #NOTE-- JUST OPEN THIS WHEN THE DISTANCE MATRICES CHANGES
+# #NOTE-- JUST OPEN THIS WHEN THE DISTANCE MATRICES CHANGE
 # #check if we can load individual files here then merge
 # #distmat_filenames <- list.files(path=here("data","distance-library","fst_file"), pattern=".fst", all.files=FALSE,full.names=TRUE)
 # distmat_filenames <- list.files(path=here("data","distance-library"), pattern=".rds", all.files=FALSE,full.names=TRUE)
@@ -168,14 +166,19 @@ run_subset_connectivitymatrix <- 0 #1 for turn on, 0 to switch off
 #   write.fst(myfile , here("data","distance-library","dist_matrix_subset_fst",paste0(i,"_connect_matrix.fst")))
 # }
 
-distmat_filenames_subset_fst <- list.files(path=here("data","distance-library","dist_matrix_subset_fst"), pattern=".fst", all.files=FALSE,full.names=TRUE)
-distmat_filenames_subset_fst[1]
-length(distmat_filenames_subset_fst)#40 files
+##--Connectivity matrix, larvae
+##--No need to run so we will switch this function off
+run_subset_connectivitymatrix <- 0 #1 for turn on, 0 to switch off
 
-source(here("scripts", "functions","func_stitch_connect_matrix.R"))
-
-#parallel version
+#Subset larvae connectivity matrix
 if(run_subset_connectivitymatrix == 1){
+  
+  distmat_filenames_subset_fst <- list.files(path=here("data","distance-library","dist_matrix_subset_fst"), pattern=".fst", all.files=FALSE,full.names=TRUE)
+  distmat_filenames_subset_fst[1]
+  length(distmat_filenames_subset_fst)#40 files
+  
+  source(here("scripts", "functions","func_stitch_connect_matrix.R"))
+  
   stocklist2 <- c(461,467,473,475,478,stocklist[393:821])
   nstock<-length(stocklist2)
   registerDoParallel(6)
@@ -209,8 +212,10 @@ for (i in 1:length(connect_matrix_nfiles)){
 #seeme %>% group_by(source) %>% summarize(sum(biom_prop))
 #seeme %>% group_by(sink) %>% summarize(sum(biom_prop))
 
-#connectivity matrix, adult
+##--Connectivity matrix, adult
+##-- no need to re-run so we will turn this function off
 run_subset_connectivitymatrix_adult <- 0 #1 for on, 0 to switch this off
+
 if(run_subset_connectivitymatrix_adult == 1){
   registerDoParallel(detectCores()/2)
   foreach(stock_num=stocklist) %dopar% {
@@ -236,10 +241,10 @@ if(run_subset_connectivitymatrix_adult == 1){
 
 #---- this is the main code that evaluates the biomass change for each stock and the change in biodiversity
 #number of dives
-number_of_dives <- read.csv(here("data","dive","number_of_dives_extrapolated_by_cell.csv"))
+number_of_dives <- read.csv(here("data","dive","number_of_marine_dives_by_cell_extrapolated.csv"))
 head(number_of_dives)
-dim(number_of_dives)#1997
-sum(number_of_dives$n_dives_extrap)#50700017 dives.
+dim(number_of_dives)#2043
+sum(number_of_dives$n_dives_extrap)#42277478 dives.
 
 #revenue in billion
 sum(number_of_dives$n_dives_extrap)*60/1000000000
@@ -264,7 +269,7 @@ country_classification_with_iso_and_class <- left_join(country_classification_wi
 
 #plot number of dives per country
 head(dive_per_country)
-plot_number_dives <- dive_per_country %>% group_by(territory1) %>% summarize(n_dive=sum(n_dives_extrap)) %>% left_join(country_classification,by="territory1") %>%
+plot_number_dives <- dive_per_country %>% group_by(territory1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap)) %>% left_join(country_classification,by="territory1") %>%
   arrange(-n_dive) %>% slice(1:50) %>%
   #ggplot(aes(x=as.factor(territory1),y=n_dive)) + geom_col()
   ggplot(aes(x = reorder(as.factor(territory1), n_dive/1000000), y = n_dive/1000000, fill=Classification))+
@@ -273,7 +278,7 @@ plot_number_dives <- dive_per_country %>% group_by(territory1) %>% summarize(n_d
 plot_number_dives
 
 #plot number of dive pixels per country
-plot_number_divepexels_country <- dive_per_country %>% group_by(territory1) %>% summarize(n_divesites=n()) %>% filter(territory1!="NA") %>% left_join(country_classification,by="territory1") %>%
+plot_number_divepexels_country <- dive_per_country %>% group_by(territory1) %>% dplyr::summarize(n_divesites=n()) %>% filter(territory1!="NA") %>% left_join(country_classification,by="territory1") %>%
   arrange(-n_divesites) %>% slice(1:50) %>%
   #ggplot(aes(x=as.factor(territory1),y=n_dive)) + geom_col()
   ggplot(aes(x = reorder(as.factor(territory1), n_divesites), y = n_divesites, fill=Classification))+
@@ -282,9 +287,9 @@ plot_number_divepexels_country <- dive_per_country %>% group_by(territory1) %>% 
 plot_number_divepexels_country
 
 #-- dive density might be interesting! # of dives per pixel per territory
-ndivepixel_territory <- cell_id_with_country  %>% group_by(territory1) %>% summarize(total_territory_pixel=n())
+ndivepixel_territory <- cell_id_with_country  %>% group_by(territory1) %>% dplyr::summarize(total_territory_pixel=n())
 #plot % of the eez that are number of dive sites
-plot_divedensity <- dive_per_country %>% group_by(territory1) %>% summarize(n_dive=sum(n_dives_extrap)) %>% left_join(ndivepixel_territory,by="territory1") %>% mutate(percent_divearea = n_dive/total_territory_pixel) %>% filter(territory1!="NA") %>%
+plot_divedensity <- dive_per_country %>% group_by(territory1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap)) %>% left_join(ndivepixel_territory,by="territory1") %>% mutate(percent_divearea = n_dive/total_territory_pixel) %>% filter(territory1!="NA") %>%
   arrange(-percent_divearea) %>% slice(1:50) %>%
   #ggplot(aes(x=as.factor(territory1),y=n_dive)) + geom_col()
   ggplot(aes(x = reorder(as.factor(territory1), percent_divearea), y = percent_divearea))+
@@ -294,7 +299,7 @@ plot_divedensity
 ggsave(here("figures","supplementary","plot_divedensity.jpg"),plot_divedensity, width = 10, height = 14, units = "cm")
 
 ##--correlate # of dives with on-reef values
-ndive_per_sovereign <- dive_per_country %>% group_by(sovereign1,iso_sov1) %>% summarize(n_dive=sum(n_dives_extrap))
+ndive_per_sovereign <- dive_per_country %>% group_by(sovereign1,iso_sov1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap))
 head(ndive_per_sovereign)
 
 onreef_values <- read.csv(here("data","tourism_reef_values","Tourvalues_Spalding.csv")) %>% group_by(iso_sov1) %>% summarise(onreef_value=sum(OnReef))
@@ -309,11 +314,11 @@ plot_correlate_dive_and_value<- ggplot(correlate_dive_and_value, aes(x=onreef_va
 plot_correlate_dive_and_value
 
 ##--correlate # of dives with flikr data
-ndive_per_sovereign <- dive_per_country %>% group_by(sovereign1,iso_sov1) %>% summarize(n_dive=sum(n_dives_extrap))
+ndive_per_sovereign <- dive_per_country %>% group_by(sovereign1,iso_sov1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap))
 head(ndive_per_sovereign)
 #flickr_data <- read.csv(here("data","flickr","flickr_aggregate_by_country.csv")) 
 flickr_data <- read.csv(here("data","flickr","flickr_webscraped_data_raw_v11.csv"))  
-flickr_data_sum <- flickr_data %>% group_by(iso_code) %>% summarize(count=n()) %>% dplyr::rename(iso_sov1=iso_code)
+flickr_data_sum <- flickr_data %>% group_by(iso_code) %>% dplyr::summarize(count=n()) %>% dplyr::rename(iso_sov1=iso_code)
 head(flickr_data_sum)
 
 correlate_dive_and_flickr <- merge(x=ndive_per_sovereign,y=flickr_data_sum,by="iso_sov1") %>% filter(is.na(iso_sov1)==F)
@@ -336,21 +341,22 @@ head(dive_per_country)
 #checkme <- read.csv(here("data","UN_territory_sovereign_classification.csv"))
 
 ##--price per dive
-prices_constant_by_cell <- read.csv(here("data","dive","prices_constant_by_cell.csv"))
-dim(prices_constant_by_cell)
-plot(prices_constant_by_cell$price) #60 USD per dive
-
-#price per country
-prices_country_region_by_cell <- read.csv(here("data","dive","prices_country_region_by_cell.csv"))
-plot(prices_country_region_by_cell$price)
-#request to add country name or country code in the file. Or a file of cell_id and country names.
+prices_constant_by_cell <- read.csv(here("data","dive","prices_interpolated_matched_to_cell_id.csv"))
+prices_constant_by_cell_ocean <- prices_constant_by_cell %>% filter(ocean==1)
+mean(prices_constant_by_cell_ocean$price)
+mean(prices_constant_by_cell$price)
+#plot(prices_constant_by_cell$price) #60 USD per dive
 
 #ok, use constant price. 
 ocean_coordinates_dive_suitable <- left_join(ocean_coordinates,dive_suitability,by="cell_id")
 ocean_coordinates_dive_suitable_v2 <- left_join(ocean_coordinates_dive_suitable,number_of_dives,by="cell_id")
 
 #plot suitability later
-ocean_coordinates_dive_suitable_v2 %>% mutate(suitable = replace_na(suitable,0)) %>% ggplot() + geom_raster(aes(x=lon,y=lat,fill=suitable)) + scale_fill_gradientn(colours=c("black","orange")) #ok, great
+world_dive_sites <- ocean_coordinates_dive_suitable_v2 %>% mutate(suitable = replace_na(suitable,0)) %>% ggplot() + geom_raster(aes(x=lon,y=lat,fill=suitable)) + scale_fill_gradientn(colours=c("black","orange")) #ok, great
+world_dive_sites
+ggsave(here("figures","supplementary","world_dive_sites.jpg"),world_dive_sites, width = 20, height = 12, units = "cm")
+
+#save plot of the dive sites of the world
 
 # MPA location -- assume that a pixel is an MPA is f_highly_mpa>=0.5. Consult this assumption
 MPA_vec <- transformed_stockdistrib %>% dplyr::select(cell_id,f_highly_mpa) %>% mutate(f_highly_mpa = (f_highly_mpa>=0.5))
@@ -359,7 +365,7 @@ MPA_loc <- MPA_vec %>% filter(f_highly_mpa=="TRUE") %>% select(cell_id)
 #Question: How many of the suitable dive sites are already in MPAs?
 divesite_in_MPA <- dive_suitability %>% filter(cell_id %in% MPA_loc$cell_id) %>% dim()
 divesite_in_MPA#23 pixels. 
-divesite_in_MPA[1]*100/dim(number_of_dives)[1] #1.15% of the dive sites are inside MPA... hmmm... this sounds correct? maybe we should analyze it using high res data.
+divesite_in_MPA[1]*100/dim(number_of_dives)[1] #1.13% of the dive sites are inside MPA (using 50 x 50km resolution). Add high res data analysis.
 
 ##--biodiversity prep
 # Source functions
@@ -414,24 +420,30 @@ bio_benefit_all/max_benefit_allthreats #0.7563106
 #% increase from current MPA to all threats solved (not needed)
 (max_benefit_allthreats-bio_benefit_current)*100/bio_benefit_current
 
-#Biodiv benefits of current MPAs + dive MPAs #do this next...
-
 ##----- BIOMASS CODE
 #--test:
 #func_evaluateMPA_explicit(stock_num=1, transformed_stockdistrib,MegaData_filtered_step_fin,MPA_loc)$biomass
 
-stock_include <- stocklist#c(1,2,4,5,6)#stocklist[8] #c(1,2,4,5,6) #comment this. this is just a placeholder for building our code
 
-ptm <- proc.time()
-registerDoParallel(detectCores()/2)
-#stock_include<-stocklist ##stocklist#1:nstock#c(1,3,5)#which(MegaData$INCLUDE==1)
-collate_biomass_equi_merged <- foreach(stock_num=stock_include, .combine='cbind') %dopar% {
-  func_evaluateMPA_explicit(stock_num, transformed_stockdistrib,MegaData_filtered_step_fin,MPA_loc)$biomass
+rerun_biomass_code <- 0 #1 for on, 0 to switch this off
+
+if(rerun_biomass_code == 1){
+  stock_include <- stocklist#c(1,2,4,5,6)#stocklist[8] #c(1,2,4,5,6) #comment this. this is just a placeholder for building our code
+  
+  ptm <- proc.time()
+  registerDoParallel(detectCores()/2)
+  #stock_include<-stocklist ##stocklist#1:nstock#c(1,3,5)#which(MegaData$INCLUDE==1)
+  collate_biomass_equi_merged <- foreach(stock_num=stock_include, .combine='cbind') %dopar% {
+    func_evaluateMPA_explicit(stock_num, transformed_stockdistrib,MegaData_filtered_step_fin,MPA_loc)$biomass
+  }
+  doParallel::stopImplicitCluster()
+  (proc.time() - ptm)/60 #check process time in minutes
+  colnames(collate_biomass_equi_merged)<-MegaData_filtered_step_fin$stockid[stock_include]
+  dim(collate_biomass_equi_merged)
+  
+  saveRDS(collate_biomass_equi_merged, file = here("data","collate_biomass_equi_merged.rds"))
 }
-doParallel::stopImplicitCluster()
-(proc.time() - ptm)/60 #check process time in minutes
-colnames(collate_biomass_equi_merged)<-MegaData_filtered_step_fin$stockid[stock_include]
-dim(collate_biomass_equi_merged)
+collate_biomass_equi_merged<-readRDS(file = here("data","collate_biomass_equi_merged.rds"))
 
 ##--Calculate B/K per pixel
 #compute K per pixel of our stock list
@@ -474,16 +486,22 @@ MPA_vec_dive <- transformed_stockdistrib %>% dplyr::select(cell_id,f_highly_mpa)
 #this is current MPA + converting all dive sites into MPA.
 MPA_loc_dive <- MPA_vec_dive %>% filter(f_highly_mpa=="TRUE") %>% select(cell_id)
 
-ptm <- proc.time()
-registerDoParallel(detectCores()/2)
-collate_biomass_equi_merged_dive <- foreach(stock_num=stock_include, .combine='cbind') %dopar% {
-  func_evaluateMPA_explicit(stock_num, transformed_stockdistrib,MegaData_filtered_step_fin,MPA_loc_dive)$biomass
-}
-doParallel::stopImplicitCluster()
-(proc.time() - ptm)/60 #check process time in minutes
-colnames(collate_biomass_equi_merged_dive)<-MegaData_filtered_step_fin$stockid[stock_include]
 
-#collate_bvk_equi_merged_dive[collate_bvk_equi_merged_dive>1]<-1 #cap to 1
+rerun_biomass_wMPAdive_code <- 0 #1 for on, 0 to switch this off
+
+if(rerun_biomass_wMPAdive_code == 1){
+  ptm <- proc.time()
+  registerDoParallel(detectCores()/2)
+  collate_biomass_equi_merged_dive <- foreach(stock_num=stock_include, .combine='cbind') %dopar% {
+    func_evaluateMPA_explicit(stock_num, transformed_stockdistrib,MegaData_filtered_step_fin,MPA_loc_dive)$biomass
+  }
+  doParallel::stopImplicitCluster()
+  (proc.time() - ptm)/60 #check process time in minutes
+  colnames(collate_biomass_equi_merged_dive) <- MegaData_filtered_step_fin$stockid[stock_include]
+  
+  saveRDS(collate_biomass_equi_merged_dive, file = here("data","collate_biomass_equi_merged_dive.rds"))
+}
+collate_biomass_equi_merged_dive <- readRDS(file = here("data","collate_biomass_equi_merged_dive.rds"))
 
 #compute B/K per pixel
 BvK_dive <- rowSums(collate_biomass_equi_merged_dive,na.rm = TRUE)/TotalKperPixel
@@ -492,11 +510,12 @@ transformed_stockdistrib %>% ggplot(aes(x=lon,y=lat,fill=BvK_dive)) + scale_fill
 
 Delta_biomass <- BvK_dive - BvK
 Delta_biomass[is.nan(Delta_biomass)] <- 0
+Delta_biomass[Delta_biomass<0] <- 0 #in case
 length(Delta_biomass)
 
-#let us subset to dive sites only and check the results. There are 1997 dive sites.
+#let us subset to dive sites only and check the results.
 plot(Delta_biomass[dive_suitability$cell_id]) #hmmm... there are negative biomass. This is an artefact of the estimation we used.
-mean(Delta_biomass[dive_suitability$cell_id]) #0.446 increase in biomass density or from below's calculation, x% of base biomass.
+mean(Delta_biomass[dive_suitability$cell_id]) #0.445 increase in biomass density or from below's calculation, x% of base biomass.
 
 transformed_stockdistrib %>% ggplot(aes(x=lon,y=lat,fill=Delta_biomass)) + scale_fill_viridis_c(limits = c(0, max(Delta_biomass,na.rm=T))) + geom_raster()
 
@@ -508,7 +527,7 @@ biomass_data <- data.frame(ratio_biomass=(BvK_dive-BvK)*100/BvK)
 biomass_data$ratio_biom_divesite <- NA
 biomass_data$ratio_biom_divesite[dive_suitability$cell_id] <- biomass_data$ratio_biomass[dive_suitability$cell_id]
 biomass_data$TotalKperPixel<-TotalKperPixel
-  
+
 max(biomass_data$ratio_biom_divesite, na.rm=T)
 
 biomass_data_divesites <- biomass_data %>% filter(!is.na(ratio_biom_divesite))
@@ -528,7 +547,8 @@ sample.n <- sum(!is.na(biomass_data$ratio_biom_divesite))
 (sample.sd <- sd(biomass_data$ratio_biom_divesite,na.rm=T))
 (sample.se <- sample.sd/sqrt(sample.n))
 
-land_shp_moll<-readRDS(file = "/Users/ren/Documents/CODES/FoodProvision/land_shp_moll.rds")
+land_shp_moll <- readRDS(here("data","land_shp_moll.rds"))
+#land_shp_moll<-readRDS(file = "/Users/ren/Documents/CODES/FoodProvision/land_shp_moll.rds")
 
 cuts <-c(0,20,40,60,80,100)
 
@@ -582,11 +602,11 @@ biodiv_dive/max_benefit_allthreats #0.5735252
 #dive pixels -- use dive_suitability$cell_id for the cell ids of dive pixels.
 
 divepixels_unprotected <- dive_suitability$cell_id[which(! dive_suitability$cell_id %in% MPA_loc$cell_id)]
-length(divepixels_unprotected)#1974
+length(divepixels_unprotected)#2020 pixels
 #compare this with all dive pixels
-length(dive_suitability$cell_id)
+length(dive_suitability$cell_id)#2043 pixels
 
-#--run this just once because it takes time.
+#--run this just once because it takes time. Rerun if there are changes in the dive locations or MPA locations.
 run_me <- 0
 if(run_me==1){
   #close each pixel and compute for the biodiversity benefits
@@ -596,15 +616,18 @@ if(run_me==1){
   store_per_pixel_delta_biodiv_benefit$delta_biodiv_benefit <- 0
   
   #parallel version of the code
-  registerDoParallel(detectCores()/2)
-  foreach(i=1:length(divepixels_unprotected)) %dopar% {
+  #registerDoParallel(detectCores()/2)
+  #registerDoParallel(5)
+  #foreach(i=1:length(divepixels_unprotected)) %dopar% {
+  for (i in 1:length(divepixels_unprotected)){  
     MPA_vec_close1 <- MPA_vec_base %>% mutate(f_highly_mpa = replace(f_highly_mpa,cell_id %in% divepixels_unprotected[i], TRUE))
     #evaluate biodiv benefit of closing 1 pixel then subtract with the BAU result. Then save the results.
     store_per_pixel_delta_biodiv_benefit$delta_biodiv_benefit[i] <- calculate_relative_bio_benefit(is_mpa_vect = MPA_vec_close1$f_highly_mpa, v_out_matrix =  v_out_matrix,
                                                                                                    v_in_matrix = v_in_matrix, weights  = bio_weights, 
                                                                                                    z_bio = z_bio, bau_benefit = bau_benefit, total_benefit_diff = total_benefit_diff) - biodiv_bau
+  print(i)
   }
-  doParallel::stopImplicitCluster()
+  #doParallel::stopImplicitCluster()
   
   head(store_per_pixel_delta_biodiv_benefit)
   #normalize the benefit value per pixel and save it
@@ -616,6 +639,8 @@ if(run_me==1){
 
 #this is the normalized benefit value when each pixel is protected one by one.
 normalized_per_pixel_delta_biodiv_benefit<-readRDS(file = here("data","per_pixel_delta_biodiv_benefit.rds"))
+
+normalized_per_pixel_delta_biodiv_benefit %>% filter(cell_id %in% divepixels_unprotected)
 
 #let us convert the per pixel delta biodiv benefit to be max value per territory
 cell_id_territory <- dive_per_country %>% select(cell_id, lon,lat,CountryCode,territory1,sovereign1)
@@ -637,9 +662,6 @@ renormalize_country_biodiv_benefit <- biodiv_territory_complete %>% group_by(Cou
 #WTP based on the changes in biomass and diversity 
 price_per_dive <- 60 #price per dive
 choke_price <- 197.25
-
-#For now, if delta biomass is negative, make it 0. Fix in the main code.
-Delta_biomass[Delta_biomass<0] <- 0
 
 change_biomass_density_full <- Delta_biomass[divepixels_unprotected]
 change_diversity_full <- renormalize_country_biodiv_benefit$renorm_biodiv_benefit
@@ -709,13 +731,13 @@ reduce_wtp_crowd<-0.1
 for(frac_user_fee_opt in seq(0,5, by=0.01)){
   index <- index+1
   dive_tax <- frac_user_fee_opt*wtp_combined
-
+  
   #shifted number of dives with crowding and with tax
   delta_q_wMPA <- (wtp_combined - dive_tax)*base_number_dive/(choke_price-price_per_dive)
   shifted_number_dive_wMPA <- base_number_dive + delta_q_wMPA#*(1-(reduce_wtp_crowd*dive_group_size*delta_q_crowding/base_number_dive))
   #if negative, it will be zero because there is no negative diving
   shifted_number_dive_wMPA[shifted_number_dive_wMPA<0]<-0
-
+  
   #with MPA
   change_dive_revenue_wMPA <- price_per_dive*(shifted_number_dive_wMPA - base_number_dive) # in USD
   #new_choke_price_withcrowding <- (parameter_a+((wtp_combined-dive_tax)*base_number_dive/(choke_price-price_per_dive)))/parameter_b
@@ -834,3 +856,21 @@ p3_development
 Fig4 <- cowplot::plot_grid(p1_contribution,p2_beneficiary,p3_development, ncol = 1, labels = "AUTO")
 Fig4
 ggsave(here("figures","main","Fig4.jpg"),Fig4, width = 4, height = 10.5, units = "in")
+
+#This is the summary table of results! with/without MPA and varying tax level.
+head(explore_user_fee_merged)
+
+#Summary table: with MPA, no tax. Just printing the change in biological parameters.
+#this table will output the following:
+#1. Pixel number of unprotected dive sites
+#2. Change in biomass per MPA pixels
+#3. Change in biodiversity metric per MPA pixel
+summary_table1 <- data.frame(pixel_number = divepixels_unprotected)
+summary_table1$change_biomass <- change_biomass_density_full
+summary_table1$change_diversity <- change_diversity_full
+summary_table1$change_ndive <- 
+head(summary_table1)
+
+
+
+
