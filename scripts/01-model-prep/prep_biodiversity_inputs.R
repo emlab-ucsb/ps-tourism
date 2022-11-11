@@ -212,6 +212,9 @@ max_benefit <- sum(bio_weights*v_full_mpa_per_species^z_bio)
 
 max_benefit/sum(bio_weights*1^z_bio)
 
+#max_benefit when all threats removed (both abatable and unabatable)
+max_benefit_allthreats <- sum(bio_weights*1^z_bio)
+
 # What is the max difference made by species?
 v_diff_per_species <- v_diff_matrix %>% 
   colSums(na.rm = T)
@@ -231,7 +234,7 @@ total_benefit_diff/sum(bio_weights*v_bau_per_species^z_bio) # a max of 41% incre
 save(ocean_df, highly_mpas, highly_mpas_raster,
      biodiversity_df, bio_features_info, n_bio_features, bio_feature_names, norm_features_matrix, bio_weights, 
      v_in_matrix, v_out_matrix, v_diff_matrix, v_bau_per_species, v_full_mpa_per_species,
-     bau_benefit, max_benefit,total_benefit_diff,
+     bau_benefit, max_benefit, max_benefit_allthreats, total_benefit_diff,
      file = file.path(this_project_dir,  "data", "02-processed-data", "bio_model_input.RData"))
 
 save(v_out_matrix, v_in_matrix, bio_weights, bau_benefit, total_benefit_diff, 

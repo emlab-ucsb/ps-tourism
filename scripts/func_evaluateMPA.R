@@ -17,7 +17,7 @@ func_evaluateMPA<-function(stock_num, transformed_stockdistrib,MegaData_filtered
   # head(MPA_loc)
   
   distance_mat_full_prop_larvae_wMPA <- distance_mat_full_prop_larvae %>% mutate(MPA_sink=replace(MPA_sink,sink %in% MPA_loc$cell_id,1)) %>% mutate(MPA_source=replace(MPA_source,source %in% MPA_loc$cell_id,1))
-  # head(distance_mat_full_prop_larvae_wMPA )
+  # head(distance_mat_full_prop_larvae_wMPA)
   # sum(distance_mat_full_prop_larvae_wMPA $MPA_sink)
   # sum(distance_mat_full_prop_larvae_wMPA $MPA_source)
   

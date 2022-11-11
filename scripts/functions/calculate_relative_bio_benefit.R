@@ -9,7 +9,7 @@ calculate_relative_bio_benefit <- function(is_mpa_vect,
                                            v_in_matrix, 
                                            weights, 
                                            z_bio, 
-                                           bau_benefit, 
+                                           bau_benefit,
                                            total_benefit_diff){
   
   protected_cells <- matrix(is_mpa_vect, nrow = 1, ncol = length(is_mpa_vect))
@@ -22,7 +22,7 @@ calculate_relative_bio_benefit <- function(is_mpa_vect,
   
   b_benefit <- sum(weights*(sum_v_in + sum_v_outs)^z_bio)
   
-  relative_b_benefit <- (b_benefit - bau_benefit)/total_benefit_diff
+  relative_b_benefit <- b_benefit#(1+((b_benefit - bau_benefit)/bau_benefit))*0.5326662#(b_benefit - bau_benefit)/total_benefit_diff #
   
   return(relative_b_benefit)
 }
