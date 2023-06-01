@@ -24,6 +24,7 @@ library(ggrepel)
 library(bigstatsr)
 library(Hmisc)
 library(dplyr)
+library(viridis)
 
 #-- Path to the Pristine Seas tourism directory on the emLab Google Drive
 this_project_dir <- "/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/ps-tourism"
@@ -60,7 +61,7 @@ dim(MegaData_filtered)
 MegaData_filtered$check_stock_id<-colnames(transformed_stockdistrib)[6:1155] #ok. This is just a check that the files are matched.
 
 #--- load the distance matrix (source, sink, distance)
-merged_dist_matrix<-readRDS(here("data","distance-library","merged_dist_matrix","merged_dist_matrix.rds"))
+merged_dist_matrix<-readRDS(here("data","distance-library","merged_dist_matrix.rds"))
 #convert distance from m to km
 merged_dist_matrix$distance <- merged_dist_matrix$distance/1000
 head(merged_dist_matrix)
@@ -199,13 +200,13 @@ if(run_subset_connectivitymatrix == 1){
   doParallel::stopImplicitCluster()
 }
 
-#check how many files
-connect_matrix_nfiles <- list.files(path="/Users/ren/Documents/GitHub/tourism-mpa-support/connect_matrix/", pattern=".fst", all.files=FALSE,full.names=TRUE)
-length(connect_matrix_nfiles)#821 files
-for (i in 1:length(connect_matrix_nfiles)){
-  check<-read.fst(connect_matrix_nfiles[i])
-  print(dim(check)[1])
-}
+# #check how many files
+# connect_matrix_nfiles <- list.files(path="/Users/ren/Documents/GitHub/tourism-mpa-support/connect_matrix/", pattern=".fst", all.files=FALSE,full.names=TRUE)
+# length(connect_matrix_nfiles)#821 files
+# for (i in 1:length(connect_matrix_nfiles)){
+#   check<-read.fst(connect_matrix_nfiles[i])
+#   print(dim(check)[1])
+# }
 
 ##check the output
 #seeme <- read.fst("/Users/ren/Documents/GitHub/tourism-mpa-support/connect_matrix/1_connect_larvae.fst")
@@ -375,7 +376,8 @@ source(here("scripts", "functions","calculate_relative_bio_benefit.R"))
 source(here("scripts", "functions","func_evaluateMPA_explicit.R"))
 
 # Load data files necessary for biodiversity model
-load(file = file.path(this_project_dir,  "data", "02-processed-data", "bio_model_input.RData"))
+#load(file = file.path(this_project_dir,  "data", "02-processed-data", "bio_model_input.RData"))
+load(file = file.path("/Users/kat/Library/CloudStorage/GoogleDrive-kmillage@ucsb.edu/Shared\ drives/emlab/projects/current-projects/ps-tourism/data/02-processed-data/bio_model_input.RData"))
 # set Z for biodiversity
 z_bio <- 0.25
 
@@ -400,10 +402,10 @@ MPA_vec$f_all_mpa<-TRUE
 bio_benefit_all<-calculate_relative_bio_benefit(is_mpa_vect = MPA_vec$f_all_mpa, v_out_matrix =  v_out_matrix,
                                                 v_in_matrix = v_in_matrix, weights  = bio_weights, 
                                                 z_bio = z_bio, bau_benefit = bau_benefit, total_benefit_diff = total_benefit_diff)
-#% increase from zero MPA to current MPA
-(bio_benefit_current-bio_benefit_zero)*100/bio_benefit_zero
+#% increase from zero MPA to current MPA 
+(bio_benefit_current-bio_benefit_zero)*100/bio_benefit_zero #2.23517
 #% increase from current MPA to all MPA
-(bio_benefit_all-bio_benefit_current)*100/bio_benefit_current
+(bio_benefit_all-bio_benefit_current)*100/bio_benefit_current #38.88162
 
 #biodiversity score, no MPA
 bio_benefit_zero/max_benefit_allthreats #0.5326662
@@ -418,7 +420,7 @@ bio_benefit_all/max_benefit_allthreats #0.7563106
 (bio_benefit_all-bio_benefit_current)*100/bio_benefit_current
 
 #% increase from current MPA to all threats solved (not needed)
-(max_benefit_allthreats-bio_benefit_current)*100/bio_benefit_current
+(max_benefit_allthreats-bio_benefit_current)*100/bio_benefit_current # 83.6304
 
 ##----- BIOMASS CODE
 #--test:
@@ -547,39 +549,115 @@ sample.n <- sum(!is.na(biomass_data$ratio_biom_divesite))
 (sample.sd <- sd(biomass_data$ratio_biom_divesite,na.rm=T))
 (sample.se <- sample.sd/sqrt(sample.n))
 
-land_shp_moll <- readRDS(here("data","land_shp_moll.rds"))
-#land_shp_moll<-readRDS(file = "/Users/ren/Documents/CODES/FoodProvision/land_shp_moll.rds")
+### Figure 2 --------------------------
 
-cuts <-c(0,20,40,60,80,100)
+# Mollewide projection
+prj <- "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84"
 
-b0<-transformed_stockdistrib %>% ggplot(aes(x=lon,y=lat,fill=biomass_data$ratio_biom_divesite)) + geom_raster(aes(fill = cut(biomass_data$ratio_biom_divesite, cuts))) +
-  scale_fill_brewer(palette = "RdBu", drop = FALSE) + 
-  theme(axis.title.x = element_blank(),axis.title.y = element_blank(), panel.background = element_blank())+
-  geom_sf(data = land_shp_moll,fill="darkgrey", lwd = 0,  inherit.aes = F)+labs(title = "", fill = "% biomass increase")
+# Map theme
+map_theme <- theme_linedraw()+
+  theme(axis.title = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "bottom",
+        legend.key.width = unit(2, "cm"),
+        plot.title = element_text(size= 13, hjust=0.5, color = "#4e4d47"), 
+        panel.border = element_blank(),
+        axis.ticks = element_blank())
 
-b1<-transformed_stockdistrib %>% ggplot(aes(x=lon,y=lat,fill=biomass_data$ratio_biom_divesite)) + geom_raster(aes(fill = cut(biomass_data$ratio_biom_divesite, cuts))) +
-  scale_fill_brewer(palette = "RdBu", drop = FALSE) + 
-  theme(axis.title.x = element_blank(),axis.title.y = element_blank(), panel.background = element_blank(),legend.position="none")+
-  geom_sf(data = land_shp_moll,fill="darkgrey", lwd = 0,  inherit.aes = F)+
-  xlim(0.9e7, 1.5e7) +ylim(-2.5e6,3e6)+labs(title = "Southeast Asia", fill = "% biomass increase")
+# Land shapefile (Mollewide)
+land_shp_moll <- readRDS(here("data","land_shp_moll.rds")) %>%
+  sf::st_transform(crs = st_crs(prj)) # redefining CRS to make error go away
 
-b2<-transformed_stockdistrib %>% ggplot(aes(x=lon,y=lat,fill=biomass_data$ratio_biom_divesite)) + geom_raster(aes(fill = cut(biomass_data$ratio_biom_divesite, cuts))) +
-  scale_fill_brewer(palette = "RdBu", drop = FALSE) + 
-  theme(axis.title.x = element_blank(),axis.title.y = element_blank(), panel.background = element_blank(),legend.position="none")+
-  geom_sf(data = land_shp_moll,fill="darkgrey", lwd = 0,  inherit.aes = F)+
-  xlim(-0.2e7, 0.4e7) +ylim(2.5e6,7.5e6)+labs(title = "Europe", fill = "% biomass increase")
+# Biomass data
+biomass_df <- transformed_stockdistrib %>% 
+  dplyr::select(cell_id, lon, lat, ocean, f_highly_mpa) %>%
+  bind_cols(biomass_data)
 
-b3<-transformed_stockdistrib %>% ggplot(aes(x=lon,y=lat,fill=biomass_data$ratio_biom_divesite)) + geom_raster(aes(fill = cut(biomass_data$ratio_biom_divesite, cuts))) +
-  scale_fill_brewer(palette = "RdBu", drop = FALSE) + 
-  theme(axis.title.x = element_blank(),axis.title.y = element_blank(), panel.background = element_blank(),legend.position="none")+
-  geom_sf(data = land_shp_moll,fill="darkgrey", lwd = 0,  inherit.aes = F)+
-  xlim(-1.1e7, -0.5e7) +ylim(-0.5e6,5.2e6)+labs(title = "Carribean", fill = "% biomass ratio")
+# cuts <-c(0,20,40,60,80,100)
 
-bottom_row <- plot_grid(b1,b2,b3, nrow=1, labels = c('B', 'C','D'), label_size = 12)
-plot_biomass_increase <- cowplot::plot_grid(b0,bottom_row, nrow = 2, labels =c('A',''),rel_heights=c(2,1))
-plot_biomass_increase 
+# Global map
+fig_2_a <- biomass_df %>% 
+  dplyr::filter(!is.na(ratio_biom_divesite)) %>%
+  ggplot()+
+  geom_raster(aes(x = lon, y = lat, fill=ratio_biom_divesite))+
+  geom_sf(data = land_shp_moll, color = "black", fill = "black", size = 0.1)+
+  scale_fill_viridis(name = "% biomass increase",
+                     option = "C",
+                     limits = c(0,500), 
+                     oob = squish,
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5))+
+  map_theme
 
-ggsave(here("figures","main","plot_biomass_increase.jpg"),plot_biomass_increase, width = 15, height = 10, units = "in")
+### Caribbean plot
+# Bounding box coordinates for area we want to plot - easier to pick lat/lon this way
+b_coords = data.frame(lon = c(-100, -100, -60, -60, -100),
+                      lat = c(-10, 30, 30, -10, -10)) %>%
+  st_as_sf(coords = c("lon", "lat"),
+           crs = 4326) %>%
+  st_transform(crs = st_crs(prj)) %>%
+  st_bbox() # xmin, ymin, xmax, ymax
+
+# Plot
+fig_2_b <- fig_2_a +
+  coord_sf(xlim = c(b_coords[1], b_coords[3]),
+           ylim = c(b_coords[2], b_coords[4]))+
+  # xlim(-1.1e7, -0.5e7) +
+  # ylim(-0.5e6,5.2e6) +
+  theme(panel.border = element_rect(color = "black", fill = NA))
+
+### Europe plot
+# Bounding box coordinates for area we want to plot - easier to pick lat/lon this way
+c_coords = data.frame(lon = c(-10, -10, 40, 40, -10),
+                      lat = c(20, 70, 70, 20, 20)) %>%
+  st_as_sf(coords = c("lon", "lat"),
+           crs = 4326) %>%
+  st_transform(crs = st_crs(prj)) %>%
+  st_bbox() # xmin, ymin, xmax, ymax
+
+# Plot 
+fig_2_c <- fig_2_a +
+  coord_sf(xlim = c(c_coords[1], c_coords[3]),
+           ylim = c(c_coords[2], c_coords[4]))+
+  # xlim(-0.2e7, 0.4e7) +
+  # ylim(2.5e6,7.5e6) +
+  theme(panel.border = element_rect(color = "black", fill = NA))
+
+### Southeast Asia plot
+# Bounding box coordinates for area we want to plot - easier to pick lat/lon this way
+d_coords = data.frame(lon = c(95, 95, 145, 145, 95),
+                      lat = c(-20, 25, 25, -20, -20)) %>%
+  st_as_sf(coords = c("lon", "lat"),
+           crs = 4326) %>%
+  st_transform(crs = st_crs(prj)) %>%
+  st_bbox() # xmin, ymin, xmax, ymax
+
+fig_2_d <- fig_2_a +
+  coord_sf(xlim = c(d_coords[1], d_coords[3]),
+           ylim = c(d_coords[2], d_coords[4]))+
+  # xlim(0.9e7, 1.5e7) +
+  # ylim(-2.5e6,3e6) +
+  theme(panel.border = element_rect(color = "black", fill = NA))
+
+# Combine to make final plot
+fig_2_bottom_row <- plot_grid(fig_2_b + theme(legend.position = "none"),
+                              fig_2_c + theme(legend.position = "none"),
+                              fig_2_d + theme(legend.position = "none"),
+                              nrow = 1,
+                              rel_widths = c(1,1,1),
+                              labels = c("B)", "C)", "D)"),
+                              label_y = 1.1)
+
+fig_2 <- plot_grid(fig_2_a + theme(legend.position = "none"),
+                   fig_2_bottom_row,
+                   cowplot::get_legend(fig_2_a+
+                                         theme(legend.margin = margin(t = 0.25, unit='cm'))),
+                   nrow = 3,
+                   labels = c("A)", "", ""),
+                   rel_heights = c(5,3.5,1))
+
+fig_2 
+
+ggsave(here("figures","main","plot_biomass_increase.jpg"), fig_2, width = 6.5, height = 6.75, units = "in")
 
 ##-----NOW, close all dive pixels and calculate change in diversity
 biodiv_bau <- calculate_relative_bio_benefit(is_mpa_vect = MPA_vec$f_highly_mpa, v_out_matrix =  v_out_matrix,
@@ -771,35 +849,82 @@ explore_user_fee_noMPA_merged$Scenario<-"No MPA"
 
 explore_user_fee_merged <- rbind(explore_user_fee_wMPA_merged,explore_user_fee_noMPA_merged)
 
-p1 <- ggplot(explore_user_fee_merged ,aes(x=`fraction user fee opt`,y=`Tax revenue`/1e9,group=Scenario))+geom_line(aes(linetype=Scenario))+theme_classic()+labs(x ="", y = "Dive fee revenue (billion US$)")#+xlim(0,100)
-p2 <- ggplot(explore_user_fee_merged,aes(x=`fraction user fee opt`,y=`Change dive revenue`/1e9,group=Scenario))+geom_line(aes(linetype=Scenario))+theme_classic()+labs(x ="", y = "\u0394 dive revenue (billion US$)")#+xlim(0,100)
-p3 <- ggplot(explore_user_fee_merged,aes(x=`fraction user fee opt`,y=`Change consumer surplus`/1e9,group=Scenario))+geom_line(aes(linetype=Scenario))+theme_classic()+labs(x ="Average user fee per dive (US$)", y = "\u0394 consumer surplus (billion US$)")#+xlim(0,100)
-p4 <- ggplot(explore_user_fee_merged,aes(x=`fraction user fee opt`,y=`N dives`/1e6,group=Scenario))+geom_line(aes(linetype=Scenario))+theme_classic()+labs(x ="Average user fee per dive (US$)", y = "\u0394 # dives (million)")#+xlim(0,100)
-plot_explore_user_fee <- cowplot::plot_grid(p1,p2,p3,p4, ncol = 2, labels = "AUTO",rel_heights=c(1,1))
-plot_explore_user_fee
+### Figure 4 --------------------------
+plot_theme <- theme_classic()+
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10))
 
-ggsave(here("figures","main","plot_explore_user_fee.jpg"),plot_explore_user_fee, width = 10, height = 8, units = "in")
+fig_4_a <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`,y=`Tax revenue`/1e9,group=Scenario))+
+  geom_line(aes(linetype=Scenario), lwd = 1)+
+  labs(x ="", y = "Dive fee revenue \n(billion US$)")+
+  scale_linetype(guide = guide_legend(title.hjust = 0.5, title.position = "top"))+
+  plot_theme +
+  theme(legend.position = "bottom")
+
+fig_4_b <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`,y=`Change dive revenue`/1e9, group=Scenario))+
+  geom_line(aes(linetype=Scenario), lwd = 1)+
+  labs(x ="", y = "\u0394 dive revenue \n(billion US$)")+
+  plot_theme
+
+fig_4_c <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`, y=`Change consumer surplus`/1e9, group=Scenario))+
+  geom_line(aes(linetype=Scenario), lwd = 1)+
+  labs(x ="Average user fee per dive \n(US$)", y = "\u0394 consumer surplus \n(billion US$)")+
+  plot_theme
+
+fig_4_d <- ggplot(explore_user_fee_merged,aes(x=`fraction user fee opt`,y=`N dives`/1e6,group=Scenario))+
+  geom_line(aes(linetype=Scenario), lwd = 1)+
+  labs(x ="Average user fee per dive \n(US$)", y = "\u0394 # dives \n(million)")+
+  plot_theme
+
+# Combine into final plot
+fig_4_no_leg <- cowplot::plot_grid(fig_4_a + theme(legend.position = "none"),
+                                   fig_4_b + theme(legend.position = "none"),
+                                   fig_4_c + theme(legend.position = "none"),
+                                   fig_4_d + theme(legend.position = "none"), 
+                                   ncol = 2, 
+                                   labels = c("A)", "B)", "C)", "D)"),
+                                   rel_heights=c(1,1))
+
+fig_4 <- plot_grid(fig_4_no_leg,
+                   get_legend(fig_4_a +
+                                theme(legend.margin = margin(t = 0.25, unit='cm'))),
+                   ncol = 1,
+                   rel_heights = c(6, 1))
+
+fig_4
+
+ggsave(here("figures","main","plot_explore_user_fee.jpg"),fig_4, width = 6.5, height = 6, units = "in")
 
 #This is the results for the values. Increase in consumer surplus etc.
 explore_user_fee_merged[1,]
 
-#figure 4 main plot
+### Figure 3 --------------------------
+
 #with MPA, then user fee of 13 USD per dive (to be exact, check the average user fee)
 component_effect_name <- round(effect_name/average_user_fee,4)
 component_biomass_effect <- round(mean(effect_biomass)/average_user_fee,4)
 component_biodiversity_effect <- round(mean(effect_biodiversity)/average_user_fee,4)
 
-p1_contribution <- data.frame(value = c(component_effect_name, component_biomass_effect, component_biodiversity_effect), Component = c("MPA name","Biomass","Biodiversity")) %>%
-  ggplot(aes(x = "", y = value, fill = Component)) +
+pie_theme <- theme_void()+
+  theme(legend.position = "none", # Removes the legend
+                   plot.title = element_text(hjust = 0.5))
+
+pie_dat <- data.frame(value = c(component_effect_name, component_biomass_effect, component_biodiversity_effect), 
+                      Component = c("MPA name effect","Biomass effect","Biodiversity effect")) %>%
+  mutate(csum = rev(cumsum(rev(value))), 
+         pos = value/2 + lead(csum, 1),
+         pos = if_else(is.na(pos), value/2, pos))
+  
+fig_3_a <- ggplot(pie_dat , aes(x = "", y = value, fill = fct_inorder(Component))) +
   geom_col(color = "black") +
-  geom_text(aes(label = percent(value)),
-            position = position_stack(vjust = 0.5)) +
   coord_polar(theta = "y") +
-  #scale_fill_brewer() +
-  ggtitle("Drivers of MPA benefits")+
-  theme_void()+
-  theme(plot.title = element_text(hjust = 0.5))
-p1_contribution #ok, this is the contribution of different components
+  ggtitle("Drivers of global MPA benefits")+
+  geom_label_repel(data = pie_dat,
+                   aes(y = pos, label = paste0(Component, "\n", percent(value))),
+                   size = 4.5, nudge_x = c(0.8, 1, 1.3), show.legend = FALSE) +
+  pie_theme
+
+fig_3_a  #ok, this is the contribution of different components
 
 #apply tax here and see where the benefits will go? #calculate tax revenue with crowding: tax_revenue_withcrowding
 dive_tax <- round(mean(user_fee_opt))
@@ -824,38 +949,66 @@ cell_developmentstatus <- dive_per_country[dive_per_country$cell_id %in% divepix
 cell_developmentstatus$tax_revenue<-tax_revenue_withcrowding
 
 #edit this once we have the true data
-p2_beneficiary <- cell_developmentstatus %>% group_by(Classification) %>% summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
-  filter(Classification %in% c("Developed", "Developing")) %>% mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
+cs_dat <- cell_developmentstatus %>% 
+  group_by(Classification) %>% 
+  summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
+  filter(Classification %in% c("Developed", "Developing")) %>% 
+  mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
   mutate(Percent_Contribution = replace(Percent_Contribution, Classification == "Developed", 0.80)) %>%
   mutate(Percent_Contribution = replace(Percent_Contribution, Classification == "Developing", 0.20)) %>%  
-  ggplot(aes(x = "", y = Percent_Contribution, fill = Classification)) +
+  mutate(csum = rev(cumsum(rev(Percent_Contribution))), 
+         pos = Percent_Contribution/2 + lead(csum, 1),
+         pos = if_else(is.na(pos), Percent_Contribution/2, pos))
+  
+fig_3_b <- ggplot(cs_dat, aes(x = "", y = Percent_Contribution, fill = fct_inorder(Classification))) +
   geom_col(color = "black") +
-  geom_text(aes(label = percent(Percent_Contribution)),
-            position = position_stack(vjust = 0.5)) +
-  #ylab("Contribution (US$ million)")
   ggtitle("Consumer surplus beneficiaries")+
   coord_polar(theta = "y") +
-  scale_fill_brewer(labels=c('Foreign','Local')) +
-  theme_void()+
-  theme(plot.title = element_text(hjust = 0.5))
-p2_beneficiary
+  geom_label_repel(data = cs_dat,
+                   aes(y = pos, label = paste0(Classification, "\n", percent(Percent_Contribution))),
+                   size = 4.5, nudge_x = c(0.9), show.legend = FALSE) +
+  scale_fill_brewer()+
+    #labels=c('Foreign','Local')) +
+  pie_theme
 
-p3_development <- cell_developmentstatus %>% group_by(Classification) %>% summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
-  filter(Classification %in% c("Developed", "Developing")) %>% mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
-  ggplot(aes(x = "", y = Percent_Contribution, fill = Classification)) +
+fig_3_b
+
+tax_rev_dat <- cell_developmentstatus %>% 
+  group_by(Classification) %>% 
+  summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
+  filter(Classification %in% c("Developed", "Developing")) %>% 
+  mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
+  mutate(csum = rev(cumsum(rev(Percent_Contribution))), 
+         pos = Percent_Contribution/2 + lead(csum, 1),
+         pos = if_else(is.na(pos), Percent_Contribution/2, pos))
+  
+fig_3_c <- ggplot(tax_rev_dat, aes(x = "", y = Percent_Contribution, fill = fct_inorder(Classification))) +
   geom_col(color = "black") +
-  geom_text(aes(label = percent(Percent_Contribution)),
-            position = position_stack(vjust = 0.5)) +
-  #ylab("Contribution (US$ million)")
   ggtitle("Tax revenue beneficiaries")+
   coord_polar(theta = "y") +
+  geom_label_repel(data = tax_rev_dat,
+                   aes(y = pos, label = paste0(Classification, "\n", percent(Percent_Contribution))),
+                   size = 4.5, nudge_x = c(0.9), show.legend = FALSE) +
   scale_fill_brewer() +
-  theme_void()+   theme(plot.title = element_text(hjust = 0.5))
-p3_development
+  pie_theme
 
-Fig4 <- cowplot::plot_grid(p1_contribution,p2_beneficiary,p3_development, ncol = 1, labels = "AUTO")
-Fig4
-ggsave(here("figures","main","Fig4.jpg"),Fig4, width = 4, height = 10.5, units = "in")
+fig_3_c
+
+# combine into final plot 
+fig_3_bottom_row <- cowplot::plot_grid(fig_3_b,
+                                       fig_3_c,
+                                       nrow = 1,
+                                       labels = c("B)", "C)"))
+
+fig_3 <- plot_grid(fig_3_a,
+                   fig_3_bottom_row,
+                   ncol = 1,
+                   rel_heights = c(2,1.5),
+                   labels = c("A)", ""))
+
+fig_3
+
+ggsave(here("figures","main","fig_3.jpg"),fig_3, width = 6.5, height = 6.75, units = "in")
 
 #This is the summary table of results! with/without MPA and varying tax level.
 head(explore_user_fee_merged)
@@ -865,11 +1018,11 @@ head(explore_user_fee_merged)
 #1. Pixel number of unprotected dive sites
 #2. Change in biomass per MPA pixels
 #3. Change in biodiversity metric per MPA pixel
-summary_table1 <- data.frame(pixel_number = divepixels_unprotected)
-summary_table1$change_biomass <- change_biomass_density_full
-summary_table1$change_diversity <- change_diversity_full
-summary_table1$change_ndive <- 
-head(summary_table1)
+# summary_table1 <- data.frame(pixel_number = divepixels_unprotected)
+# summary_table1$change_biomass <- change_biomass_density_full
+# summary_table1$change_diversity <- change_diversity_full
+# summary_table1$change_ndive <- 
+# head(summary_table1)
 
 
 
