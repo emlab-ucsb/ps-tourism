@@ -1,0 +1,540 @@
+---
+output:
+  html_document: default
+
+title: 'Dive Operator Data - Summary/Visualization'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Script Specific Packages
+library(treemap)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script summarizes and visualizes the general characteristics associated with the dive operator database, as well as statistics pertaining to those sampled as part of our price data collection.
+
+```{r}
+# Load cleaned dive center data (from Fabio et al.) and our cleaned shop metadata file
+diving_center_dat<- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diving_center_database_clean.csv"))
+
+sampled_operator_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "sampled_operators_metadata_clean.csv"))
+```
+
+# Plot Settings & Setup
+
+We're going to want to look at some of our data in a binned fashion - let's go ahead and bin our operators by location. 
+
+```{r}
+barwidth = 15
+barheight = 1
+```
+
+```{r}
+# Now let's extract what we need from our operator database
+dive_operator_dat_spatial <- diving_center_dat %>%
+  dplyr::select(lon = longitude, lat = latitude, ID)
+
+# Make it a SPDF and transform
+dive_operator_spdf <- SpatialPointsDataFrame(cbind(dive_operator_dat_spatial$lon, dive_operator_dat_spatial$lat), as.data.frame(dive_operator_dat_spatial$ID), proj4string=CRS("+proj=longlat"))
+
+dive_operator_moll_df <- spTransform(dive_operator_spdf, CRS = prj_moll) %>%
+  as.data.frame() %>%
+  rename(ID = `dive_operator_dat_spatial.ID`,
+         x_coord = `coords.x1`,
+         y_coord = `coords.x2`)
+```
+
+```{r}
+# Now let's set a bin size
+bin_size <- 50000 # in meters
+bin_size_txt <- "50km"
+
+# Match Mollewiede coordinates back to the dive operator data and bin
+dive_operator_dat_binned <- diving_center_dat %>%
+  left_join(dive_operator_moll_df, by = "ID") %>%
+  mutate(x_coord_cen = bin_spatial_data(x_coord, bin_size = bin_size),
+         y_coord_cen = bin_spatial_data(y_coord, bin_size = bin_size))
+```
+
+# Summaries: Number of Dive Operators
+
+We already made a few summary plots when we cleaned this database, but let's go ahead and make a few more pertaining to the total number of operators in the database provided to us by Schubauer et al. (in review). 
+
+## By bin
+
+Let's transform our lat/lon coordinates for our sampled dive operators to mollewide and then bin them into 50 x 50 km2 bins. 
+
+```{r}
+# Now we make a map of our number of dive operators
+dive_operators_map <- dive_operator_dat_binned %>%
+  group_by(x_coord_cen, y_coord_cen) %>%
+  summarize(n_shops = n_distinct(ID)) %>%
+  ggplot()+
+  map_layer_moll +
+  geom_raster(aes(x = x_coord_cen, y = y_coord_cen, fill = log10(n_shops)), show.legend = T)+
+  scale_fill_viridis(option = "plasma", limits = c(0,2), oob = squish, labels = c("1", "25", "50", "75", "\u2265 100"))+
+  theme(legend.position = "bottom",
+        title = element_text(hjust = 0.5))+
+  labs(title = paste0("Total number of dive operators: ", format(n_distinct(dive_operator_dat_binned$ID), big.mark = ",")),
+    x = "", y = "")+
+  guides(fill = guide_colorbar(barwidth = barwidth, barheight = barheight, title = "Dive operators (#)", title.position = "top", title.hjust = 0.5))+
+  theme_basic()
+
+# Output
+save_plots(dive_operators_map, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_all_50km_50km_bins.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+dive_operators_map
+```
+
+## By country
+
+```{r}
+# Get our number of shops by country and reorder
+dive_operators_country_data_all <- dive_operator_dat_binned %>%
+  mutate(country_iso3 = case_when(country_scraped == "Saint Martin" ~ "MAF",
+                                  T ~ countrycode(country_scraped, "country.name", "iso3c"))) %>%
+  mutate(country_name = countrycode(country_iso3, "iso3c", "country.name"),
+         continent = case_when(country_name == "Saint Martin (French part)" ~ "Americas",
+                               T ~ continent)) %>%
+  group_by(continent, country_name) %>%
+  summarize(value = n_distinct(ID)) %>%
+  ungroup() %>%
+  arrange(continent, desc(value)) %>%
+  rename(group = continent,
+         country = country_name)
+
+# Plot
+dive_operators_country_plot_all <- dive_operators_country_data_all %>%
+  ggplot() +
+  geom_bar(aes(x=fct_reorder(country, value), y=value, fill=fct_rev(group)), stat="identity", alpha=1) +
+  geom_text(aes(x=fct_reorder(country, value), y=value+10, label=country), color="black", fontface="bold",alpha=0.6, size=1.5, inherit.aes = FALSE, hjust = 0)+
+  scale_y_continuous(expand = c(0,0), limits = c(0,ceiling(max(dive_operators_country_data_all$value))+100))+
+  scale_fill_brewer(palette = "Set1", name = "", guide = guide_legend(reverse = T))+
+  facet_grid(rows = "group", scales = "free_y", space = "free")+
+  labs(y = "Dive operators (#)")+
+  coord_flip()+
+  theme_basic()+
+  theme(
+    legend.position = "none",
+    axis.text.y  = element_blank(),
+    axis.title.y = element_blank()
+  )
+
+# Output
+
+save_plots(dive_operators_country_plot_all, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_all_by_country_and_continent.png"),
+           width_in = 7.5,
+           height_in = 9.5)
+
+dive_operators_country_plot_all
+```
+
+## By country (top 25)
+
+Now let's summarize the number of operators by country with a circle plot
+
+```{r}
+# Get our number of shops by country and reorder
+dive_operators_country_data <- dive_operator_dat_binned %>%
+  group_by(continent, sovereignt) %>%
+  summarize(value = n_distinct(ID)) %>%
+  ungroup() %>%
+  arrange(continent, desc(value)) %>%
+  mutate(group = fct_reorder(continent, value),
+         country = fct_reorder2(sovereignt, continent, value)) %>%
+  dplyr::select(-continent, -sovereignt) %>%
+  dplyr::filter(value >= 25)
+
+# Set a number of 'empty bars' to add at the end of each group
+empty_bar <- 3
+to_add <- data.frame( matrix(NA, empty_bar*nlevels(dive_operators_country_data$group), ncol(dive_operators_country_data)) )
+colnames(to_add) <- colnames(dive_operators_country_data)
+to_add$group <- rep(levels(dive_operators_country_data$group), each=empty_bar)
+dive_operators_country_data <- rbind(dive_operators_country_data, to_add)
+dive_operators_country_data <- dive_operators_country_data %>% arrange(group)
+dive_operators_country_data$id <- seq(1, nrow(dive_operators_country_data))
+
+# Get the name and the y position of each label
+label_data <- dive_operators_country_data
+number_of_bar <- nrow(label_data)
+angle <- 90 - 360 * (label_data$id-0.5) /number_of_bar
+label_data$hjust <- ifelse( angle < -90, 1, 0)
+label_data$angle <- ifelse(angle < -90, angle+180, angle)
+
+# prepare a data frame for base lines
+base_data <- dive_operators_country_data %>% 
+  group_by(group) %>% 
+  summarize(start=min(id), end=max(id) - empty_bar) %>% 
+  rowwise() %>% 
+  mutate(title=mean(c(start, end)))
+ 
+# prepare a data frame for grid (scales)
+grid_data <- base_data
+grid_data$end <- grid_data$end[c(nrow(grid_data), 1:nrow(grid_data)-1)] + 1
+grid_data$start <- grid_data$start - 1
+grid_data <- grid_data[-1,]
+
+# Plot
+dive_operators_country_plot <- dive_operators_country_data %>%
+  ggplot(aes(x=as.factor(id), y=value, fill=fct_rev(group))) +
+
+  geom_bar(aes(x=as.factor(id), y=value, fill=fct_rev(group)), stat="identity", alpha=0.5) +
+  
+  # Add lines. I do it at the beginning to make sure barplots are OVER them
+  geom_segment(data=grid_data, aes(x = end, y = 800, xend = start, yend = 800), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+  geom_segment(data=grid_data, aes(x = end, y = 400, xend = start, yend = 400), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+  geom_segment(data=grid_data, aes(x = end, y = 200, xend = start, yend = 200), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+  geom_segment(data=grid_data, aes(x = end, y = 100, xend = start, yend = 100), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+  geom_segment(data=grid_data, aes(x = end, y = 50, xend = start, yend = 50), colour = "grey", alpha=1, size=0.3 , inherit.aes = FALSE ) +
+  
+  # Add text showing the value of each 100/75/50/25 lines
+  annotate("text", x = rep(max(dive_operators_country_data$id),5), y = c(50, 100, 200, 400, 800), label = c("50", "100", "200", "400", "800") , color="grey", size=1 , angle=0, fontface="bold", hjust=1) +
+  
+  geom_bar(aes(x=as.factor(id), y=value, fill=fct_rev(group)), stat="identity", alpha=1) +
+  ylim(-100,1600) +
+  theme_basic()+
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.margin = unit(rep(-3.75,4), "cm") 
+  ) +
+  coord_polar()+
+  geom_text(data=label_data, aes(x=id, y=value+15, label=country, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=1.5, angle= label_data$angle, inherit.aes = FALSE)
+  #scale_fill_brewer(palette = "Set1", name = "")
+
+
+# Output
+save_plots(dive_operators_country_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_all_by_country_and_continent_top_25_circle_plot.png"),
+           width_in = 7.5,
+           height_in = 6.5)
+
+dive_operators_country_plot
+```
+# Summaries: Operators Meeting Criteria
+
+Let's summarize the number of our sampled shops meeting the basic criteria for inclusion in our study (has a valid URL, is readable, is dive related, and offers marine dive services). We obviously don't know that these would be consistent across the non-sampled portion of the dataset, but it's a good place to start. 
+
+## Total
+
+```{r}
+# Summarize our totals
+ sampled_operator_validity <- sampled_operator_dat %>%
+   count(is_valid_url,
+         is_readable,
+         is_dive_related,
+         offers_marine_dive_services) %>%
+  mutate(percent = round((n/n_distinct(sampled_operator_dat$ID))*100, 2))
+
+ # Everything looks good!
+ sampled_operator_validity_table <- basic_table_html(sampled_operator_validity %>% mutate_all(function(x)ifelse(is.na(x), "---", x)),
+                                            column_names = c("Valid URL?", "Readable?", "Dive Related Business?", "Offers Marine Dive Services?", "Number", "Percent"),
+                                            fig_caption = "")
+
+ save_table(sampled_operator_validity_table,
+            file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_sampled_validity_table.png"))
+ 
+ sampled_operator_validity_table
+```
+
+
+```{r}
+# Let's visualize this while we're here
+sampled_operator_count <- sampled_operator_dat %>%
+  mutate(group1 = case_when(is_valid_url == F | is_readable == F ~ "Invalid URL or incomprehensible",
+                           is_dive_related == F ~ "Non dive-related businesses",
+                           offers_marine_dive_services == F ~ "Does not offer marine dive services",
+                           offers_marine_dive_services == T ~ "Offers marine dive services")) %>%
+  group_by(group1) %>%
+  summarize(count = n_distinct(ID))
+  
+# Now we plot it
+png(filename=file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_sampled_validity_tree.png"),width=7,height=7,units = "in",res =300)
+sampled_operator_validity_plot <- treemap::treemap(sampled_operator_count, #Your data frame object
+        index=c("group1"),  #A list of your categorical variables
+        vSize = "count",  #This is your quantitative variable
+        type="index", #Type sets the organization and color scheme of your treemap
+        palette = c("#e3e3aa", "#d69ca2", "#fabf9b", "#738deb"),
+        title=paste0("Dive operators sampled: ", format(sum(sampled_operator_count$count), big.mark = ",")), #Customize your title
+        fontsize.title = 16, #Change the font size of the title
+        fontsize.labels=c(16,14),
+        fontface.labels=c(2,2),
+        #bg.labels=c("transparent"),
+        align.labels=list(
+        c("center", "center")),
+        ymod.labels = list(0),
+        inflate.labels = F,
+        overlap.labels = 1,
+        border.col=c("black"),
+        border.lwds=c(4,2),
+        fontcolor.labels = c("black"),
+        position.legend = "none",
+        mirror.x = T,
+        mirror.y = T)
+dev.off()
+```
+
+## By continent
+
+Then by continent 
+
+```{r}
+# Now let's visualize
+sampled_operator_count_continent <- sampled_operator_dat %>%
+  mutate(group1 = case_when(is_valid_url == F | is_readable == F ~ "Invalid URL or incomprehensible",
+                           is_dive_related == F ~ "Non dive-related businesses",
+                           offers_marine_dive_services == F ~ "Does not offer marine dive services",
+                           offers_marine_dive_services == T ~ "Offers marine dive services")) %>%
+  group_by(group1, continent) %>%
+  summarize(count = n_distinct(ID))
+
+# Visualize
+png(filename=file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_sampled_validity_tree_by_continent.png"),width=7,height=7,units = "in",res =300)
+sampled_operator_validity_plot_continent <- treemap::treemap(sampled_operator_count_continent, #Your data frame object
+        index=c("continent", "group1"),  #A list of your categorical variables
+        vSize = "count",  #This is your quantitative variable
+        type="categorical", #Type sets the organization and color scheme of your treemap
+        vColor = "group1",
+        palette = c("#e3e3aa", "#d69ca2", "#fabf9b", "#738deb"),
+        title=paste0("Dive Operators Surveyed: ", format(sum(sampled_operator_count_continent$count), big.mark = ",")), #Customize your title
+        fontsize.title = 16, #Change the font size of the title
+        fontsize.labels=c(16,6.5),
+        fontface.labels=c(2,2),
+        #bg.labels=c("transparent"),
+        align.labels=list(
+        c("center", "center")),
+        ymod.labels = list(0),
+        inflate.labels = F,
+        overlap.labels = 0,
+        border.col=c("black", "black"),
+        border.lwds=c(4,2),
+        fontcolor.labels = c("black", "black"),
+        position.legend = "none",
+        mirror.x = T,
+        mirror.y = T)
+dev.off()
+```
+
+# Summaries: Sampling Rates
+
+Now that we've got a good idea of our "false positive" rates across a few different metrics, let's look at our sampling rates spatially.
+
+## By bin
+
+Let's make a map of the % of operators in each bin sampled. 
+
+```{r}
+# Map of proportion of operators sampled by bin
+dive_operators_prop_sampled_map <- dive_operator_dat_binned %>%
+  mutate(was_sampled = ifelse(ID %in% sampled_operator_dat$ID,T, F)) %>%
+  group_by(x_coord_cen, y_coord_cen) %>%
+  summarize(n_shops = n_distinct(ID),
+            n_shops_sampled = n_distinct(ID[was_sampled])) %>%
+  ungroup() %>%
+  mutate(prop_sampled = n_shops_sampled/n_shops) %>%
+  ggplot()+
+  map_layer_moll +
+  geom_raster(aes(x = x_coord_cen, y = y_coord_cen, fill = prop_sampled), show.legend = T)+
+  scale_fill_gradient(low = "lightblue4", high = "#f9b641", labels = percent)+
+  theme(legend.position = "bottom",
+        title = element_text(hjust = 0.5))+
+  labs(x = "", y = "", 
+       title = paste0("Total number of dive operators: ", format(n_distinct(dive_operator_dat_binned$ID), big.mark = ",")))+
+  guides(fill = guide_colorbar(barwidth = barwidth, barheight = barheight, title = "Dive operators (% sampled)", title.position = "top", title.hjust = 0.5))+
+  theme_basic()
+
+# Output
+save_plots(dive_operators_prop_sampled_map, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_sampled_50km_50km_bins.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+dive_operators_prop_sampled_map
+```
+
+## By business type
+
+Then look at sampling rates by business type. 
+
+```{r}
+# Let's recreate one of our earlier figures looking at center types. This time we want to see the proportions of those we sampled. 
+sampling_summary_business_type_abs <- diving_center_dat %>%
+  mutate(was_sampled = case_when(ID %in% sampled_operator_dat$ID ~ T,
+                                 T ~ F)) %>%
+  group_by(type_of_business_new, was_sampled) %>%
+  summarize(shops_n = n_distinct(ID)) %>%
+  ungroup() %>%
+  group_by(type_of_business_new) %>%
+  mutate(shops_total = sum(shops_n, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(label = ifelse(was_sampled, paste0(shops_n, " of ", shops_total, "\nsampled"), "")) %>%
+  ggplot()+
+  aes(x = reorder(type_of_business_new, shops_n), y = shops_n, fill = was_sampled)+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label = label), hjust = -0.1, family = "Roboto", size = 2, color = "white")+
+  scale_fill_manual(values = c("#042333", "#f9b641"))+
+  coord_flip()+
+  labs(x = "", y = "Dive operators (#)",
+       title = paste0("Total number of dive operators: ", format(n_distinct(diving_center_dat$ID), big.mark = ",")))+
+  guides(fill = guide_legend(title = "Sampled?", reverse = T))+
+  theme_basic()
+
+sampling_summary_business_type_abs
+```
+
+And then the same by proportion
+  
+```{r}  
+# Let's get the relative proportions too
+sampling_summary_business_type_prop <- diving_center_dat %>%
+  mutate(was_sampled = case_when(ID %in% sampled_operator_dat$ID ~ T,
+                                 T ~ F)) %>%
+  group_by(type_of_business_new) %>%
+  summarize(Sampled = n_distinct(ID[was_sampled])/n_distinct(ID),
+            `Not Sampled` = n_distinct(ID[!was_sampled])/n_distinct(ID),
+            shops_n = n_distinct(ID)) %>%
+  ungroup() %>%
+  gather(was_sampled, prop, 2:3) %>%
+  mutate(was_sampled = case_when(was_sampled == "Sampled" ~ T,
+                                 T ~ F)) %>%
+  mutate(label = ifelse(was_sampled, paste0(round(prop, 4)*100, "%\nsampled"), "")) %>%
+  ggplot()+
+  aes(x = reorder(type_of_business_new, shops_n), y = prop, fill = was_sampled)+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label = label), hjust = -0.2, family = "Roboto", size = 2, color = "white")+
+  scale_fill_manual(values = c("#042333", "#f9b641"))+
+  coord_flip()+
+  labs(x = "", y = "Dive operators (% of total)")+
+  guides(fill = guide_legend(title = "Sampled?", reverse = T))+
+  scale_y_continuous(labels = scales::percent)+
+  theme_basic()
+
+sampling_summary_business_type_prop
+```
+
+```{r}
+# And combine and save
+sampling_summary_business_type_out <- plot_grid(sampling_summary_business_type_abs + theme(legend.position = "none"), 
+                                                sampling_summary_business_type_prop, 
+                                                labels = "AUTO", ncol = 1, align = "hv", rel_heights = c(1, 1))
+
+
+save_plots(sampling_summary_business_type_out, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_sampled_by_type.png"),
+           width_in = 7.5,
+           height_in = 7)
+
+sampling_summary_business_type_out
+```
+
+### By continent
+
+```{r}
+# Number of operators sampled by continent
+sampling_summary_continent_abs <- diving_center_dat %>%
+  mutate(was_sampled = case_when(ID %in% sampled_operator_dat$ID ~ T,
+                                 T ~ F)) %>%
+  group_by(continent, was_sampled) %>%
+  summarize(shops_n = n_distinct(ID)) %>%
+  ungroup() %>%
+  group_by(continent) %>%
+  mutate(shops_total = sum(shops_n, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(label = ifelse(was_sampled, paste0(shops_n, " of ", shops_total, "\nsampled"), "")) %>%
+  dplyr::filter(!is.na(continent)) %>%
+  ggplot()+
+  aes(x = reorder(continent, shops_total), y = shops_n, fill = was_sampled)+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label = label), hjust = -0.1, family = "Roboto", size = 2, color = "white")+
+  theme_bw()+
+  coord_flip()+
+  labs(x = "", y = "Dive operators (#)",
+       title = paste0("Total number of dive operators: ", format(n_distinct(diving_center_dat$ID), big.mark = ",")))+
+  scale_y_continuous(expand = c(0,0))+
+  scale_fill_manual(values = c("#042333", "#f9b641"))+
+  guides(fill = guide_legend(title = "Sampled?", reverse = T))+
+  theme_basic()
+
+sampling_summary_continent_abs
+```
+  
+```{r}
+# Let's get the relative proportions too
+sampling_summary_continent_prop <- diving_center_dat %>%
+  mutate(was_sampled = case_when(ID %in% sampled_operator_dat$ID ~ T,
+                                 T ~ F)) %>%
+  group_by(continent) %>%
+  summarize(Sampled = n_distinct(ID[was_sampled])/n_distinct(ID),
+            `Not Sampled` = n_distinct(ID[!was_sampled])/n_distinct(ID),
+            shops_n = n_distinct(ID)) %>%
+  ungroup() %>%
+  dplyr::filter(!is.na(continent)) %>%
+  gather(was_sampled, prop, 2:3) %>%
+  mutate(was_sampled = case_when(was_sampled == "Sampled" ~ T,
+                                 T ~ F)) %>%
+  mutate(label = ifelse(was_sampled, paste0(round(prop, 4)*100, "%\nsampled"), "")) %>%
+  ggplot()+
+  aes(x = reorder(continent, shops_n), y = prop, fill = was_sampled)+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label = label), hjust = -0.1, family = "Roboto", size = 2, color = "white")+
+  theme_bw()+
+  coord_flip()+
+  labs(x = "", y = "Dive operators (% of total)")+
+  scale_y_continuous(expand = c(0,0), labels = scales::percent)+
+  scale_fill_manual(values = c("#042333", "#f9b641"))+
+  guides(fill = guide_legend(title = "Sampled?", reverse = T))+
+  theme_basic()
+
+sampling_summary_continent_prop
+```
+```{r}
+# And combine and save
+sampling_summary_continent_out <- plot_grid(sampling_summary_continent_abs + theme(legend.position = "none"), 
+                                            sampling_summary_continent_prop, 
+                                            labels = "AUTO", ncol = 1, align = "hv", rel_heights = c(1, 1))
+
+save_plots(sampling_summary_continent_out, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_sampled_by_continent.png"),
+           width_in = 7.5,
+           height_in = 7)
+
+sampling_summary_continent_out
+```
+
+# Fig SX - Three panel plot summarizing price data collection
+
+```{r}
+fig_s1_b_legend <- get_legend(sampling_summary_continent_abs + theme(legend.box.margin = margin(12,0,0,0)))
+
+fig_s1_b <- plot_grid(sampling_summary_continent_abs + theme(legend.position = "none") + labs(title = ""), 
+                      sampling_summary_continent_prop + theme(legend.position = "none"), 
+                      nrow = 1, align = "hv", rel_widths = c(1, 1), 
+                      labels = c("B", "C"))
+
+fig_s1 <- plot_grid(dive_operators_map,
+                    fig_s1_b,
+                    fig_s1_b_legend,
+                    labels = c("A", "", ""),
+                    nrow = 3, rel_heights = c(4,1.5,0.3), align = "hv")
+
+save_plots(fig_s1, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_fig_s1.png"),
+           width_in = 7.5,
+           height_in = 7.5)
+```
+

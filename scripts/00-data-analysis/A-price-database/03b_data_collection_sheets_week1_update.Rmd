@@ -1,0 +1,142 @@
+---
+output:
+  html_document: default
+
+title: 'Price Data Collection Sheets - Week 1 (Update)'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Sheet Specific Packages
+library(googlesheets4)
+
+# Source common R file
+source(here::here("common.R"))
+
+# Load original samples for Lesley and Bergen
+lesley_sample <- read_csv(file.path(emlab_project_dir, "data", "01-raw", "prices", "lesley_sample_week1.csv"))
+bergen_sample <- read_csv(file.path(emlab_project_dir, "data", "01-raw", "prices", "bergen_sample_week1.csv"))
+```
+
+# Introduction
+
+This script corrects some of the fields in the first set of price data collection sheets based on feedback from Lesley and Bergen after the first data of data collection.
+
+# Update Google Sheet fields
+
+## Lesley
+
+```{r}
+lesley_sample_keep <- lesley_sample %>%
+  dplyr::select(ID, business_name, website)
+```
+
+## Bergen
+
+```{r}
+bergen_sample_keep <- bergen_sample %>%
+  dplyr::select(ID, business_name, website)
+```
+
+## Make new columns
+
+```{r}
+sheet_1_cols <- c(
+  "date_accessed" = "Date website was accessed to collect data (MM/DD/YY).",
+  "is_duplicate" = "Is this a duplicate entry (T/F). If T, STOP.",
+  "is_valid_url" = "Is the url valid (T/F). If F, STOP.",
+  "original_site_language" = "Language of the website.",
+  "google_translate_used" = "Was any sort of Google translation used to make the website readable (T/F).",
+  "is_readable" = "Is the website readable (after translation, if used - T/F). If F, STOP.",
+  "is_dive_related" = "Does the business represented by the website have anything to do with SCUBA diving (T/F). If F, STOP.",
+  "offers_marine_dive_services" = "Does the business represented by the website offer any dive trips or services in the ocean (T/F). If F, STOP.",
+  "is_travel_agency" = "Is the business represented by the website a travel agency (T/F).",
+  "business_name_if_different" = "Business name if different from that already provided.",
+  "business_location" = "Business location (State/Province, Country).",
+  "is_PADI" = "Is this business affiliated with PADI (T/F).",
+  "is_NAUI" = "Is this business affiliated with NAUI (T/F).",
+  "is_SSI_TDI" = "Is this business affiliated with SSI/TDI (T/F).",
+  "other_cert_agencies" = "Any other certification agencies affiliated with this business.",
+  "advertised species" = "Any species (or types of species) one might expect to see when diving with this business.",
+  "advertised_attractions" = "Any specific attractions (or types of diving) related to marine diving one might expect to encounter when diving with this business.",
+  "has_species_or_attraction_photos" = "Are there photos on the website from which we could infer species or attractions?",
+  "notes" = "Other information or notes"
+)
+
+sheet_2_cols <- c(
+  "has_marine_dive_prices" = "Does the website list prices for any diving activities in the ocean (T/F). If F, STOP.",
+  "currency" = "Local currency prices are provided in. If multiple options are given for the same services, pick one.",
+  "price" = "Listed price in local currency.",
+  "description" = "What dive service/activity is the listed price for?",
+  "n_dives" = "If description is 'N Dives', how many dives are included in the price?",
+  "type" = "What type of diving is this?",
+  "is_liveabord" = "Is this price for a liveabord trip (probably only relevant for boat dives).",
+  "includes_full_equipment" = "Does the price include a full equipment rental?",
+  "includes_food_drink" = "Does the price include food/drinks?",
+  "dive_location" = "Specific location(s) visited as part of the service/activity.",
+  "notes" = "Other information or notes"
+)
+
+metadata <- c(sheet_1_cols[sheet_1_cols != "notes"], sheet_2_cols)
+metadata_sheet <- tibble(column = names(metadata),
+                         description = metadata)
+```
+
+# Upload
+
+## Lesley
+
+```{r}
+lesley_nrow <- nrow(lesley_sample_keep)
+
+lesley_sheet_1_blank <- data.frame(matrix(ncol = length(sheet_1_cols), nrow = lesley_nrow))
+colnames(lesley_sheet_1_blank) <- names(sheet_1_cols)
+
+lesley_sheet_2_blank <- data.frame(matrix(ncol = length(sheet_2_cols), nrow = lesley_nrow))
+colnames(lesley_sheet_2_blank) <- names(sheet_2_cols)
+
+lesley_sheet_1 <- lesley_sample_keep %>%
+  bind_cols(lesley_sheet_1_blank)
+
+lesley_sheet_2 <- lesley_sample_keep %>%
+  bind_cols(lesley_sheet_2_blank)
+```
+
+## Bergen
+
+```{r}
+bergen_nrow <- nrow(bergen_sample_keep)
+
+bergen_sheet_1_blank <- data.frame(matrix(ncol = length(sheet_1_cols), nrow = bergen_nrow))
+colnames(bergen_sheet_1_blank) <- names(sheet_1_cols)
+
+bergen_sheet_2_blank <- data.frame(matrix(ncol = length(sheet_2_cols), nrow = bergen_nrow))
+colnames(bergen_sheet_2_blank) <- names(sheet_2_cols)
+
+bergen_sheet_1 <- bergen_sample_keep %>%
+  bind_cols(bergen_sheet_1_blank)
+
+bergen_sheet_2 <- bergen_sample_keep %>%
+  bind_cols(bergen_sheet_2_blank)
+```
+
+## Send to Google Sheets
+
+```{r}
+lesley_data <- list(center_info = lesley_sheet_1, prices = lesley_sheet_2, metadata = metadata_sheet)
+bergen_data <- list(center_info = bergen_sheet_1, prices = bergen_sheet_2, metadata = metadata_sheet)
+
+lesley_gs <- gs4_create(
+  "lesley_price_data_collection_phase1",
+  sheets = lesley_data)
+
+bergen_gs <- gs4_create(
+  "bergen_price_data_collection_phase1",
+  sheets = bergen_data)
+
+```
+

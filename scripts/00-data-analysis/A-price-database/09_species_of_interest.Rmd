@@ -1,0 +1,1223 @@
+---
+output:
+  html_document: default
+
+title: 'Advertised Species of Interest - Cleaning and Visualization'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Packages
+library(rfishbase)
+library(treemap)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script extracts and cleans data collected on different types of species advertised by dive operators. 
+
+```{r}
+# Load cleaned dive center data (from Fabio et al.)
+diving_center_dat<- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diving_center_database_clean.csv"))
+
+# Load metadata for sampled operators
+sampled_operator_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "sampled_operators_metadata_clean.csv"))
+```
+
+# Cleaning - Advertised Species
+
+```{r}
+# Select columns we need and split into list column
+species_dat_raw <- sampled_operator_dat %>%
+  dplyr::select(ID, advertised_species) %>%
+  dplyr::filter(!is.na(advertised_species))
+
+# Now let's convert to lowercase and replace delimiters with a standard expression
+species_dat_clean <- species_dat_raw %>%
+  mutate(advertised_species = str_replace_all(advertised_species, "[\\.]", ",")) %>%
+  mutate(advertised_species = str_replace_all(advertised_species, " and ", ","))
+  
+# Now let's split our strings so we have individual species
+species_dat_clean <- species_dat_clean %>%
+  mutate(species_list = str_split(advertised_species, ",")) %>%
+  unnest(species_list) %>%
+  mutate(species_list = str_replace(species_list, "^\\s* ", "")) %>% # remove leading spaces
+  mutate(species_list = str_replace(species_list, "[ ]{2,}", "")) %>% # remove any instances of two or more consecutive spaces
+  mutate(species_list = str_replace(species_list, "\n", "")) %>% # remove any line breaks
+  mutate(species_list = tolower(species_list)) %>%
+  dplyr::select(-advertised_species) %>%
+  arrange(species_list) %>%
+  slice(-(1:29)) # remove blank entries
+```
+
+```{r}
+# Let's start by replacing some terms and blank entries before we start trying to combine species
+species_dat_out <- species_dat_clean %>%
+  mutate(species_list = str_replace_all(species_list, "also ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "a variety of ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "different species of ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, " schools", "")) %>%
+  mutate(species_list = str_replace_all(species_list, " during season", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "-badeches", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "hundreds of species of ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "hunting ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "in the shallower areasthere are school of ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "large ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "local fauna", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "massive ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "more than ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "n ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "non dangerous ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "riviera maya ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "small ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "various ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "west indian ", "")) %>%
+  mutate(species_list = str_replace_all(species_list, "various ", "")) %>%
+  arrange(species_list)
+```
+
+```{r}
+# One more time to remove trailing paragraph breaks because there appear to be a few
+species_dat_out <- species_dat_out %>%
+  mutate(species_list = str_replace(species_list, "\n", "")) # remove any line breaks
+```
+
+## Categorize species
+
+```{r}
+# Get unique entries
+species_list <- species_dat_out %>%
+  distinct(species_list) %>%
+  rename(raw = species_list)
+```
+
+```{r}
+# Class #1 - Anthozoa
+species_list_1 <- species_list %>%
+  mutate(edit = case_when(
+    
+    raw %in% c("anemonas",
+               "anemones",
+               "anenomes",
+               "anemone corals",
+               "sea horsesanemones") ~ "anemone", # anemone
+    raw %in% c("soft corals") ~ "soft coral",
+    raw %in% c("braicoral") ~ "brain coral",
+    raw %in% c("corals",
+               "white coral") ~ "coral"
+
+  ))
+
+species_out_1 <- species_list_1 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Anthozoa")
+```
+
+```{r}
+# Class #2 - Asteroidea
+species_list_2 <- species_list_1 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Asteroidea
+    raw %in% c("beautiful starfish",
+               "sea star",
+               "harbor starfish",
+               "sea stars",
+               "star fish",
+               "starfish",
+               "starfishes",
+               "sustars") ~ "sea star", # sea star
+    
+  ))
+
+species_out_2 <- species_list_2 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Asteroidea")
+```
+
+```{r}
+# Class #3 - Holothuroidea
+species_list_3 <- species_list_2 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    raw %in% c("sea cucumber",
+               "sea cucumbers") ~ "sea cucumber", # sea cucumber
+    
+  ))
+
+species_out_3 <- species_list_3 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Holothuroidea")
+```
+
+```{r}
+# Class #4 - Elasmobranchii (Subclass)
+species_list_4 <- species_list_3 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    raw %in% c("angel sharks") ~ "angel shark",
+    raw %in% c("africastingrays", 
+               "bull stingray",
+               "balugpunktete stingrays",
+               "180 species of fish (stingray",
+               "diamond stingrays",
+               "jenkins stingrays",
+               "longtail stingray",
+               "pelagic stingrays",
+               "southersting rays",
+               "southerstingrays",
+               "sting ray",
+               "sting rays",
+               "stingray",
+               "stingrays",
+               "stong rays",
+               "stringrays",
+               "whiptail stingrays",
+               "yellow sting rays") ~ "stingray", # stingray
+    raw %in% c("banded guitar fish",
+               "banded guitarfish") ~ "banded guitarfish", # banded guitarfish
+    raw %in% c("basking shark",
+               "basking sharks") ~ "basking shark", # basking shark
+    raw %in% c("bat rays",
+               "bat ray",
+               "bay ray") ~ "bat ray", # bat ray
+    raw %in% c("black tip reef shark", 
+               "black tipped reef sharks",
+               "blacktip reef shark",
+               "blacktip reef sharks",
+               "caribbeareef shark",
+               "grey reef shark",
+               "grey reef sharks",
+               "reef shark",
+               "reef sharks",
+               "white tip reef shark",
+               "white tip reef sharks",
+               "white tip sharks",
+               "white tipped reef shark",
+               "white-tip reef sharks") ~ "reef shark", #  reef shark
+    raw %in% c("blotched ray") ~ "round ribbontail ray", # round ribontail ray
+    raw %in% c("broad nose sevengill cow shark") ~ "broadnose sevengill shark",
+    raw %in% c("bull shark", 
+               "bull sharks") ~ "bull shark",
+    raw %in% c("blue spotted ray", 
+               "blue spotted rays", 
+               "blue spotted stingray", 
+               "blue spotted stingrays", 
+               "blue-spotted stingrays", 
+               "bluespotted stingrays") ~ "bluespotted ribbontail ray",
+    raw %in% c("blue shark") ~ "blue shark",
+    raw %in% c("bullhead shark",
+               "horsharks") ~ "horn shark",
+    raw %in% c("cat shark", 
+               "catshark") ~ "catshark",
+    raw %in% c("dusty shark") ~ "dusky shark",
+    raw %in% c("eef shark") ~ "frilled shark",
+    raw %in% c("giant guitar shark") ~ "giant guitarfish",
+    raw %in% c("great white sharks",
+               "white sharks") ~ "great white shark",
+    raw %in% c("hammerhead shark", 
+               "hammerhead shark dolphins", 
+               "hammerhead sharks",
+               "hammerfish",
+               "hammerhead",
+               "scalloped hammerhead",
+               "great hammerhead") ~ "hammerhead shark",
+    raw %in% c("lemosharks") ~ "lemon shark",
+    raw %in% c("leopard sharks") ~ "leopard shark",
+    raw %in% c("mako shark") ~ "mako shark",
+    raw %in% c("nurse shark",
+               "nurse sharks") ~ "nurse shark",
+    raw %in% c("oceanic blacktip shark",
+               "oceanic sharks",
+               "oceanic white tip shark",
+               "whitetip deep sea sharks (longimanus)") ~ "oceanic shark",
+    raw %in% c("raggedtooth shark") ~ "sand tiger shark",
+    raw %in% c("shark",
+               "sharks",
+               "sharks(requiem") ~ "shark",
+    raw %in% c("silky shark") ~ "silky shark",
+    raw %in% c("thresher sharks") ~ "thresher shark",
+    raw %in% c("tiger shark") ~ "tiger shark",
+    raw %in% c("whale shark",
+               "whale sharks",
+               "whales sharks",
+               "whaleshark") ~ "whale shark",
+    raw %in% c("wobbiegongs (carpet shark)") ~ "carpet shark",
+    raw %in% c("butterfly ray") ~ "butterfly ray",
+    raw %in% c("cortez rays") ~ "spotted round ray",
+    raw %in% c("cow nose rays") ~ "cow nose ray",
+    raw %in% c("devil rays",
+               "ghost manta rays",
+               "giant pacific manta ray",
+               "manta ray",
+               "manta rays",
+               "manta rays & eagle rays",
+               "mantas rays",
+               "rays(mobular",
+               "mobula rays",
+               "giant mantas",
+               "mantas",
+               "mobulas",
+               "oceanic manta") ~ "manta ray",
+    raw %in% c("eagle ray",
+               "eagle rays",
+               "spotted eagle ray",
+               "spotted eagle rays") ~ "eagle ray",
+    raw %in% c("electric rays",
+               "marble ray",
+               "marble rays",
+               "torpedo ray",
+               "torpedo rays") ~ "electric ray",
+    raw %in% c("fiddle rays") ~ "fiddler ray",
+    raw %in% c("leopard ray") ~ "leopard whipray",
+    raw %in% c("ray", "rays", "whiptail)") ~ "ray",
+    raw %in% c("spotted shovelnose ray") ~ "spotted shovelnose ray",
+    raw %in% c("thornback ray") ~ "thornback ray",
+    raw %in% c("guitar fish",
+               "guitarfish") ~ "guitarfish",
+    raw %in% c("skate",
+               "skates") ~ "skate",
+    raw %in% c("dog fish",
+               "dogfish") ~ "dogfish shark"
+  
+  ))
+
+species_out_4 <- species_list_4 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Elasmobranchii")
+```
+
+```{r}
+# Class #5 - Malacostraca
+species_list_5 <- species_list_4 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Malacostraca
+    raw %in% c("arlequishrimps",
+               "harlequiclowshrimp",
+               "harlequishrimp") ~ "harlequin shrimp", # harlequin shrimp
+    raw %in% c("arrow crabs",
+               "arrow head crabs") ~ "arrow crab", # arrow crab
+    raw %in% c("boxer shrimp",
+               "mantis shrimp") ~ "mantis shrimp",
+    raw %in% c("banded coral shrimp") ~ "banded coral shrimp",
+    raw %in% c("canarialobster",
+               "canarialobsters") ~ "canarian lobster",
+    raw %in% c("cave shrimp",
+               "coral shrimp") ~ "shrimp",
+    raw %in% c("cleaner shrimp") ~ "cleaner shrimp",
+    raw %in% c("coral crabs",
+               "crab",
+               "crabs",
+               "cup crabs",
+               "edrible crab",
+               "shiny spider crab",
+               "spider crabs",
+               "stone crab") ~ "crab",
+    raw %in% c("crawfish",
+               "cray",
+               "cray fish",
+               "crayfish") ~ "crayfish",
+    raw %in% c("crustaceans",
+               "crustaceans ") ~ "crustacean",
+    raw %in% c("decorator crabs") ~ "decorator crab",
+    raw %in% c("glazed cere shrimp",
+               "periclime shrimp",
+               "popcorshrimp",
+               "prawns",
+               "rock shrimp",
+               "shrimp",
+               "shrimps",
+               "shrimpfish") ~ "shrimp",
+    raw %in% c("hermit",
+               "hermit crab",
+               "hermit crabs") ~ "hermit crab",
+    raw %in% c("huge lobsters",
+               "lobster",
+               "lobsters",
+               "spanish lobsters",
+               "spiny",
+               "spiny lobster",
+               "spiny lobsters",
+               "squat lobster",
+               "walking lobsters") ~ "lobster"
+  ))
+
+species_out_5 <- species_list_5 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Malacostraca")
+```
+
+```{r}
+# Class # 6 - Mammalia
+species_list_6 <- species_list_5 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Mammalia
+    raw %in% c("blue whale", "blue whales") ~ "blue whale",
+    raw %in% c("bottlenose dolphins",
+               "dolphin",
+               "dolphins",
+               "dophins",
+               "olphins",
+               "spinner dolphin",
+               "spinner dolphins") ~ "dolphin",
+    raw %in% c("dugong") ~ "dugong",
+    raw %in% c("false killer whales") ~ "false killer whale",
+    raw %in% c("grey",
+               "grey whales") ~ "grey whale",
+    raw %in% c("harbour seals",
+               "seal",
+               "seals") ~ "seal",
+    raw %in% c("hawaiiamonk seal") ~ "monk seal",
+    raw %in% c("humpback",
+               "humpback whale",
+               "humpback whales") ~ "humpback whale",
+    raw %in% c("manatee") ~ "manatee",
+    raw %in% c("orcas") ~ "orca",
+    raw %in% c("pilot whale") ~ "pilot whale",
+    raw %in% c("sea mammals") ~ "mammal",
+    raw %in% c("sperm whale") ~ "sperm whale",
+    raw %in% c("whale)", "whales") ~ "whale",
+    raw %in% c("sea lion", "sea lions") ~ "sea lion",
+    raw %in% c("ceraceans") ~ "cetacean"
+  ))
+
+species_out_6 <- species_list_6 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Mammalia")
+```
+
+```{r}
+# Class # 7 - Bivalvia
+species_list_7 <- species_list_6 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Bivalvia
+    raw %in% c("clam", "clams") ~ "clam",
+    raw %in% c("giant clams") ~ "giant clam",
+    raw %in% c("mussels") ~ "mussel",
+    raw %in% c("oyster", "oysters") ~ "oyster",
+    raw %in% c("scallops") ~ "scallop"
+    
+  ))
+
+species_out_7 <- species_list_7 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Bivalvia")
+```
+
+```{r}
+# Class # 8 - Gastropoda
+species_list_8 <- species_list_7 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Gastropoda
+    raw %in% c("conch") ~ "conch",
+    raw %in% c("countless nudibranchs",
+               "dendronotids",
+               "nubibranchs",
+               "nudi branchs",
+               "nudibranch",
+               "nudibranches",
+               "nudibranchs",
+               "nudibrancs",
+               "nudis",
+               "nudribranchs",
+               "spanish dancer") ~ "nudibranch",
+    raw %in% c("cowries") ~ "cowry",
+    raw %in% c("hibusami slug",
+               "moosnails",
+               "sagami slug",
+               "sea slug",
+               "sea slugs",
+               "sea snails",
+               "seashells",
+               "seaslugs",
+               "sesame slug",
+               "shirayuki slug",
+               "shirohoku slug",
+               "slugs",
+               "snails",
+               "wart slugs",
+               "worms & sea slugs",
+               "gerbera slug",
+               "sakura slug",
+               "sakura slug") ~ "sea snail/slug",
+    raw %in% c("sea hare",
+               "sea hares") ~ "sea hare",
+    raw %in% c("blue glaucus") ~ "blue glaucus"
+    
+  ))
+
+species_out_8 <- species_list_8 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Gastropoda")
+```
+
+```{r}
+# Class # 9 - Ascidiacea and Thaliacea (tunicates and sea squirts)
+species_list_9 <- species_list_8 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    raw %in% c("glassy sea squirts") ~ "sea squirt",
+    raw %in% c("sea peaches") ~ "sea peach",
+    raw %in% c("school of salps") ~ "salp"
+    
+  ))
+
+species_out_9 <- species_list_9 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Tunicata (Ascidiacea/Thaliacea)")
+```
+
+```{r}
+# Class # 10 - Hydrozoa
+species_list_10 <- species_list_9 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Hydrozoa
+    raw %in% c("flaming corals") ~ "fire coral",
+    raw %in% c("jellyfish",
+               "upside dowjelly fish") ~ "jellyfish"
+
+    
+  ))
+
+species_out_10 <- species_list_10 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Hydrozoa")
+```
+
+```{r}
+# Class # 11 - Cephalopoda
+species_list_11 <- species_list_10 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Cephalopoda
+    raw %in% c("bigfireef squid",
+               "squid",
+               "squids") ~ "squid", # squid
+    raw %in% c("cephalopods") ~ "cephalopod",
+    raw %in% c("cuddlefish",
+               "cuttle fish",
+               "cuttlefish") ~ "cuttlefish",
+    raw %in% c("mimic octopus",
+               "octopi",
+               "octopus",
+               "octopuses",
+               "sapphire octopuses") ~ "octopus"
+
+  ))
+
+species_out_11 <- species_list_11 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Cephalopoda")
+```
+
+```{r}
+# Class # 12 - Polychaeta
+species_list_12 <- species_list_11 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Polychaeta
+    raw %in% c("bristle worms") ~ "bristle worm",
+    raw %in% c("bobbit worm") ~ "bobbit worm",
+    raw %in% c("feather duster worms") ~ "feather duster worm",
+    raw %in% c("sea worms") ~ "sea worms"
+
+  )) 
+
+species_out_12 <- species_list_12 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Polychaeta")
+```
+
+```{r}
+# Class # 13 - Reptilia
+species_list_13 <- species_list_12 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    raw %in% c("greesea turtle",
+               "green",
+               "greesea turtles",
+               "greeturtle",
+               "greeturtles") ~ "green sea turtle",
+    raw %in% c("hawksbill & loggerheads",
+               "huatulco turtles",
+               "sea turtle",
+               "sea turtles",
+               "turtle",
+               "turtles") ~ "sea turtle",
+    raw %in% c("hawksbill turtle", "hawksbill turtles") ~ "hawksbill sea turtle",
+    raw %in% c("loggerhead turtle") ~ "loggerhead sea turtle",
+    raw %in% c("sea snake", "sea snakes", "snakes") ~ "sea snake",
+    raw %in% c("crocodile") ~ "crocodile"
+    
+  )) 
+
+species_out_13 <- species_list_13 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Reptilia")
+```
+
+```{r}
+# Class # 14 - Echinoidea
+species_list_14 <- species_list_13 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    raw %in% c("sea urchin",
+               "sea urchins",
+               "urchin",
+               "urchins",
+               "west indiasea urchins",
+               "urchin",
+               "urchins",
+               "west indiasea urchins") ~ "sea urchin"
+  )) 
+
+species_out_14 <- species_list_14 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Echinoidea")
+```
+
+```{r}
+# Class #15 - ray finned fishes
+species_list_15 <- species_list_14 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    # Actinopterygii
+    raw %in% c("104 ﬁsh species",
+               "500 fish species",
+               "big fish",
+               "bogue’s",
+               "browmeagre",
+               "bull's eye",
+               "bulls eye fish",
+               "anthias",
+               "colored tropical fish",
+               "colorful fish",
+               "fish",
+               "fishes",
+               "game fish",
+               "vault fish etc)",
+               "glass fish",
+               "glassfish",
+               "tropical fish",
+               "snout curler",
+               "schools of fish",
+               "schooling fishes",
+               "schooling fish",
+               "schoolfish",
+               "school fish",
+               "samsofish",
+               "laxier fish",
+               "lord howe coral fish",
+               "maidens",
+               "more fish",
+               "nodangerous fish",
+               "pelagic fish",
+               "pelagic fishes",
+               "rare fishes",
+               "razorfishes",
+               "reef fish",
+               "reef fishes") ~ "fish", # fish
+    
+    raw %in% c("flat fish",
+               "flounder",
+               "flounders",
+               "halibut",
+               "sole",
+               "peacock flounder") ~ "flatfish",
+    
+    raw %in% c("mahi mahi") ~ "dolphinfish",
+    
+    raw %in% c("mandarifish",
+               "mandarinfish") ~ "mandarinfish",
+    
+    raw %in% c("fusiliers",
+               "fusilier",
+               "striped fusiliers") ~ "fusilier",
+    
+    raw %in% c("flying gurnard",
+               "streaked gunard’s") ~ "gurnard",
+    
+    raw %in% c("carp") ~ "carp",
+    
+    raw %in% c("blue chromis",
+               "chromodoris orientalis") ~ "chromis",
+    
+    raw %in% c("arctic char") ~ "char",
+    
+    raw %in% c("amarela",
+               "courbines",
+               "croakers") ~ "croaker",
+    
+    raw %in% c("amber jack",
+               "amber-jacks",
+               "amberjack",
+               "amberjack yellowtail",
+               "amberjacks",
+               "yellowtails",
+               "yellowtail",
+               "yellow tails") ~ "amberjack", # amberjack
+    
+    raw %in% c("anchovy",
+               "baitfish",
+               "yellowtail mackerel",
+               "herrings",
+               "horse mackerel",
+               "tainhotas",
+               "silversides",
+               "seer fish",
+               "sardines",
+               "sardina",
+               "king mackerel",
+               "king george whiting",
+               "long fibatfish",
+               "mackerel",
+               "mackerels") ~ "baitfish",
+    
+    raw %in% c("anemone fish",
+               "anemone fish (nemo)",
+               "clowfish",
+               "false clowfish",
+               "saddleback anemonefish") ~ "clownfish", # clownfish
+    
+    raw %in% c("angel fish",
+               "angelfish",
+               "blue angels",
+               "blue ring",
+               "blue ring angle fish",
+               "emperor angelfish",
+               "emperors",
+               "french angelfish",
+               "of angel spade fish",
+               "queeangelfish") ~ "angelfish", # angelfish
+    
+    raw %in% c("arctic wolf fish") ~ "wolf fish",
+    
+    raw %in% c("atlantic damsel’s",
+               "blue-fidamsel’s",
+               "colorful damsel",
+               "damsel fish",
+               "damselfish",
+               "damselfly",
+               "damsels",
+               "sergeant majors",
+               "sergeant major fish",
+               "sargentinhos") ~ "damselfish", # damselfish
+    
+    raw %in% c("banner fish",
+               "bannerfish",
+               "banner fish angelfish",
+               "commobanner fish",
+               "harem bannerfish") ~ "bannerfish",
+    
+    raw %in% c("baraccuda",
+               "barracuda",
+               "barracudas",
+               "yellowtail barracudas",
+               "giant barracudas",
+               "striated barracuda") ~ "barracuda", # barracuda
+    
+    raw %in% c("bastanrd grunts",
+               "bastard grunt’s",
+               "corcorocas",
+               "yellow grunt",
+               "grunt",
+               "grunters",
+               "grunts",
+               "striped grunts",
+               "such as grunts",
+               "roncadores",
+               "panamic porkfish",
+               "portk fish") ~ "grunt", # grunt
+    
+    raw %in% c("bat fish",
+               "batfish") ~ "batfish", # batfish
+    
+    raw %in% c("big eye jack", 
+               "big eyes",
+               "bigeye jacks",
+               "blue-fitrevallies",
+               "yellow finned trevally",
+               "xaréu",
+               "white trevallies",
+               "giant jacks",
+               "giant of jacks",
+               "giant trevally",
+               "jack",
+               "jackfish",
+               "jacks",
+               "trevally",
+               "travellys",
+               "travelly") ~ "jack/trevally", # trevally
+    
+    raw %in% c("triggerfish",
+               "trigger fish",
+               "titatriggerfish",
+               "titanium trigger fish",
+               "rigger fish",
+               "red-toothed triggerfish") ~ "triggerfish",
+    
+    raw %in% c("big groupers",
+               "black spotted groper",
+               "dusky groupers",
+               "giant grouper",
+               "giant groupers",
+               "goldegroupers",
+               "goldetail",
+               "goliath grouper",
+               "grouper",
+               "groupers",
+               "ithe shallower areasthere are schoolof groupers",
+               "jewfish",
+               "spotted black grouper") ~ "grouper", # grouper
+    
+    raw %in% c("big sweet lips",
+               "harlequisweetlips",
+               "sweetlips") ~ "harlequin sweetlips", # harlequin sweetlips
+    
+    raw %in% c("hatchetfish") ~ "hatchetfish",
+    
+    raw %in% c("bump head parrotfish", 
+               "bumphead", 
+               "bumphead parrot fish",
+               "humpback parrot",
+               "parrot fish",
+               "parrotfish") ~ "parrotfish", # parrotfish
+    
+     raw %in% c("black bass", 
+                "black sea bass",
+                "combers",
+                "kelp bass",
+                "sea bass",
+                "striped bass",
+                "striper") ~ "sea bass", # black sea bass
+    
+    raw %in% c("rockfish", "rock fish") ~ "rockfish",
+    
+    raw %in% c("jewel fairy basslet") ~ "basslet",
+    
+    raw %in% c("blackbar soldier fish") ~ "soldierfish", # soldierfish
+    
+    raw %in% c("blackfish",
+               "tau tog") ~ "blackfish",
+    
+    raw %in% c("blacksmith") ~ "blacksmith", # blacksmith
+    
+    raw %in% c("blennies",
+               "blimey fish",
+               "commoblennies") ~ "blenny", # blenny
+    
+    raw %in% c("blue & gold snapper", 
+               "blue stripe snapper",
+               "colorful snappers",
+               "yellow snapper",
+               "juvenile snapper",
+               "snappers",
+               "snapper",
+               "schools of snapper",
+               "red snapper") ~ "snapper",
+    
+    raw %in% c("glassy sweepers",
+               "yellow sweeper",
+               "sweep") ~ "sweeper",
+    
+    raw %in% c("goatfish",
+               "mullets",
+               "red mullet") ~ "goatfish/mullet",
+    
+    raw %in% c("blue devil") ~ "southern blue devil",
+    
+    raw %in% c("blue runners") ~ "blue runner",
+    
+    raw %in% c("box fish", 
+               "boxfish",
+               "cowfish",
+               "yellow boxfish",
+               "trunk fish",
+               "spotted boxfish") ~ "boxfish",
+    
+    raw %in% c("bream", "breams", "brim",
+               "deer sea bream",
+               "zebra bream",
+               "white seabream",
+               "saddled seabream",
+               "sea bream",
+               "sea breams",
+               "seabreams",
+               "sargus",
+               "sargo de beiço",
+               "salemas",
+               "salema") ~ "sea bream",
+    
+    raw %in% c("blue-headed wrasse",
+               "cleaner wrasse",
+               "creole wrasse",
+               "elegant wrasse",
+               "wrasses",
+               "wrasse",
+               "senorita fish",
+               "saddle wrasse",
+               "napoleans",
+               "napoleofish",
+               "napoleons",
+               "napoleowrasse",
+               "napoleowrasse and ghost pipe fish",
+               "napoleowrasses",
+               "neopoleowrasse",
+               "rainbow fish",
+               "rainbow wrasse") ~ "wrasse",
+    
+    raw %in% c("bluefish") ~ "bluefish",
+    
+    raw %in% c("bonito") ~ "bonito",
+    
+    raw %in% c("butterfly fish",
+               "butterflyfish",
+               "kabuba",
+               "millet-seed butterfly fish",
+               "multi-band butterflyfish") ~ "butterflyfish",
+    
+    raw %in% c("calico lizardfish",
+               "lizard fish",
+               "lizardfishes") ~ "lizardfish",
+    
+    raw %in% c("cardinal fish") ~ "cardinalfish",
+    
+    raw %in% c("squirrelfish", 
+               "squirrelfish", 
+               "soldierfishes",
+               "soldier fish",
+               "squirrelfishes") ~ "soldierfish/squirrelfish",
+    
+    raw %in% c("chub", "chubs", "opaleye") ~ "chub",
+    
+    raw %in% c("cobia") ~ "cobia",
+    
+    raw %in% c("cod",
+               "huge potato cod",
+               "juvenile pollack",
+               "pollack",
+               "red hake") ~ "cod/hake/pollock",
+    
+    raw %in% c("porcupine fish",
+               "prorcupinefish",
+               "puffer",
+               "puffer fish",
+               "pufferfish",
+               "puffers") ~ "porcupinefish/pufferfish",
+    
+    raw %in% c("colorful gobies",
+               "gobies",
+               "goby") ~ "goby",
+    
+    raw %in% c("cornetfishes") ~ "cornetfish",
+    
+    raw %in% c("crocodile fish",
+               "crocodile fishes",
+               "crocodilefish",
+               "tentacular flathead") ~ "crocodilefish",
+    
+    raw %in% c("cyclopteridae") ~ "lumpfish",
+    
+    raw %in% c("dentex") ~ "dentex",
+    
+    raw %in% c("doctor fish",
+               "doctorfish",
+               "surgeonfish",
+               "surgeofish",
+               "moorish idol",
+               "moorish idols",
+               "palette surgeonfish") ~ "moorish idol/surgeonfish",
+    
+    raw %in% c("dogtooth tuna",
+               "tuna",
+               "tunas") ~ "tuna",
+    
+    raw %in% c("drumfish") ~ "drum",
+    
+    raw %in% c("frog fish",
+               "frog fishes",
+               "frogfish",
+               "toadfish",
+               "toad fish",
+               "monkfish",
+               "painted anglerfish",
+               "red frogfish") ~ "frogfish/toadfish",
+    
+    raw %in% c("moonfish") ~ "moonfish",
+    
+    raw %in% c("yellow-banded perch",
+               "giant pusher perch",
+               "perch",
+               "perches") ~ "perch",
+    
+    raw %in% c("weavers") ~ "weever",
+    
+    raw %in% c("waspfishes",
+               "velvetfish",
+               "stonefishes",
+               "stonefish",
+               "stone scorpionfish",
+               "stone fish",
+               "scorpions",
+               "scorpionfish",
+               "scorpiofishes",
+               "scorpiofish",
+               "leaf scorpiofish",
+               "Filamented devil fish") ~ "scorpionfish/stonefish",
+    
+    raw %in% c("wahoos",
+               "wahoo") ~ "wahoo",
+    
+    raw %in% c("chaimorays",
+               "commorays",
+               "zebra morays",
+               "zebra eels",
+               "zebra",
+               "young moray eels",
+               "white-eyed moray eels",
+               "giant moray",
+               "giant moray eel",
+               "great greemoray eels",
+               "greemoray",
+               "greemoray eels",
+               "jewel moray",
+               "moray",
+               "moray eel",
+               "moray eels",
+               "morayeels",
+               "morays",
+               "ray-finned fishes(moray eels",
+               "murray eels") ~ "moray eel",
+    
+    raw %in% c("conger",
+               "conger eel",
+               "conger eels",
+               "congers") ~ "conger eel",
+    
+    raw %in% c("blue ribboeels",
+               "ribboeels") ~ "ribbon eel",
+    
+    raw %in% c("eel",
+               "eel catfish",
+               "eels",
+               "elusive eels",
+               "gardeeels",
+               "wolf eels",
+               "snake eels",
+               "snake-eels",
+               "spotted eels") ~ "eel",
+    
+    raw %in% c("kuda seahorse",
+               "occasional sea horses",
+               "pygmy seahorses",
+               "sea horse",
+               "sea horses",
+               "seahorse",
+               "seahorses",
+               "seahorsespipefish") ~ "seahorse",
+    
+    raw %in% c("ghost fish",
+               "ghost pipefish",
+               "robust ghost pipe fish",
+               "pipe fish",
+               "pipe fishes",
+               "pipefish") ~ "pipefish",
+    
+    raw %in% c("sea needle",
+               "needlefish") ~ "needlefish",
+    
+    raw %in% c("garibaldi") ~ "garibaldi",
+    
+    raw %in% c("giant boar fish") ~ "hogfish",
+    
+    raw %in% c("unicornfish", "unicorfish") ~ "unicornfish",
+    
+    raw %in% c("trumpetfishes", "trumpetfish", "trumpet fish") ~ "trumpetfish",
+    
+    raw %in% c("trout") ~ "trout",
+    
+    raw %in% c("tarpon") ~ "tarpon",
+    
+    raw %in% c("sunfish",
+               "mola mola",
+               "mola-mola",
+               "molas",
+               "oceanic sunfish (mola mola)") ~ "sunfish",
+    
+    raw %in% c("striped snipe fish") ~ "snipefish",
+    
+    raw %in% c("sticklebacks") ~ "stickleback",
+    
+    raw %in% c("stargazers", "star gazers") ~ "stargazer",
+    
+    raw %in% c("spadefish", "spade fish") ~ "spadefish",
+    
+    raw %in% c("sheepshead", "sheephead", "sheep head") ~ "sheephead",
+    
+    raw %in% c("seamoths",
+               "sea mouse",
+               "sea moth") ~ "seamoth",
+    
+    raw %in% c("scribbled file fish") ~ "filefish",
+    
+    raw %in% c("sailfish sardines", "sailfish", "marlin", "merlins") ~ "marlin/sailfish",
+    
+    raw %in% c("remora") ~ "remora",
+    
+    raw %in% c("kelp greenling") ~ "greenling",
+    
+    raw %in% c("ling",
+              "ling cod") ~ "lingcod",
+    
+    raw %in% c("lionfish",
+               "liofish") ~ "lionfish",
+    
+    raw %in% c("pageot") ~ "porgy",
+    
+    raw %in% c("pout") ~ "eelpout",
+    
+    raw %in% c("rabbitfish") ~ "rabbitfish"
+    
+))
+
+species_out_15 <- species_list_15 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Actinopterygii")
+
+# test <- species_list_15 %>% dplyr::filter(is.na(edit))
+```
+
+```{r}
+# Class # 16 - Octocorallia
+species_list_16 <- species_list_15 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    raw %in% c("gorgonia",
+               "gorgoniafields",
+               "gorgonians") ~ "gorgonian"
+  )) 
+
+species_out_16 <- species_list_16 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Octocorallia")
+```
+
+```{r}
+# Class # 17 - Porifera (Phylum)
+species_list_17 <- species_list_16 %>%
+  dplyr::filter(is.na(edit)) %>%
+  mutate(edit = case_when(
+    
+    raw %in% c("sponge",
+               "sponges") ~ "sponge"
+  )) 
+
+species_out_17 <- species_list_17 %>%
+  dplyr::filter(!is.na(edit)) %>%
+  mutate(class = "Porifera")
+```
+
+## Combine and summarize 
+
+```{r}
+species_files <- paste0("species_out_", seq(1,17))
+species_out <- NULL
+
+for(i in 1:length(species_files)){
+  
+  species_out <- species_out %>%
+    bind_rows(get(species_files[i]))
+}
+  
+```
+
+```{r}
+# I created classes for both Anthozoa and Octocorallia Sala et al just uses Anthozoa (subphylum). So let's reassign our others. 
+species_out$class[species_out$class %in% c("Octocorallia")] <- "Anthozoa"
+
+```
+
+```{r}
+# Match back to original and summarize 
+species_dat_final <- species_dat_out %>% 
+  inner_join(species_out, by = c("species_list" = "raw"))
+
+tot_operators <- length(unique(species_dat_final$ID))
+
+# Summarize
+class_counts <- species_dat_final %>%
+  group_by(class) %>%
+  count(ID) %>%
+  summarize(n_mentions = sum(n)) %>%
+  ungroup() %>%
+  mutate(prop_total = round((n_mentions/sum(n_mentions))*100, 1)) %>%
+  arrange(desc(prop_total))
+
+tot_mentions <- sum(class_counts$n_mentions)
+
+write_csv(class_counts, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "advertised_species_by_taxonomic_group.csv"))
+
+# Plot
+# Now let's visualize
+sampled_operator_count_continent <- sampled_operator_dat %>%
+  mutate(group1 = case_when(is_valid_url == F | is_readable == F ~ "Invalid URL or incomprehensible",
+                           is_dive_related == F ~ "Non dive-related businesses",
+                           offers_marine_dive_services == F ~ "Does not offer marine dive services",
+                           offers_marine_dive_services == T ~ "Offers marine dive services")) %>%
+  group_by(group1, continent) %>%
+  summarize(count = n_distinct(ID))
+
+# Visualize
+png(filename=file.path(emlab_project_dir, "figures", "data-prep", "advertised_species_by_taxonomic_group.png"),width=7,height=7,units = "in",res =300)
+species_plot <- treemap::treemap(class_counts, #Your data frame object
+        index=c("class"),  #A list of your categorical variables
+        vSize = "n_mentions",  #This is your quantitative variable
+        type="index", #Type sets the organization and color scheme of your treemap
+        palette = "Set1",
+        title="",
+        algorithm = "pivotSize",
+        sortID = "n_mentions",
+        mirror.x = T,
+        mirror.y = T,
+        #vColor = "group1",
+        #palette = c("#e3e3aa", "#d69ca2", "#fabf9b", "#738deb"),
+        #bg.labels=c("transparent"),
+        align.labels=list(
+        c("center", "center")),
+        ymod.labels = list(0),
+        inflate.labels = F,
+        overlap.labels = 0,
+        border.col=c("black", "black"),
+        border.lwds=c(4,2),
+        fontcolor.labels = c("black", "black"),
+        position.legend = "none")
+dev.off()
+```
+

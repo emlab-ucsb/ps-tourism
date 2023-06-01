@@ -1,0 +1,232 @@
+---
+output:
+  html_document: default
+
+title: 'Diving Center Database - Wrangling and Exploration'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+# Script specific packages
+library(snakecase)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+To curate a geographically representative dataset of prices for scuba diving, we want to use the global Google Maps-derived database of dive operators (N = 11,132) created by Schuhbauer et al. (in review) as a sampling frame from which to extract data directly from operators on their prices. This database was generated using the Google Maps API to look for query parameters based on business categories registered in Google. Business categories are standardized in Google to enhance searches, so businesses registering within the platform are advised to specify their category correctly. Schuhbauer et al. (in review) used the "Diving center" business category as a keyword. Searches were conducted in English first, but the primary language for each country (if different than English) was also used. Searches were conducted at the country level and were repeated until global coverage was reached. Each countries’ results were joined in a single dataset where they were inspected for incorrect coordinates and mismatched business categories. Duplicates with the same coordinates were eliminated. As a preliminary check of validity, Schuhbauer et al. (in review) created a program to ping each website listed in the dataset to see if it was active.
+
+# Data wrangling
+
+*Note - our samples used for price collection were made using v1.11 of this database. They later shared an updated version of the database (v2.0), but we did not use that in our analysis*
+
+```{r}
+# Load database
+diving_center_dat <- read_csv(file.path(emlab_project_dir, "data", "01-raw", "diving-centers", "diving_centers_database_v1.11_verified_with_padi_info.csv")) %>%
+  dplyr::filter(verified == 1) # make sure we're only getting verified shops
+
+# Minor edits
+# Assign more general classifications
+# Assign our unique shop identifiers just to make it easier to keep track of the data
+diving_center_dat_edit <- diving_center_dat %>%
+  mutate(country_code_scraped_a3 = countrycode(country_code_scraped, "iso2c", "iso3c"),
+         type_of_business_new = case_when(type_of_business %in% c("Dive shop", 
+                                                                  "Negozio di attrezzature per immersioni") ~ "Dive shop",
+                                          type_of_business %in% c("Diving center", 
+                                                                  "Centro de buceo", 
+                                                                  "Centro immersioni") ~ "Diving center",
+                                          type_of_business %in% c("SCUBA instructor", 
+                                                                  "Profesor de buceo", 
+                                                                  "Diving contractor") ~ "Instructor",
+                                          type_of_business %in% c("SCUBA tour agency", 
+                                                                  "Agencia de viajes de buceo", 
+                                                                  "Agenzia viaggi specializzata in immersioni") ~ "Tour agency",
+                                          type_of_business %in% c("Dive club", 
+                                                                  "Club de buceo", 
+                                                                  "Scuba diving", 
+                                                                  "Diving") ~ "Dive club",
+                                          TRUE ~ "Other")) %>%
+  mutate(unique_id = paste0(to_snake_case(continent), "_", country_code_scraped, "_", to_snake_case(business_name), "_", ID)) %>%
+  arrange(unique_id)
+
+# Save edited version
+write_csv(diving_center_dat_edit, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diving_center_database_clean.csv"))
+```
+
+# Summary plots - General
+
+We first want to generate some summary plots related to this dataset to help inform our stratification strategy.
+
+Let's start with some basic summary stats, and then move on to spatial summary stats. 
+
+## Business type
+
+```{r}
+# Summarize by business type to get counts
+summary_business_type <- diving_center_dat_edit %>%
+  group_by(language_scraped, type_of_business) %>%
+  summarize(continent_n = n_distinct(continent),
+            country_n = n_distinct(sov_code_a3),
+            shops_n = n_distinct(ID))
+
+# Create summary plot
+plot_business_type <- ggplot(summary_business_type, aes(x = reorder(type_of_business, shops_n), y = shops_n, fill = language_scraped)) +
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  labs(title = paste0("Total number of dive operators: ", format(sum(summary_business_type$shops_n, na.rm = T), big.mark = ",")), 
+       x = "",
+       y = "Dive operators (#)")+
+  guides(fill = guide_legend(title = "Language scraped"))+
+  theme_basic()
+
+plot_business_type
+```
+
+```{r}
+# Resummarize and plot
+summary_business_type_agg <- diving_center_dat_edit %>%
+  group_by(language_scraped, type_of_business_new) %>%
+  summarize(type_of_business_all = paste0(unique(type_of_business), collapse = ", "),
+            continent_n = n_distinct(continent),
+            country_n = n_distinct(sov_code_a3),
+            shops_n = n_distinct(ID))
+
+# Create summary plot
+plot_business_type_agg <- summary_business_type_agg %>%
+  ggplot()+ 
+  aes(x = reorder(type_of_business_new, shops_n), y = shops_n, fill = language_scraped) +
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  labs(x = "",
+       y = "Dive operators (#)")+
+  guides(fill = guide_legend(title = "Language scraped"))+
+  theme_basic()
+
+plot_business_type_agg
+```
+
+```{r}
+# Combine plots and output
+plot_business_type_out <- plot_grid(plot_business_type + theme(legend.position = "none"), 
+                                    plot_business_type_agg, 
+                                    labels = "AUTO", 
+                                    ncol = 1, align = "hv", rel_heights = c(1.75, 1))
+
+plot_business_type_out
+
+save_plots(plot_business_type_out, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_all_by_language_scraped.png"),
+           width_in = 7.5,
+           height_in = 6)
+```
+
+## Business type by continent
+
+```{r}
+# Summarize by business type and continent to get counts
+summary_business_type_continent <- diving_center_dat_edit %>%
+  group_by(continent, type_of_business_new) %>%
+  summarize(shops_n = n_distinct(ID)) %>%
+  ungroup() %>%
+  na.omit() %>%
+  mutate(type = "By type")
+
+summary_business_type_continent_all <- summary_business_type_continent %>%
+  group_by(continent) %>%
+  summarize(shops_n = sum(shops_n)) %>%
+  ungroup() %>%
+  mutate(type_of_business_new = "All center types") %>%
+  mutate(type = "Total")
+
+summary_business_type_continent <- summary_business_type_continent %>%
+  bind_rows(summary_business_type_continent_all)
+
+# Create summary plot
+plot_business_type_continent <- summary_business_type_continent %>%
+  ggplot()+
+  aes(x = reorder(type_of_business_new, shops_n), y = shops_n, fill = factor(continent, levels = c("Oceania", "Europe", "Asia", "Americas", "Africa"))) +
+  geom_bar(stat = "identity", position = "dodge")+
+  scale_fill_brewer(palette = "Set1", name = "", guide = guide_legend(reverse = T))+
+  labs(title = paste0("Total number of dive operators: ", format(sum(summary_business_type_continent_all$shops_n, na.rm = T), big.mark = ",")), x = "", y = "Dive operators (#)")+
+  scale_y_continuous(labels = comma, expand = c(0,0.1))+
+  coord_flip()+
+  facet_grid(type ~ ., scales = "free", space = "free")+
+  theme_basic()
+
+# Output
+save_plots(plot_business_type_continent, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_all_by_type_and_continent.png"),
+           width_in = 7.5,
+           height_in = 6)
+
+plot_business_type_continent
+```
+
+## Total diving centers by country
+
+```{r}
+# Summarize by business type and country to get counts
+summary_business_type_sov <- diving_center_dat_edit %>%
+  group_by(continent, sovereignt, type_of_business_new) %>%
+  summarize(shops_n = n_distinct(ID)) %>%
+  ungroup() %>%
+  group_by(sovereignt) %>%
+  mutate(shops_total = sum(shops_n, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(rank = dense_rank(desc(shops_total)))
+
+# Create summary plot
+plot_business_type_sov <- summary_business_type_sov %>%
+  ggplot() + 
+  aes(x = reorder(sovereignt, shops_total), y = shops_n, fill = type_of_business_new) +
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  labs(title = paste0("Total number of dive operators: ", format(sum(summary_business_type$shops_n, na.rm = T), big.mark = ",")), x = "",
+      y = "Dive operators (#)")+
+  guides(fill = guide_legend(title = "", reverse = T, nrow = 2, byrow = T))+
+  theme_basic()+
+  scale_y_continuous(expand = c(0,0))+
+  theme(axis.text = element_text(size = 5))
+
+# Output
+save_plots(plot_business_type_sov, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_all_by_country_and_type.png"),
+           width_in = 7.5,
+           height_in = 10)
+
+plot_business_type_sov
+```
+
+Now just do the same for the countries with the most. 
+
+```{r}
+# Summarize by business type and country to get counts
+summary_business_type_sov_top <- summary_business_type_sov %>%
+  dplyr::filter(rank <= 25)
+
+# Create summary plot
+plot_business_type_sov_top <- summary_business_type_sov_top %>%
+  ggplot()+
+  aes(x = reorder(sovereignt, shops_total), y = shops_n, fill = type_of_business_new) +
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  labs(title = paste0("Total number of dive operators: ", format(sum(summary_business_type_sov_top$shops_n, na.rm = T), big.mark = ",")), 
+       x = "",
+       y = "Dive operators (#)")+
+  guides(fill = guide_legend(title = "", reverse = T, nrow = 2, byrow = T))+
+  theme_basic()+
+  theme(axis.text = element_text(size = 10))
+
+# Output
+save_plots(plot_business_type_sov_top, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "dive_operators_all_by_country_and_type_top_25.png"),
+           width_in = 7.5,
+           height_in = 8.5)
+
+plot_business_type_sov_top
+```
+

@@ -1,0 +1,394 @@
+---
+output:
+  html_document: default
+
+title: 'Origins of Tourists From Literature'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+# Packages
+library(readxl)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script wrangles and summarizes the data we collected from literature on diver origins. This information is used in the paper to estimate the proportion of certain types of benefits that would remain local vs. go overseas. 
+
+```{r}
+# Load the dataset from literature
+lit_dat_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "literature", "tourist_origins_from_literature.xlsx")) %>%
+  janitor::clean_names() %>%
+  mutate(designation = case_when((id == 18 & origin == "Other") ~ "Domestic", # This fraction is likely domestic
+                                 T ~ designation),
+         id = case_when(source_short == "Emang et al. (2016)" ~ 45,
+                        source_short == "Tongson and Dygico (2004)" ~ 46,
+                        source_short == "Hermoso et al. (2019)" & location == "Chilean mainland" ~ 47,
+                        source_short == "Hermoso et al. (2019)" & location == "Rapa Nui" ~ 48,
+                        source_short == "Marshall et al. (2009)" ~ 49,
+                        T ~ id),
+         region = case_when(is.na(region) ~ countrycode(country_territory, "country.name", "region"),
+                            T ~ region))
+```
+
+# Summarize: By Location
+
+We collected information to the highest resolution possible (e.g., origin country of the tourist). However, this is hard to standardize across locations, so let's first just summarize in terms of domestic vs. foreign origin. The proportion of domestic divers wasn't reported, and instead it was denoted what proportion was from the region. There are also some cases where the origin wasn't reported and we have marked those as unknown.    
+
+```{r}
+lit_dat_summarized <- lit_dat_raw %>%
+  group_by(region, country_territory, location, designation) %>%
+  summarize(percent = sum(percent, na.rm = T)) %>%
+  ungroup() %>%
+  group_by(region, country_territory, location) %>%
+  mutate(total_percent = sum(percent, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(fixed_percent = (percent/total_percent)*100) %>%
+  mutate(location = ifelse(is.na(location), "All", location)) %>%
+  mutate(country_territory = case_when(country_territory == "Austraila" ~ "Australia",
+                                       !is.na(country_territory) ~ country_territory,
+                                       location == "St. Kitts and Nevis, Barbados, Honduras" ~ "Multiple"),
+         location = case_when(location == "6 destinations along the Egyptian Red Sea Coastline that include El Gouna, Saffaga, Qusier, Marsa Alam, Wadi Lahmi" ~ "Egyptian Red Sea Coastline",
+                              T ~ location))
+```
+
+## Plot Setup
+
+```{r}
+# Color pallette so it's consistent across both National and MPA analysis 
+pal_names <- c(unique(lit_dat_summarized$designation), "Local")
+color_pal <- hue_pal()(length(pal_names))
+names(color_pal) <- pal_names
+```
+
+## Plots - Regional
+
+```{r}
+east_asia_pacific_plot <- lit_dat_summarized %>%
+  dplyr::filter(region == "East Asia & Pacific") %>%
+  ggplot()+
+  aes(x = location, y = fixed_percent/100, fill = fct_rev(designation))+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors", title = "East Asia & Pacific")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  scale_x_discrete(position = "top")+
+  theme_basic()+
+  facet_grid(rows = "country_territory", scales = "free_y", space = "free", switch = "y")+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% lit_dat_summarized$designation],
+                     guide = guide_legend(title = "", reverse = F))+
+  theme(strip.placement = "outside",
+        strip.text.y.left = element_text(angle=0, vjust = 0.5, hjust = 1))
+
+# Output
+save_plots(east_asia_pacific_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "east_asia_pacific_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+east_asia_pacific_plot
+```
+
+```{r}
+europe_central_asia_plot <- lit_dat_summarized %>%
+  dplyr::filter(region == "Europe & Central Asia") %>%
+  ggplot()+
+  aes(x = location, y = fixed_percent/100, fill = fct_rev(designation))+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors", title = "Europe & Central Asia")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  scale_x_discrete(position = "top")+
+  theme_basic()+
+  facet_grid(rows = "country_territory", scales = "free_y", space = "free", switch = "y")+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% lit_dat_summarized$designation],
+                     guide = guide_legend(title = "", reverse = F))+
+  theme(strip.placement = "outside",
+        strip.text.y.left = element_text(angle=0, vjust = 0.5, hjust = 1))
+
+# Output
+save_plots(europe_central_asia_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "europe_central_asia_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+europe_central_asia_plot
+```
+
+```{r}
+latin_america_caribbean_plot <- lit_dat_summarized %>%
+  dplyr::filter(region == "Latin America & Caribbean") %>%
+  ggplot()+
+  aes(x = location, y = fixed_percent/100, fill = fct_rev(designation))+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors", title = "Latin America & Caribbean")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  scale_x_discrete(position = "top")+
+  theme_basic()+
+  facet_grid(rows = "country_territory", scales = "free_y", space = "free", switch = "y")+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% lit_dat_summarized$designation],
+                     guide = guide_legend(title = "", reverse = F))+
+  theme(strip.placement = "outside",
+        strip.text.y.left = element_text(angle=0, vjust = 0.5, hjust = 1))
+
+# Output
+save_plots(latin_america_caribbean_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "latin_america_caribbean_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+latin_america_caribbean_plot
+```
+
+```{r}
+middle_east_north_africa_plot <- lit_dat_summarized %>%
+  dplyr::filter(region == "Middle East & North Africa") %>%
+  ggplot()+
+  aes(x = location, y = fixed_percent/100, fill = fct_rev(designation))+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors", title = "Middle East & North Africa")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  scale_x_discrete(position = "top")+
+  theme_basic()+
+  facet_grid(rows = "country_territory", scales = "free_y", space = "free", switch = "y")+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% lit_dat_summarized$designation],
+                     guide = guide_legend(title = "", reverse = F))+
+  theme(strip.placement = "outside",
+        strip.text.y.left = element_text(angle=0, vjust = 0.5, hjust = 1))
+
+# Output
+save_plots(middle_east_north_africa_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "middle_east_north_africa_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+middle_east_north_africa_plot
+```
+
+```{r}
+north_america_plot <- lit_dat_summarized %>%
+  dplyr::filter(region == "North America") %>%
+  ggplot()+
+  aes(x = location, y = fixed_percent/100, fill = fct_rev(designation))+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors", title = "North America")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  scale_x_discrete(position = "top")+
+  theme_basic()+
+  facet_grid(rows = "country_territory", scales = "free_y", space = "free", switch = "y")+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% lit_dat_summarized$designation],
+                     guide = guide_legend(title = "", reverse = F))+
+  theme(strip.placement = "outside",
+        strip.text.y.left = element_text(angle=0, vjust = 0.5, hjust = 1))
+
+# Output
+save_plots(north_america_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "north_america_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+north_america_plot
+```
+
+```{r}
+south_asia_plot <- lit_dat_summarized %>%
+  dplyr::filter(region == "South Asia") %>%
+  ggplot()+
+  aes(x = location, y = fixed_percent/100, fill = fct_rev(designation))+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors", title = "South Asia")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  scale_x_discrete(position = "top")+
+  theme_basic()+
+  facet_grid(rows = "country_territory", scales = "free_y", space = "free", switch = "y")+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% lit_dat_summarized$designation],
+                     guide = guide_legend(title = "", reverse = F))+
+  theme(strip.placement = "outside",
+        strip.text.y.left = element_text(angle=0, vjust = 0.5, hjust = 1))
+
+# Output
+save_plots(south_asia_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "south_asia_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+south_asia_plot
+```
+
+```{r}
+sub_saharan_africa_plot <- lit_dat_summarized %>%
+  dplyr::filter(region == "Sub-Saharan Africa") %>%
+  ggplot()+
+  aes(x = location, y = fixed_percent/100, fill = fct_rev(designation))+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors", title = "Sub-Saharan Africa")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  scale_x_discrete(position = "top")+
+  theme_basic()+
+  facet_grid(rows = "country_territory", scales = "free_y", space = "free", switch = "y")+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% lit_dat_summarized$designation],
+                     guide = guide_legend(title = "", reverse = F))+
+  theme(strip.placement = "outside",
+        strip.text.y.left = element_text(angle=0, vjust = 0.5, hjust = 1))
+
+# Output
+save_plots(sub_saharan_africa_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "sub_saharan_africa_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+sub_saharan_africa_plot
+```
+
+## Plot - Combined
+
+```{r}
+# east_asia_pacific_plot (22), europe_central_asia_plot (5), latin_america_caribbean_plot (4), middle_east_north_africa_plot (3), north_america_plot (6), south_asia_plot (1), sub_saharan_africa_plot (4)
+
+plot_1 <- plot_grid(east_asia_pacific_plot + theme(legend.position = "none",
+                                                   axis.text.x = element_blank(),
+                                                   axis.title.x = element_blank()),
+                    europe_central_asia_plot + theme(legend.position = "none",
+                                                   axis.text.x = element_blank(),
+                                                   axis.title.x = element_blank()),
+                    latin_america_caribbean_plot + theme(legend.position = "none",
+                                                   axis.text.x = element_blank(),
+                                                   axis.title.x = element_blank()),
+                    middle_east_north_africa_plot + theme(legend.position = "none",
+                                                   axis.text.x = element_blank(),
+                                                   axis.title.x = element_blank()),
+                    north_america_plot + theme(legend.position = "none",
+                                                   axis.text.x = element_blank(),
+                                                   axis.title.x = element_blank()),
+                    south_asia_plot + theme(legend.position = "none",
+                                                   axis.text.x = element_blank(),
+                                                   axis.title.x = element_blank()),
+                    sub_saharan_africa_plot + theme(legend.position = "none"),
+                    ncol = 1,
+                    align = "hv",
+                    rel_heights = c(1,(9/22),(9.5/22),(5.5/22),(8/22),(3.5/22),(8/22)))
+
+combined_plot <- plot_grid(plot_1,
+                           cowplot::get_legend(sub_saharan_africa_plot),
+                           ncol = 1,
+                           rel_heights = c(1,0.1))
+
+save_plots(combined_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "all_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 9.5)
+
+combined_plot
+```
+
+# Summarize: By Region
+
+For our paper, we want regional averages of foreign vs. domestic or foreign vs. local that can be applied more broadly. Thus, we need to create these aggregations.  
+
+For the first, we'll only include domestic classifications as "domestic". Pretty straightforward - we'll remove any studies where a statistic was not provided for domestic visitors on their own. We'll also remove any studies where it is unclear whether the "unknown" classification includes domestic and/or regional visitors. 
+
+For the second, we'll include both domestic and regional classifications as local IF there was no statistic for domestic visitors alone AND the region includes the country in which the diving was taking place. We'll just remove any studies where it is unclear whether the "unknown" classification includes regional visitors. 
+
+```{r}
+lit_dat_regional <- lit_dat_raw %>%
+  group_by(id) %>%
+  mutate(group = case_when(all(designation %in% c("Domestic", "Foreign")) ~ "Domestic/Foreign Only",
+                           all(designation %in% c("Regional", "Foreign")) ~ "Regional/Foreign Only",
+                           all(designation %in% "Unknown", "Foreign") ~ "Unknown/Foreign Only",
+                           all(designation %in% c("Domestic", "Regional", "Foreign")) ~ "All Regional is Foreign",
+                           T ~ "Other")) %>%
+  ungroup() %>%
+  dplyr::filter(!(group %in% c("Unknown/Foreign Only", "Other"))) %>%
+  mutate(designation_df = case_when(group == "Domestic/Foreign Only" ~ designation,
+                                    group == "All Regional is Foreign" & designation == "Regional" ~ "Foreign",
+                                    group == "All Regional is Foreign" & designation != "Regional" ~ designation),
+         designation_lf = case_when(group == "Domestic/Foreign Only" & designation == "Domestic" ~ "Local",
+                                    group == "Domestic/Foreign Only" & designation != "Domestic" ~ designation,
+                                    group == "All Regional is Foreign" & designation == "Regional" ~ "Foreign",
+                                    group == "All Regional is Foreign" & designation == "Domestic" ~ "Local",
+                                    group == "All Regional is Foreign" & designation == "Foreign" ~ "Foreign",
+                                    group == "Regional/Foreign Only" & designation == "Regional" ~ "Local",
+                                    group == "Regional/Foreign Only" & designation == "Foreign" ~ "Foreign"))
+
+# Check we didn't exclude any that we want to keep in the domestic/foreign grouping
+t1 <- lit_dat_regional %>% dplyr::filter(is.na(designation_df))
+
+# Check we didn't exclude any that we want to keep in the local/foreign grouping
+t2 <- lit_dat_regional %>% dplyr::filter(is.na(designation_lf))
+```
+
+```{r}
+domestic_foreign_props <- lit_dat_regional %>%
+  dplyr::filter(!is.na(designation_df)) %>%
+  group_by(region, designation_df) %>%
+  summarize(percent = sum(percent, na.rm = T)) %>%
+  ungroup() %>%
+  group_by(region) %>%
+  mutate(total_percent = sum(percent, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(avg_percent = (percent/total_percent)*100)
+
+write_csv(domestic_foreign_props %>% dplyr::select(region, origin = designation_df, percent_avg = avg_percent), file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "domestic_vs_foreign_tourist_origins_by_region.csv"))
+
+domestic_foreign_plot <- domestic_foreign_props %>%
+  ggplot()+
+  aes(x = fct_rev(region), y = avg_percent/100, fill = fct_rev(designation_df))+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  theme_basic()+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% domestic_foreign_props$designation_df],
+                     guide = guide_legend(title = "", reverse = F))
+
+# Output
+save_plots(domestic_foreign_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "domestic_foreign_avg_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+domestic_foreign_plot
+```
+
+```{r}
+local_foreign_props <- lit_dat_regional %>%
+  dplyr::filter(!is.na(designation_lf)) %>%
+  group_by(region, designation_lf) %>%
+  summarize(percent = sum(percent, na.rm = T)) %>%
+  ungroup() %>%
+  group_by(region) %>%
+  mutate(total_percent = sum(percent, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(avg_percent = (percent/total_percent)*100)
+
+write_csv(local_foreign_props %>% dplyr::select(region, origin = designation_lf, percent_avg = avg_percent), file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "local_vs_foreign_tourist_origins_by_region.csv"))
+
+local_foreign_plot <- local_foreign_props %>%
+  ggplot()+
+  aes(x = fct_rev(region), y = avg_percent/100, fill = designation_lf)+
+  geom_bar(stat = "identity", position = "stack")+
+  coord_flip()+
+  labs(x = "", y = "Percent of Divers or Visitors")+
+  scale_y_continuous(expand = c(0,0), labels = percent)+
+  theme_basic()+
+  scale_fill_manual(values = color_pal[names(color_pal) %in% local_foreign_props$designation_lf],
+                     guide = guide_legend(title = "", reverse = T))
+
+# Output
+save_plots(local_foreign_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "tourist-origins", "local_foreign_avg_tourist_origins.png"),
+           width_in = 7.5,
+           height_in = 4)
+
+local_foreign_plot
+```

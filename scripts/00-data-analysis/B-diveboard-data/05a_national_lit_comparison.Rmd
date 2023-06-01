@@ -1,0 +1,373 @@
+---
+output:
+  html_document: default
+
+title: 'Dive Database: Compare number of extrapolated dives to literature estimates (National Level)'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+# Packages
+library(readxl)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script compares our extrapolated estimates of the number of dives made in different locations to estimates from literature. This is the national-level comparison.  
+
+```{r}
+# Load the dive data matched to site.
+dive_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_database_extrapolated_2010_2020_final.csv"))
+
+# Load the dataset from literature
+lit_dat_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "literature", "diving_dat_from_literature.xlsx")) %>%
+  janitor::clean_names()
+```
+
+# Plot Settings & Setup
+
+```{r}
+# Color pallette so it's consistent across both National and MPA analysis 
+pal_names <- unique(lit_dat_raw$region)
+color_pal <- hue_pal()(length(pal_names))
+names(color_pal) <- pal_names
+```
+
+# Get National Totals from Literature
+
+```{r}
+# Let's extract the entries we have for number of dives - we don't need to do anything to these
+dives_lit <- lit_dat_raw %>%
+  dplyr::filter(scale == "National") %>%
+  dplyr::filter(variable == "Dives") %>%
+  dplyr::select(id, region, country_territory, value, min, max)
+
+# Now let's extract the entries we have for number of divers - we're going to make a couple of assumptions here. 
+# Let's assume the average diver makes anywhere between 2 and 4 dives per year to give us a range. 
+# We're only going to keep this extrapolation for sources where we don't have a direct estimate of the number of dives
+divers_lit <- lit_dat_raw %>%
+  dplyr::filter(scale == "National") %>%
+  dplyr::filter(variable == "Divers") %>%
+  mutate(dives_min = case_when(!is.na(value) ~ value*2,
+                               T ~ min*2),
+         dives_max = case_when(!is.na(value) ~ value*4,
+                               T ~ max*4)) %>%
+  dplyr::filter(!(id %in% dives_lit$id)) %>%
+  dplyr::select(id, region, country_territory, min = dives_min, max = dives_max)
+
+# Now we join them back together and select which to keep
+dives_lit_out <- dives_lit %>%
+  bind_rows(divers_lit)
+
+# Now we summarize by country 
+dives_lit_out <- dives_lit_out %>%
+  group_by(region, country_territory) %>%
+  summarize(value_min = min(value, na.rm = T),
+            value_max = max(value, na.rm = T),
+            range_min = min(min, na.rm = T),
+            range_max = max(max, na.rm = T)) %>%
+  ungroup() %>%
+  rowwise() %>%
+  mutate(min = min(c(value_min[value_min != Inf], range_min[range_min != Inf])),
+         max = max(c(value_max[value_max != -Inf], range_max[range_max != -Inf])),
+         median = median(c(min, max))) %>%
+  dplyr::select(region, country_territory, min, max, median) %>%
+  mutate(country_iso3 = countrycode(country_territory, "country.name", "iso3c")) %>%
+  ungroup()
+```
+
+# Get National Totals from Extrapolated Database 
+
+For this portion, we're mostly going to limit ourselves to marine dives, and thus summarize by EEZ. However, let's also calculate freshwater totals. 
+
+```{r}
+# Now get country-level estimates from our extrapolated dataset
+dives_extrap <- dive_dat %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(mrgid, eez_ter1_name, eez_ter1_iso3, eez_sov1_name, eez_type) %>%
+  summarize(n_dives = n_distinct(dive_id),
+            n_dives_extrap = sum(n_dives_extrap, na.rm = T),
+            n_dives_extrap_min = sum(n_dives_extrap_min, na.rm = T),
+            n_dives_extrap_max = sum(n_dives_extrap_max, na.rm = T)) %>%
+  ungroup() %>%
+  dplyr::filter(eez_type == "200NM") %>%
+  arrange(eez_ter1_name)
+
+# Do the same for dives on land in case we need them
+dives_extrap_land <- dive_dat %>%
+  dplyr::filter(site_classification == "Freshwater") %>%
+  group_by(admin_name, admin_iso3, sov_name, sov_iso3) %>%
+  summarize(n_dives = n_distinct(dive_id),
+            n_dives_extrap = sum(n_dives_extrap, na.rm = T),
+            n_dives_extrap_min = sum(n_dives_extrap_min, na.rm = T),
+            n_dives_extrap_max = sum(n_dives_extrap_max, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(admin_name)
+```
+
+## Join together
+
+```{r}
+dives_matched <- dives_lit_out %>%
+  left_join(dives_extrap, by = c("country_iso3" = "eez_ter1_iso3"))
+
+write_csv(dives_matched, file.path(emlab_project_dir, "data", "diagnostics", "lit-comparison", "national_lit_comparison.csv"))
+```
+
+# Summary
+
+```{r}
+# Select data for plotting
+plot_data <- dives_matched %>%
+  dplyr::filter(country_iso3 != "USA") # Major outlier in terms of scale, and it's unclear whether the study was referring to certified divers or active divers so we're going to remove the USA for now
+
+# Get maximum number of dives
+max_y <- max(plot_data$max)*1.05
+
+# Plot
+dives_point_plot <- dives_matched %>%
+  dplyr::filter(country_iso3 != "USA") %>%
+  ggplot(aes(x = n_dives_extrap, y = median, color = region))+
+  geom_point(size = 2)+
+  geom_crossbar(aes(x = n_dives_extrap, ymin = min, ymax = max), width = 0.5)+
+  geom_crossbar(aes(y = median, xmin = n_dives_extrap_min, xmax = n_dives_extrap_max), width = 0.5, color = "black", alpha =0.5)+
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "lightgrey")+
+  scale_y_continuous(limits = c(0,max_y))+
+  scale_x_continuous(limits = c(0,max_y))+
+  labs(x = "Dives per Year (#, extrapolated)", y = "Dives per Year (#, from literature)", color = "")+
+  scale_color_manual(values = color_pal[names(color_pal) %in% dives_matched$region[dives_matched$country_iso3 != "USA"]],
+                     guide = guide_legend(title.position = "top",
+                                          title.hjust = 0.5,
+                                          nrow = 2,
+                                          byrow = T))+
+  theme_basic()
+
+# Output
+save_plots(dives_point_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "lit-comparison", "dives_extrap_lit_comparison_point_plot_national.png"),
+           width_in = 7.5,
+           height_in = 5.5)
+
+dives_point_plot
+```
+
+```{r}
+# Let's also make a bar plot version
+dives_bar_plot <- dives_matched %>%
+  ggplot()+
+  aes(x = fct_rev(as.factor(country_territory)))+
+  geom_segment(aes(xend = country_territory, y = min, yend = max, color = region), size = 4, alpha = 0.75)+
+  geom_point(aes(y = median, color = region), size = 5)+
+  geom_segment(aes(xend = country_territory, y = n_dives_extrap_min, yend = n_dives_extrap_max), color = "black", size = 1, alpha = 0.5)+
+  geom_point(aes(y = n_dives_extrap), size = 2)+
+  labs(x = "", y = "Dives per Year (#)", color = "")+
+  coord_flip()+
+  scale_color_manual(values = color_pal[names(color_pal) %in% dives_matched$region],
+                     guide = guide_legend(title.position = "top",
+                                          title.hjust = 0.5))+
+  theme_basic()
+
+# Output
+save_plots(dives_bar_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "lit-comparison", "dives_extrap_lit_comparison_bar_plot_national_all.png"),
+           width_in = 7.5,
+           height_in = 5.5)
+
+dives_bar_plot
+```
+
+```{r}
+# And again without the USA 
+dives_bar_plot_no_USA <- dives_matched %>%
+  dplyr::filter(country_iso3 != "USA") %>%
+  ggplot()+
+  aes(x = fct_rev(as.factor(country_territory)))+
+  geom_segment(aes(xend = country_territory, y = min, yend = max, color = region), size = 4, alpha = 0.75)+
+  geom_point(aes(y = median, color = region), size = 5)+
+  geom_segment(aes(xend = country_territory, y = n_dives_extrap_min, yend = n_dives_extrap_max), color = "black", size = 1, alpha = 0.5)+
+  geom_point(aes(y = n_dives_extrap), size = 2)+
+  labs(x = "", y = "Dives per Year (#)", color = "")+
+  coord_flip()+
+  theme_linedraw()+
+  scale_color_manual(values = color_pal[names(color_pal) %in% dives_matched$region[dives_matched$country_iso3 != "USA"]],
+                     guide = guide_legend(title.position = "top",
+                                          title.hjust = 0.5,
+                                          nrow = 2,
+                                          byrow = T))+
+  theme_basic()
+
+# Output
+save_plots(dives_bar_plot_no_USA, 
+           file_name = file.path(emlab_project_dir, "figures", "lit-comparison", "dives_extrap_lit_comparison_bar_plot_national_no_USA.png"),
+           width_in = 7.5,
+           height_in = 5.5)
+
+dives_bar_plot_no_USA
+```
+
+```{r}
+dives_plot_combined <- cowplot::plot_grid(dives_bar_plot_no_USA + theme(legend.position = "none"),
+                                          dives_point_plot + theme(legend.position = "none"),
+                                          nrow = 1,
+                                          align = "h",
+                                          rel_widths = c(1.4,0.9))
+
+dives_plot_combined_w_legend <- cowplot::plot_grid(dives_plot_combined,
+                                                   cowplot::get_legend(dives_bar_plot_no_USA),
+                                                   nrow = 2,
+                                                   align = "v",
+                                                   rel_heights = c(1,0.3))
+
+# Output
+save_plots(dives_plot_combined_w_legend, 
+           file_name = file.path(emlab_project_dir, "figures", "lit-comparison", "dives_extrap_lit_comparison_national_combo_plot.png"),
+           width_in = 14,
+           height_in = 6.5)
+
+dives_plot_combined_w_legend
+```
+
+## Specific countries and aggregates for discussion in the text
+
+```{r}
+# Canada
+canada <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 == "CAN") %>%
+  dplyr::pull(n_dives_extrap) #102,424 - was 90,481
+
+canada_land <- dives_extrap_land %>%
+  dplyr::filter(admin_name == "Canada") %>%
+  dplyr::pull(n_dives_extrap) # 492,768
+
+canada_total <- sum(canada) + sum(canada_land) #595,192
+
+# Brazil 
+brazil <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 == "BRA") %>%
+  dplyr::pull(n_dives_extrap) #612,656 - was 541,637
+
+# French Polynesia
+fp <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 == "PYF") %>%
+  dplyr::pull(n_dives_extrap) #98,176 - was 86,729
+
+# Malaysia
+malaysia <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 == "MYS") %>%
+  dplyr::pull(n_dives_extrap) #1,436,768 - was 1,269,241
+
+# Mexico 
+mexico <- dives_extrap %>%
+  dplyr::filter(eez_ter1_name == "Mexico") %>%
+  dplyr::pull(n_dives_extrap)
+
+mexico_land <- dives_extrap_land %>%
+  dplyr::filter(admin_name == "Mexico") %>%
+  dplyr::pull(n_dives_extrap)
+
+mexico_total <- sum(mexico) + sum(mexico_land) #2,053,672 - was 1,943,056
+
+# US (total)
+us <- dives_extrap %>%
+  dplyr::filter(eez_ter1_name %in% c("United States", "Alaska", "Hawaii")) %>%
+  summarize(n_dives_extrap = sum(n_dives_extrap)) %>%
+  dplyr::pull(n_dives_extrap)
+
+us_land <- dives_extrap_land %>%
+  dplyr::filter(admin_name == "United States of America") %>%
+  dplyr::pull(n_dives_extrap)
+
+us_total <- sum(us) + sum(us_land) #7,453,352
+
+# Phillipines 
+phillipines <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 == "PHL") %>%
+  dplyr::pull(n_dives_extrap) #1,643,504 - was 1,451,871
+
+# South Africa
+south_africa <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 == "ZAF") %>%
+  dplyr::pull(n_dives_extrap) #507,872 - was 449,071
+
+# Turkey
+turkey <- dives_extrap %>%
+  dplyr::filter(eez_ter1_name == "Turkey") %>%
+  dplyr::pull(n_dives_extrap) #113,752 - was 100,489
+
+# Thailand
+thailand <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 == "THA") %>%
+  dplyr::pull(n_dives_extrap) #2,866,456 - was 2,546,821
+
+# 7 countries in Asia
+asia_aggregate <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 %in% c("KHM", "IDN", "MYS", "PHL", "SGP", "THA", "VNM")) %>%
+  summarize(n_dives_tot = sum(n_dives_extrap, na.rm = T)) %>%
+  pull(n_dives_tot) #8,362,896 - was 7,406,128
+
+# 30 countries in the Caribbean
+caribbean_aggregate <- dives_extrap %>%
+  dplyr::filter(eez_ter1_iso3 %in% c("AIA", "ATG", "BHS", "BRB", "BLZ", "BMU", "VGB", "CYM", "COL", "CRI", "DMA", "DOM", "SLV", "GRD", "GLP", "HND", "JAM", "MTQ", "MEX", "MSR", "BES", "CUW", "SXM", "PAN", "PRI", "BLM", "LCA", "VCT", "TTO", "TCA", "VIR", "VEN")) %>%
+  summarize(n_dives_tot = sum(n_dives_extrap, na.rm = T)) %>%
+  pull(n_dives_tot) #4,666,192 - was 4,129,620
+```
+
+```{r}
+# CountryPlot <- function(dat, name, buffer = 1.001, prj, ocean_df, results_dir){
+# 
+#   filtered_dat <- ocean_df %>%
+#     left_join(dat, by = "cell_id") %>%
+#     dplyr::filter(country_name == name)
+#   
+#   x_coord <- c(min(filtered_dat$lon, na.rm = T), max(filtered_dat$lon, na.rm = T))+c(-100000, 100000)
+#   y_coord <- c(min(filtered_dat$lat, na.rm = T), max(filtered_dat$lat, na.rm = T))+c(-100000, 100000)
+#   
+#   plot <- filtered_dat %>%
+#      ggplot()+
+#   map_layer+
+#   geom_tile(aes(x = lon, y = lat, fill = n_dives_extrap)) +
+#   scale_fill_gradientn(colours=viridis(7),
+#                        na.value = "lightgrey",
+#                        limits=c(0,200000),
+#                        labels=c("0", "50,000", "100,000", "150,000", "\U02265 200,000"),
+#                        oob=squish,
+#                        guide = guide_colorbar(keyheight = unit(2.5, units = "mm"), keywidth=unit(10, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1, title.hjust = 0.5))+
+#   labs(fill = "Dives (#)", title = paste0("Total marine dives in ", name, " (extrapolated, annual): ", comma(sum(filtered_dat$n_dives_extrap[filtered_dat$country_name == name]))))+
+#   theme_linedraw()+
+#   coord_sf(xlim = x_coord, ylim = y_coord) +
+#   theme(axis.title = element_blank(),
+#         axis.text = element_blank(),
+#         legend.position = "bottom",
+#         legend.key.width = unit(2, "cm"),
+#         plot.title = element_text(size= 13, hjust=0.5, color = "#4e4d47"))
+#   
+#   ggsave(paste0(results_dir, tolower(name), "_dives_extrap.png"), width = 7.5)
+#   
+#   return(plot)
+#     
+# }
+```
+
+```{r}
+# Define directory to save 
+# country_dir <- paste0(results_dir, "/country-plots/")
+# 
+# countries_list <- unique(plot_data$country_iso3)
+# # 
+# 
+# 
+# 
+# guam_plot <- CountryPlot(dat = dives_marine_extrap, name = "Guam", prj = prj, ocean_df = ocean_df, results_dir = country_dir)
+# 
+# mexico_plot <- CountryPlot(dat = dives_marine_extrap, name = "Mexico", prj = prj, ocean_df = ocean_df, results_dir = country_dir)
+# 
+# bahamas_plot <- CountryPlot(dat = dives_marine_extrap, name = "Bahamas", prj = prj, ocean_df = ocean_df, results_dir = country_dir)
+# 
+# austraila_plot <- CountryPlot(dat = dives_marine_extrap, name = "Australia", prj = prj, ocean_df = ocean_df, results_dir = country_dir)
+```
+

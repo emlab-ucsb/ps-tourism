@@ -1,0 +1,60 @@
+---
+output:
+  html_document: default
+
+title: 'Price Data Collection Sheets - Testing'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Script specific packages
+library(googlesheets4)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script is a test run to generate price data collection sheets in google sheets from the dive operator database.
+
+# Testing
+
+```{r}
+# Load data
+diving_center_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diving_center_database_clean.csv"))
+```
+
+For our tests, let's just randomly select X shops from each region and extract the data we need from those. 
+
+```{r}
+# Extract only shops with websites
+diving_center_dat_good_url <- diving_center_dat %>%
+  dplyr::filter(!is.na(website))
+
+# Now let's randomly generate a testing sample. 
+testing_sample <- diving_center_dat_good_url %>%
+  dplyr::filter(!is.na(continent)) %>%
+  group_by(continent) %>%
+  sample_n(5, replace = T) %>%
+  ungroup()
+
+# Keep only the rows we need
+testing_sample_keep <- testing_sample %>%
+  dplyr::select(ID, business_name, website)
+```
+
+## Make Google Sheets
+
+```{r}
+data <- list(alpha = testing_sample_keep, beta = testing_sample_keep, delta = testing_sample_keep)
+
+ss1 <- gs4_create(
+  "price_data_collection_testing",
+  sheets = data)
+```
+

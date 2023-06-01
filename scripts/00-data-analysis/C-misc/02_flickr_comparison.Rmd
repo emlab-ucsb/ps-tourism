@@ -1,0 +1,117 @@
+---
+output:
+  html_document: default
+
+title: 'diveboard.com data: Compare number of dives by country to flickr images by country'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+*Note - We're not using this*
+
+<!-- ```{r setup, include=FALSE} -->
+<!-- # Packages -->
+<!-- library(knitr) # Necessary to convert file to .html -->
+<!-- library(tidyverse) # General data wrangling -->
+<!-- library(raster) -->
+<!-- library(sf) -->
+<!-- library(tidyverse) -->
+<!-- library(countrycode) # Country name matching -->
+<!-- library(viridis) -->
+<!-- library(scales) -->
+<!-- library(broom) -->
+<!-- library(lubridate) -->
+<!-- library(hexbin) -->
+<!-- library(rnaturalearth) -->
+<!-- library(rnaturalearthdata) -->
+<!-- library(sp) -->
+<!-- library(rgdal) -->
+<!-- library(cowplot) -->
+
+<!-- # Code chunk defaults -->
+<!-- knitr::opts_chunk$set(echo = FALSE, error = FALSE, message = FALSE, warning = FALSE, include = FALSE) -->
+
+<!-- # Path to the Pristine Seas tourism directory on the emLab Google Drive -->
+<!-- this_project_dir <- "/Volumes/GoogleDrive/Shared drives/emlab/projects/current-projects/ps-tourism" -->
+
+<!-- # Path to where the diveboard data is stored in a nicely accessible format -->
+<!-- raw_data_dir <- paste0(this_project_dir, "/data/01-raw-data/") -->
+<!-- edited_data_dir <- paste0(this_project_dir, "/data/02-processed-data/") -->
+
+<!-- # Results dir -->
+<!-- results_dir <- paste0(this_project_dir, "/results/flickr-comparison/") -->
+
+<!-- if (dir.exists(results_dir) == F) { -->
+<!--   dir.create(results_dir, recursive = T) -->
+<!-- } -->
+<!-- ``` -->
+
+<!-- ## Load data -->
+
+<!-- ```{r} -->
+<!-- # Ocean df (Mollewide) -->
+<!-- ocean_df <- read_csv(paste0(edited_data_dir, "ocean_moll_df.csv")) -->
+
+<!-- # World df (Mollewide) -->
+<!-- world_df <- read_csv(paste0(edited_data_dir, "world_moll_df.csv")) -->
+
+<!-- # Load the marine data with our extrapolations. -->
+<!-- dive_dat_raw <- read_csv(paste0(edited_data_dir, "diveboard-database/dive_data_edited_2000_2022.csv")) -->
+<!-- #dives_marine_extrap <- read_csv(paste0(edited_data_dir, "diveboard-database/number_of_marine_dives_by_cell_country_extrapolated.csv")) -->
+
+<!-- # Load the flickr data by country -->
+<!-- flickr_country_dat <- read_csv(paste0(raw_data_dir, "flickr/flickr_aggregate_by_country.csv")) -->
+<!-- ``` -->
+
+<!-- ### Wrangle dive data to match the viability criteria we defined -->
+
+<!-- ```{r} -->
+<!-- # Global estimate of the number of dives -->
+<!-- n_global_dives <- 50700000 -->
+
+<!-- # Filter for year and get proportion of total dives by site -->
+<!-- dive_dat_use <- dive_dat_raw %>% -->
+<!--   dplyr::filter(year >= 2010 & year <= 2020) %>% -->
+<!--   group_by(country_name) %>% -->
+<!--   summarize(n_dives = n_distinct(dive_id), -->
+<!--             n_sites = n_distinct(spot_id)) %>% -->
+<!--   ungroup() %>% -->
+<!--   mutate(country_code = countrycode(country_name, "country.name", "iso3c")) %>% -->
+<!--   dplyr::filter(!is.na(country_code)) -->
+
+<!-- # Add country code to the flickr data  -->
+<!-- flickr_dat_use <- flickr_country_dat %>% -->
+<!--   mutate(country_code = countrycode(country, "country.name", "iso3c")) %>% -->
+<!--   dplyr::select(country_code, n_photos = n) %>% -->
+<!--   dplyr::filter(!is.na(country_code)) -->
+<!-- ``` -->
+
+
+<!-- ### Match by country -->
+
+<!-- ```{r} -->
+<!-- # Extract the spot IDs and lat/lon -->
+<!-- dive_flickr_match <- flickr_dat_use %>% -->
+<!--   right_join(dive_dat_use, by = "country_code") %>% -->
+<!--   mutate(continent = countrycode(country_code, "iso3c", "continent")) -->
+
+<!-- dive_flickr_plot <- dive_flickr_match %>% -->
+<!--   ggplot()+ -->
+<!--   aes(x = n_photos, y = n_dives, color = continent)+ -->
+<!--   geom_point(size = 3)+ -->
+<!--   labs(x = "Flickr Photos (#)", y = "Dives (#)", color = "Continent")+ -->
+<!--   theme_linedraw() -->
+
+<!-- ggsave(paste0(results_dir, "dives_flickr_comparison_country.png"), dive_flickr_plot, width = 7.5, height = 4.5, units = "in") -->
+
+<!-- site_flickr_plot <- dive_flickr_match %>% -->
+<!--   ggplot()+ -->
+<!--   aes(x = n_photos, y = n_sites, color = continent)+ -->
+<!--   geom_point(size = 3)+ -->
+<!--   labs(x = "Flickr Photos (#)", y = "Dive Sites (#)", color = "Continent")+ -->
+<!--   theme_linedraw() -->
+
+<!-- ggsave(paste0(results_dir, "sites_flickr_comparison_country.png"), site_flickr_plot, width = 7.5, height = 4.5, units = "in") -->
+
+<!-- ``` -->

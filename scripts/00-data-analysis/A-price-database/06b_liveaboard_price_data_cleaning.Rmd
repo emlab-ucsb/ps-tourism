@@ -1,0 +1,33 @@
+---
+output:
+  html_document: default
+
+title: 'Liveaboard Price Data - Cleaning'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Packages
+library(readxl)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script cleans the price data collected from the websites of different liveaboard dive operators. 
+
+```{r}
+## Load raw liveaboard data collection
+price_dat_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "liveaboard_price_data_collection.xlsx"), sheet = 1)
+```
+
+```{r}
+### This file actually doesn't require any wrangling or cleaning, so we'll save it in the processed folder
+write_csv(price_dat_raw, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "prices_liveaboards_clean.csv"))
+```

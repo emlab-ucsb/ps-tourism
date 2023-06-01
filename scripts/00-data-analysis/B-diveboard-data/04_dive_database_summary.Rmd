@@ -1,0 +1,815 @@
+---
+output:
+  html_document: default
+
+title: 'Dive Databaase: Summary/Visualization'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+# Packages
+#devtools::install_github("ropensci/rnaturalearthhires")
+library(rnaturalearthhires) # To do the land area mapping
+
+# Source common R file
+source(here::here("common.R"))
+
+# Load UN country classification helper file
+country_lookup <- read_csv(file.path(emlab_project_dir, "data", "01-raw", "UN_territory_classification.csv")) %>%
+  mutate(territory1 = case_when(territory1 == "Comores" ~ "Comoros", # fixing mispellings
+                                T ~ territory1)) %>%
+  mutate(country_code = countrycode(territory1, "country.name", "iso3c"))
+
+sids <- country_lookup$country_code[country_lookup$SIDS == 1]
+```
+
+# Introduction
+
+This script summarizes and visualizes the final version of the dive database used in this analysis.  
+
+```{r}
+# Load the dive data matched to site.
+dive_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_database_extrapolated_2010_2020_final.csv"))
+
+# Now many unique dive sites do we have
+n_sites <- n_distinct(dive_dat$spot_id)
+n_dives <- n_distinct(dive_dat$dive_id)
+n_dives_extrap <- sum(dive_dat$n_dives_extrap, na.rm = T)
+
+# What about those by land
+n_sites_land <- n_distinct(dive_dat$spot_id[dive_dat$site_classification == "Freshwater"])
+n_dives_land <-  n_distinct(dive_dat$dive_id[dive_dat$site_classification == "Freshwater"])
+n_dives_extrap_land <- sum(dive_dat$n_dives_extrap[dive_dat$site_classification == "Freshwater"])
+
+# Those in a marine area
+n_sites_eez <- n_distinct(dive_dat$spot_id[dive_dat$site_classification == "Marine"])
+n_dives_eez <- n_distinct(dive_dat$dive_id[dive_dat$site_classification == "Marine"])
+n_dives_extrap_eez <- sum(dive_dat$n_dives_extrap[dive_dat$site_classification == "Marine"])
+
+# Do our totals match? - Yes, we're all good
+site_diff <- n_sites - (n_sites_land + n_sites_eez)
+dive_diff <- n_dives - (n_dives_land + n_dives_eez)
+dive_extrap_diff <- n_dives_extrap - (n_dives_extrap_land + n_dives_extrap_eez)
+```
+
+```{r}
+# Get natural earth data for countries
+world_sf <- ne_countries(scale = "large", returnclass = "sf") %>%
+    dplyr::select(country_type = type,
+                sov_name = sovereignt,
+                sov_iso3 = sov_a3,
+                admin_name = admin,
+                admin_iso3 = adm0_a3,
+                geounit_name = geounit,
+                geounit_iso3 = gu_a3,
+                subunit_name = subunit,
+                subunit_iso3 = su_a3,
+                continent,
+                region_un,
+                subregion_un = subregion,
+                region_wb) %>%
+  sf::st_transform(crs = st_crs(prj_moll))
+
+# Get EEZ data (marine regions v11)
+eez_sf <- st_read(file.path(emlab_data_dir, "marine-regions-eez-v11", "World_EEZ_v11_20191118_gpkg", "eez_v11.gpkg")) %>%
+  janitor::clean_names() %>%
+  dplyr::select(mrgid,
+                eez_name = geoname,
+                eez_type = pol_type,
+                eez_ter1_name = territory1,
+                eez_ter1_iso3 = iso_ter1,
+                eez_sov1_name = sovereign1,
+                eez_ter2_name = territory2,
+                eez_ter2_iso3 = iso_ter2,
+                eez_sov2_name = sovereign2,
+                eez_ter3_name = territory3,
+                eez_ter3_iso3 = iso_ter3,
+                eez_sov3_name = sovereign3,
+                eez_area_km = area_km2) %>%
+  sf::st_transform(crs = st_crs(prj_moll))
+
+# Reassign Alaska and Hawaii with the rest of the US EEZ
+eez_sf$eez_ter1_iso3[eez_sf$eez_name %in% c("United States Exclusive Economic Zone (Hawaii)",
+                                            "United States Exclusive Economic Zone (Alaska)")] <- "USA"
+eez_sf$eez_ter1_name[eez_sf$eez_name %in% c("United States Exclusive Economic Zone (Hawaii)",
+                                            "United States Exclusive Economic Zone (Alaska)")] <- "United States"
+eez_sf$mrgid[eez_sf$eez_name %in% c("United States Exclusive Economic Zone (Hawaii)",
+                                            "United States Exclusive Economic Zone (Alaska)")] <- 8456
+eez_sf$eez_name[eez_sf$eez_name %in% c("United States Exclusive Economic Zone (Hawaii)",
+                                            "United States Exclusive Economic Zone (Alaska)")] <- "United States Exclusive Economic Zone"
+
+# Simplify
+eez_sf_simple <- rmapshaper::ms_simplify(eez_sf, keep_shapes = T)
+
+# Fix invalid geometries
+eez_sf_simple <- st_make_valid(eez_sf_simple)
+
+# Merge polygons
+eez_sf_out <- eez_sf_simple %>%
+  group_by(mrgid, eez_name, eez_type, eez_ter1_name, eez_ter1_iso3, eez_sov1_name, eez_ter2_name, eez_ter2_iso3, eez_sov2_name, eez_ter3_name, eez_ter3_iso3, eez_sov3_name) %>%
+  summarise(geom = sf::st_union(geom)) %>%
+  ungroup()
+```
+
+```{r}
+# Fix Alaska and Hawaii in our dive dat for plotting
+dive_dat_fix <- dive_dat %>%
+  mutate(eez_ter1_iso3 = ifelse(eez_ter1_name %in% c("Hawaii", "Alaska"), "USA", eez_ter1_iso3),
+         eez_ter1_name = ifelse(eez_ter1_name %in% c("Hawaii", "Alaska"), "United States", eez_ter1_name),
+         mrgid = ifelse(eez_name %in% c("United States Exclusive Economic Zone (Hawaii)",
+                                        "United States Exclusive Economic Zone (Alaska)"), 8456, mrgid),
+         eez_name = ifelse(eez_name %in% c("United States Exclusive Economic Zone (Hawaii)",
+                                        "United States Exclusive Economic Zone (Alaska)"), "United States Exclusive Economic Zone", eez_name))
+```
+
+
+```{r}
+# First summarize by land area (non-marine sites/dives)
+land_summary <- dive_dat_fix %>%
+  dplyr::filter(site_classification == "Freshwater") %>% # remove entries that also have an associated EEZ for now since we'll give those priority later
+  group_by(country_type, sov_name, sov_iso3, admin_name, admin_iso3, geounit_name, geounit_iso3, subunit_name, subunit_iso3, continent, region_un, subregion_un, region_wb) %>%
+  summarize(n_dives = n_distinct(dive_id),
+            n_sites = n_distinct(spot_id),
+            n_dives_extrap = sum(n_dives_extrap, na.rm = T)) %>%
+  ungroup()
+
+land_summary <- world_sf %>%
+  left_join(land_summary, by = c("country_type", "sov_name", "sov_iso3", "admin_name", "admin_iso3", "geounit_name", "geounit_iso3", "subunit_name", "subunit_iso3", "continent", "region_un", "subregion_un", "region_wb"))
+```
+
+```{r}
+# Then by EEZ (marine sites/dives)
+eez_summary <- dive_dat_fix %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(mrgid, eez_name, eez_type, eez_ter1_name, eez_ter1_iso3, eez_sov1_name, eez_ter2_name, eez_ter2_iso3, eez_sov2_name, eez_ter3_name, eez_ter3_iso3, eez_sov3_name) %>%
+  summarize(n_dives = n_distinct(dive_id),
+            n_sites = n_distinct(spot_id),
+            n_dives_extrap = sum(n_dives_extrap, na.rm = T)) %>%
+  ungroup()
+
+eez_summary <- eez_sf_out %>%
+  left_join(eez_summary, by = c("mrgid", "eez_name", "eez_type", "eez_ter1_name", "eez_ter1_iso3", "eez_sov1_name", "eez_ter2_name", "eez_ter2_iso3", "eez_sov2_name", "eez_ter3_name", "eez_ter3_iso3", "eez_sov3_name"))
+```
+
+# Plot Settings & Setup
+
+```{r}
+barwidth = 15
+barheight = 1
+
+site_breaks = c(1, 10, 100, 1000, 10000)
+dive_breaks = c(1, 10, 100, 1000, 10000)
+dive_extrap_breaks = c(100,1000,1e4,1e5,1e6,1e7)
+```
+
+# Summaries - Global
+
+## By Land
+
+```{r}
+# Just land sites
+sites_map_land <- ggplot()+
+  geom_sf(data = land_summary, aes(group = admin_name, fill = n_sites, geometry = geometry), color = "white", size = 0.1)+
+  scale_fill_viridis(name = "Dive Sites (#)",
+                      trans = "log",
+                      breaks = site_breaks, 
+                      labels = site_breaks,
+                      limits = c(1,10000),
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(title = paste0("Total number of freshwater dive sites: ", format(n_sites_land, big.mark = ",")))
+
+# Output
+save_plots(sites_map_land, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_sites_by_land_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+sites_map_land
+```
+
+```{r}
+# Just land dives
+dives_map_land <- ggplot()+
+  geom_sf(data = land_summary, aes(group = admin_name, fill = n_dives, geometry = geometry), color = "white", size = 0.1)+
+  scale_fill_viridis(name = "Dives (#, 2010-2020)",
+                      trans = "log",
+                      breaks = dive_breaks, 
+                      labels = dive_breaks,
+                      limits = c(1,10000),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map() +
+  labs(title = paste0("Total number of freshwater dives (2010-2020): ", format(n_dives_land, big.mark = ",")))
+
+
+# Output
+save_plots(dives_map_land, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_by_land_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+dives_map_land
+```
+
+```{r}
+# Now extrapolated land dives
+dives_map_extrap_land <- ggplot()+
+  geom_sf(data = land_summary, aes(group = admin_name, fill = n_dives_extrap, geometry = geometry), color = "white", size = 0.1)+
+  scale_fill_viridis(name = "Dives (millions, extrapolated)",
+                     trans = "log",
+                     breaks = dive_extrap_breaks, 
+                     labels = dive_extrap_breaks/1e6,
+                     limits = c(100,1e7),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map() +
+  labs(title = paste0("Total number of freshwater dives (extrapolated): ", format(n_dives_extrap_land, big.mark = ",")))
+
+# Output
+save_plots(dives_map_extrap_land, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_extrapolated_by_land_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+dives_map_extrap_land
+```
+
+## By EEZ
+
+```{r}
+# Just EEZ sites
+sites_map_eez <- ggplot()+
+  geom_sf(data = eez_summary, aes(group = mrgid, fill = n_sites, geometry = geom), color = "black", size = 0.1)+
+  scale_fill_viridis(name = "Dive Sites (#)",
+                      trans = "log",
+                      breaks = site_breaks, 
+                      labels = site_breaks,
+                      limits = c(1,10000),
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(title = paste0("Total number of marine dive sites: ", format(n_sites_eez, big.mark = ",")))
+
+
+# Output
+save_plots(sites_map_eez, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_sites_by_EEZ_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+sites_map_eez
+```
+
+```{r}
+# Just EEZ dives
+dives_map_eez <- ggplot()+
+  geom_sf(data = eez_summary, aes(group = mrgid, fill = n_dives, geometry = geom), color = "black", size = 0.1)+
+  scale_fill_viridis(name = "Dives (#, 2010-2020)",
+                      trans = "log",
+                      breaks = dive_breaks, 
+                      labels = dive_breaks,
+                      limits = c(1,10000),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(title = paste0("Total number of marine dives (2010-2020): ", format(n_dives_eez, big.mark = ",")))
+
+
+# Output
+save_plots(dives_map_eez, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_by_EEZ_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+dives_map_eez
+```
+
+```{r}
+# Just EEZ dives (extrapolated)
+dives_extrapolated_map_eez <- ggplot()+
+  geom_sf(data = eez_summary, aes(group = mrgid, fill = n_dives_extrap, geometry = geom), color = "black", size = 0.1)+
+  scale_fill_viridis(name = "Dives (millions, extrapolated)",
+                      trans = "log",
+                      breaks = dive_extrap_breaks, 
+                      labels = dive_extrap_breaks/1e6,
+                      limits = c(100,1e7),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(title = paste0("Total number of marine dives (extrapolated): ", format(n_dives_extrap_eez, big.mark = ",")))
+
+
+# Output
+save_plots(dives_extrapolated_map_eez, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_extrapolated_by_EEZ_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+dives_extrapolated_map_eez
+```
+
+```{r}
+fig_1_b_breaks <- c(300, 3000, 30000, 300000, 3000000)
+fig_1_b_labels <- format(fig_1_b_breaks, big.mark = ",", scientific = F)
+
+# Just EEZ dives (extrapolated) - WITH SOME MINOR CHANGES FOR THE MAIN TEXT FIGURE
+fig_1_b <- ggplot()+
+  map_layer_moll+
+  geom_sf(data = eez_summary, aes(group = mrgid, fill = n_dives_extrap, geometry = geom), color = "black", size = 0.1)+
+  scale_fill_viridis(name = "Dives (per year, extrapolated)",
+                     trans = "log",
+                     breaks = fig_1_b_breaks,
+                     labels = fig_1_b_labels,
+                     limits = c(300,3000000),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(title = paste0("Total number of marine dives (per year, extrapolated): ", format(n_dives_extrap_eez, big.mark = ",")))
+
+
+# Output
+save_plots(fig_1_b, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "fig_1_b.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+save(fig_1_b,
+     file = file.path(emlab_project_dir, "figures", "data-prep", "fig_1_b.Rdata"))
+
+fig_1_b
+```
+
+## Combined 
+
+```{r}
+# Both land and EEZ together
+sites_map_land_eez <- ggplot()+
+  geom_sf(data = land_summary, aes(group = admin_name, fill = n_sites, geometry = geometry), color = "white", size = 0.1)+
+  geom_sf(data = eez_summary, aes(group = mrgid, fill = n_sites, geometry = geom), color = "black", size = 0.1)+
+  scale_fill_viridis(name = "Dive Sites (#)",
+                      trans = "log",
+                      breaks = site_breaks, 
+                      labels = site_breaks,
+                      limits = c(1,10000),
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  labs(title = paste0("Total number of dive sites: ", format(n_sites, big.mark = ",")))+
+  theme_basic_map()
+
+save_plots(sites_map_land_eez, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_sites_by_land_and_EEZ_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+sites_map_land_eez
+```
+
+```{r}
+# Both dives together
+dives_map_land_eez <- ggplot()+
+  geom_sf(data = land_summary, aes(group = admin_name, fill = n_dives, geometry = geometry), color = "white", size = 0.1)+
+  geom_sf(data = eez_summary, aes(group = mrgid, fill = n_dives, geometry = geom), color = "black", size = 0.1)+
+  scale_fill_viridis(name = "Dives (#, 2010-2020)",
+                      trans = "log",
+                      breaks = dive_breaks, 
+                      labels = dive_breaks,
+                      limits = c(1,10000),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(title = paste0("Total number of dives (2010-2020): ", format(n_dives, big.mark = ",")))
+
+
+save_plots(dives_map_land_eez, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_by_land_and_EEZ_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+dives_map_land_eez
+```
+
+```{r}
+# Both extrapolated dives together
+dives_extrapolated_map_land_eez <- ggplot()+
+  geom_sf(data = land_summary, aes(group = admin_name, fill = n_dives_extrap, geometry = geometry), color = "white", size = 0.1)+
+  geom_sf(data = eez_summary, aes(group = mrgid, fill = n_dives_extrap, geometry = geom), color = "black", size = 0.1)+
+  scale_fill_viridis(name = "Dives (millions, extrapolated)",
+                      trans = "log",
+                      breaks = dive_extrap_breaks, 
+                      labels = dive_extrap_breaks/1e6,
+                      limits = c(100,1e7),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(title = paste0("Total number of dives (extrapolated): ", format(n_dives_extrap, big.mark = ",")))
+
+
+save_plots(dives_extrapolated_map_land_eez, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_extrapolated_by_land_and_EEZ_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+dives_extrapolated_map_land_eez
+```
+
+# Summaries - By Protection Status
+
+## All Areas
+
+```{r}
+# Specify factor levels
+dive_dat_edit <- dive_dat_fix %>%
+  mutate(protection_level = factor(category_use,
+                               levels = c("Not Marine", "Not MPA", "Proposed / Committed", "Designated & Unimplemented", "Less Protected / Unknown", "Fully / Highly Protected")))
+
+# Summarize by country and protection status
+protection_stats_by_eez <- dive_dat_edit %>%
+  group_by(mrgid, eez_name, eez_ter1_iso3, eez_ter1_name, protection_level) %>%
+  summarize(n_sites = n_distinct(spot_id),
+            n_dives = n_distinct(dive_id),
+            n_dives_extrap = sum(n_dives_extrap, na.rm = T)) %>%
+  ungroup()
+```
+
+Summarize the number of dive sites included in our final database by protection status. 
+
+```{r}
+protection_pal <- c("Fully / Highly Protected" = "#5278D1", 
+                    "Less Protected / Unknown" = "#95D0B4", 
+                    "Designated & Unimplemented" = "#DCB8C2", 
+                    "Proposed / Committed" = "#EAEAD0", 
+                    "Not MPA" = "#C0C0C4", 
+                    "Not Marine" = "#C0C0C4")
+
+sites_by_protection_global_plot <- dive_dat_edit %>%
+  group_by(site_classification, protection_level) %>%
+  summarize(n_sites = n_distinct(spot_id)) %>%
+  ungroup() %>%
+  mutate(percent_sites = (n_sites/sum(n_sites))*100) %>%
+  mutate(site_classification = fct_rev(site_classification)) %>%
+  ggplot()+
+  aes(x = protection_level, y = n_sites, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  geom_text(aes(label = paste0(format(round(n_sites), big.mark = ","), "\n(", round(percent_sites, 2), "%)")), hjust = -0.05)+
+  labs(x = "", y = "Dive sites (#)", fill = "Protection status",
+       title = paste0("Total number of dive sites: ", format(n_distinct(dive_dat_edit$spot_id), big.mark = ",")))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,28000), labels = comma)+
+  scale_fill_manual(values = protection_pal)+
+  coord_flip()+
+  facet_grid(rows = "site_classification", scales = "free_y", space = "free")+
+  theme_basic()+
+  theme(legend.position = "none")
+
+# Output
+save_plots(sites_by_protection_global_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_sites_by_protection.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+sites_by_protection_global_plot
+```
+
+Now do the same for the number of dives. 
+
+```{r}
+dives_real_by_protection_global_plot <- dive_dat_edit %>%
+  group_by(site_classification, protection_level) %>%
+  summarize(n_dives = n_distinct(dive_id)) %>%
+  ungroup() %>%
+  mutate(percent_dives = (n_dives/sum(n_dives))*100) %>%
+  mutate(site_classification = fct_rev(site_classification)) %>%
+  ggplot()+
+  aes(x = protection_level, y = n_dives, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  geom_text(aes(label = paste0(format(round(n_dives, 2), big.mark = ","), "\n(", round(percent_dives, 2), "%)")), hjust = -0.05)+
+  labs(x = "", y = "Dives (#)", fill = "Protection status",
+       title = paste0("Total number of dives (2010-2020): ", format(n_distinct(dive_dat_edit$dive_id), big.mark = ",")))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,50000), labels = comma)+
+  scale_fill_manual(values = protection_pal)+
+  coord_flip()+
+  facet_grid(rows = "site_classification", scales = "free_y", space = "free")+
+  theme_basic()+
+  theme(legend.position = "none")
+
+
+save_plots(dives_real_by_protection_global_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_by_protection.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+dives_real_by_protection_global_plot
+```
+
+And finally, for the extrapolated number of dives. 
+
+```{r}
+dives_extrap_by_protection_global_plot <- dive_dat_edit %>%
+  group_by(site_classification, protection_level) %>%
+  summarize(n_dives_extrap = sum(n_dives_extrap, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(percent_dives = (n_dives_extrap/sum(n_dives_extrap))*100) %>%
+  mutate(site_classification = fct_rev(site_classification)) %>%
+  ggplot()+
+  aes(x = protection_level, y = n_dives_extrap, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  geom_text(aes(label = paste0(format(round(n_dives_extrap, 2), big.mark = ","), "\n(", round(percent_dives, 2), "%)")), hjust = -0.05)+
+  labs(x = "", y = "Dives (per year)", fill = "Protection status",
+       title = paste0("Total number of dives (per year, extrapolated): ", format(sum(dive_dat_edit$n_dives_extrap, na.rm = T), big.mark = ",")))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,2.2e7), labels = comma)+
+  scale_fill_manual(values = protection_pal)+
+  coord_flip()+
+  facet_grid(rows = "site_classification", scales = "free_y", space = "free")+
+  theme_basic()+
+  theme(legend.position = "none")
+
+
+save_plots(dives_extrap_by_protection_global_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_extrapolated_by_protection.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+dives_extrap_by_protection_global_plot
+```
+
+## Marine Only
+
+```{r}
+sites_by_protection_marine_plot <- dive_dat_edit %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(site_classification, protection_level) %>%
+  summarize(n_sites = n_distinct(spot_id)) %>%
+  ungroup() %>%
+  mutate(percent_sites = (n_sites/sum(n_sites))*100) %>%
+  mutate(site_classification = fct_rev(site_classification)) %>%
+  ggplot()+
+  aes(x = protection_level, y = n_sites, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  geom_text(aes(label = paste0(format(round(n_sites), big.mark = ","), "\n(", round(percent_sites, 2), "%)")), hjust = -0.05)+
+  labs(x = "", y = "Dive sites (#)", fill = "Protection status",
+       title = paste0("Total number of marine dive sites: ", format(n_distinct(dive_dat_edit$spot_id[dive_dat_edit$site_classification == "Marine"]), big.mark = ",")))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,28000), labels = comma)+
+  scale_fill_manual(values = protection_pal)+
+  coord_flip()+
+  facet_grid(rows = "site_classification", scales = "free_y", space = "free")+
+  theme_basic()+
+  theme(legend.position = "none")
+
+# Output
+save_plots(sites_by_protection_marine_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_sites_by_protection_marine_only.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+sites_by_protection_marine_plot
+```
+
+```{r}
+dives_real_by_protection_marine_plot <- dive_dat_edit %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(site_classification, protection_level) %>%
+  summarize(n_dives = n_distinct(dive_id)) %>%
+  ungroup() %>%
+  mutate(percent_dives = (n_dives/sum(n_dives))*100) %>%
+  mutate(site_classification = fct_rev(site_classification)) %>%
+  ggplot()+
+  aes(x = protection_level, y = n_dives, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  geom_text(aes(label = paste0(format(round(n_dives, 2), big.mark = ","), "\n(", round(percent_dives, 2), "%)")), hjust = -0.05)+
+  labs(x = "", y = "Dives (#)", fill = "Protection status",
+       title = paste0("Total number of marine dives (2010-2020): ", format(n_distinct(dive_dat_edit$dive_id[dive_dat_edit$site_classification == "Marine"]), big.mark = ",")))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,50000), labels = comma)+
+  scale_fill_manual(values = protection_pal)+
+  coord_flip()+
+  facet_grid(rows = "site_classification", scales = "free_y", space = "free")+
+  theme_basic()+
+  theme(legend.position = "none")
+
+save_plots(dives_real_by_protection_marine_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_by_protection_marine_only.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+dives_real_by_protection_marine_plot
+```
+
+```{r}
+dives_extrap_by_protection_marine_plot <- dive_dat_edit %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(site_classification, protection_level) %>%
+  summarize(n_dives_extrap = sum(n_dives_extrap, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(percent_dives = (n_dives_extrap/sum(n_dives_extrap))*100) %>%
+  mutate(site_classification = fct_rev(site_classification)) %>%
+  ggplot()+
+  aes(x = protection_level, y = n_dives_extrap, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  geom_text(aes(label = paste0(format(round(n_dives_extrap, 2), big.mark = ","), "\n(", round(percent_dives, 2), "%)")), hjust = -0.05)+
+  labs(x = "", y = "Dives (per year)", fill = "Protection status",
+       title = paste0("Total number of dives (per year, extrapolated): ", format(sum(dive_dat_edit$n_dives_extrap[dive_dat_edit$site_classification == "Marine"], na.rm = T), big.mark = ",")))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,2.2e7), labels = comma)+
+  scale_fill_manual(values = protection_pal)+
+  coord_flip()+
+  facet_grid(rows = "site_classification", scales = "free_y", space = "free")+
+  theme_basic()+
+  theme(legend.position = "none")
+
+
+save_plots(dives_extrap_by_protection_marine_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_extrapolated_by_protection_marine_only.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+dives_extrap_by_protection_marine_plot
+```
+### Country plots
+
+```{r}
+dive_dat_country <- dive_dat_edit %>%
+  mutate(is_sid = ifelse(eez_ter1_iso3 %in% sids, T, F)) %>%
+  mutate(display_name = ifelse(is_sid, paste0(eez_ter1_name, "*"), eez_ter1_name))
+
+sites_by_protection_country_marine_plot <- dive_dat_country %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(protection_level, display_name, eez_ter1_iso3, eez_ter1_name) %>%
+  summarize(n_sites = n_distinct(spot_id)) %>%
+  ungroup() %>%
+  group_by(display_name, eez_ter1_iso3, eez_ter1_name) %>%
+  mutate(total_sites = sum(n_sites, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(percent_sites = (n_sites/total_sites)*100) %>%
+  mutate(site_rank = dense_rank(desc(total_sites))) %>%
+  dplyr::filter(site_rank <= 30) %>%
+  ggplot()+
+  aes(x = fct_reorder(display_name, total_sites), y = n_sites, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  labs(x = "", y = "Dive Sites (#)")+
+  scale_y_continuous(expand = c(0,0), limits = c(0,3000), labels = comma)+
+  scale_fill_manual(values = protection_pal[1:5],
+                    guide = guide_legend(reverse = F, title.position = "top", title.hjust = 0.5, nrow = 3, byrow = T, title = ""))+
+  coord_flip()+
+  theme_basic()+
+  theme(plot.margin = unit(c(0.2,1.5,0.2,0.2), "cm"),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.text = element_text(size = 8))
+
+save_plots(sites_by_protection_country_marine_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_sites_by_country_and_protection_marine_only.png"),
+           width_in = 7.5,
+           height_in = 9)
+
+sites_by_protection_country_marine_plot
+```
+
+```{r}
+dives_real_by_protection_country_marine_plot <- dive_dat_country %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(protection_level, display_name, eez_ter1_iso3, eez_ter1_name) %>%
+  summarize(n_dives = n_distinct(dive_id)) %>%
+  ungroup() %>%
+  group_by(display_name, eez_ter1_iso3, eez_ter1_name) %>%
+  mutate(total_dives = sum(n_dives, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(percent_dives = (n_dives/total_dives)*100) %>%
+  mutate(site_rank = dense_rank(desc(total_dives))) %>%
+  dplyr::filter(site_rank <= 30) %>%
+  ggplot()+
+  aes(x = fct_reorder(display_name, total_dives), y = n_dives, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  labs(x = "", y = "Dives (2010-2020)")+
+  scale_y_continuous(expand = c(0,0), limits = c(0,6500), labels = comma)+
+  scale_fill_manual(values = protection_pal[1:5],
+                    guide = guide_legend(reverse = F, title.position = "top", title.hjust = 0.5, nrow = 3, byrow = T, title = ""))+
+  coord_flip()+
+  theme_basic()+
+  theme(plot.margin = unit(c(0.2,1.5,0.2,0.2), "cm"),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.text = element_text(size = 8))
+
+save_plots(dives_real_by_protection_country_marine_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_by_country_and_protection_marine_only.png"),
+           width_in = 7.5,
+           height_in = 9)
+
+dives_real_by_protection_country_marine_plot
+```
+
+```{r}
+dives_extrap_by_protection_country_marine_plot <- dive_dat_country %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(protection_level, display_name, eez_ter1_iso3, eez_ter1_name) %>%
+  summarize(n_dives_extrap = sum(n_dives_extrap, na.rm = T)) %>%
+  ungroup() %>%
+  group_by(display_name, eez_ter1_iso3, eez_ter1_name) %>%
+  mutate(total_dives = sum(n_dives_extrap, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(percent_dives = (n_dives_extrap/total_dives)*100) %>%
+  mutate(site_rank = dense_rank(desc(total_dives))) %>%
+  dplyr::filter(site_rank <= 30) %>%
+  ggplot()+
+  aes(x = fct_reorder(display_name, total_dives), y = n_dives_extrap/1e6, fill = protection_level)+
+  geom_bar(stat = "identity", width = 0.8)+
+  labs(x = "", y = "Dives (millions per year, extrapolated)")+
+  scale_y_continuous(expand = c(0,0), limits = c(0,3), labels = comma)+
+  scale_fill_manual(values = protection_pal[1:5],
+                    guide = guide_legend(reverse = F, title.position = "top", title.hjust = 0.5, nrow = 3, byrow = T, title = ""))+
+  coord_flip()+
+  theme_basic()+
+  theme(plot.margin = unit(c(0.2,1.5,0.2,0.2), "cm"),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.text = element_text(size = 8))
+
+save_plots(dives_extrap_by_protection_country_marine_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_extrapolated_by_country_and_protection_marine_only.png"),
+           width_in = 7.5,
+           height_in = 9)
+
+save(dives_extrap_by_protection_country_marine_plot,
+     file = file.path(emlab_project_dir, "figures", "data-prep", "fig_1_a.Rdata"))
+
+dives_extrap_by_protection_country_marine_plot
+```
+
+```{r}
+# Finally, get the stat for the paper looking at the percent of total dives in the EEZs of the top 8 countries
+top_8 <- dive_dat_country %>%
+  dplyr::filter(site_classification == "Marine") %>%
+  group_by(display_name, eez_ter1_iso3, eez_ter1_name) %>%
+  summarize(n_dives_extrap = sum(n_dives_extrap, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(site_rank = dense_rank(desc(n_dives_extrap))) %>%
+  dplyr::filter(site_rank <= 8) %>%
+  arrange(site_rank)
+
+(sum(top_8$n_dives_extrap)/n_dives_extrap_eez)*100
+```
+
+```{r}
+# Save plots for later use
+save(sites_map_eez, 
+     dives_map_eez, 
+     dives_extrapolated_map_eez, 
+     sites_map_land_eez, 
+     dives_map_land_eez, 
+     dives_extrapolated_map_land_eez,
+     sites_by_protection_global_plot, 
+     dives_real_by_protection_global_plot, 
+     dives_extrap_by_protection_global_plot, 
+     sites_by_protection_marine_plot, 
+     dives_real_by_protection_marine_plot, 
+     dives_extrap_by_protection_marine_plot, 
+     sites_by_protection_country_marine_plot, 
+     dives_real_by_protection_country_marine_plot, 
+     dives_extrap_by_protection_country_marine_plot,
+     protection_pal,
+     file = file.path(emlab_project_dir, "figures", "data-prep", "dive_database_plots.RData"))
+```
+
+
+<!-- ### By pixel (50 km x 50 km) -->
+
+<!-- ```{r} -->
+<!-- # Now we match back to our ocean df and plot marine dives (extrapolated) -->
+<!-- dives_map_extrap <- ocean_df %>% -->
+<!--   left_join(dives_by_cell, by = "cell_id") %>% -->
+<!--   ggplot()+ -->
+<!--   map_layer+ -->
+<!--   geom_tile(aes(x = lon, y = lat, fill = n_dives_extrap)) + -->
+<!--   scale_fill_gradientn(colours=viridis(7), -->
+<!--                        na.value = "#D3D3D3", -->
+<!--                        limits=c(0,200000), -->
+<!--                        labels=c("0", "50,000", "100,000", "150,000", "\U02265 200,000"), -->
+<!--                        oob=squish, -->
+<!--                        guide = guide_colorbar(keyheight = unit(2.5, units = "mm"), keywidth=unit(10, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1, title.hjust = 0.5))+ -->
+<!--   labs(fill = "Dives (#)", title = paste0("Total marine dives (extrapolated, annual): ", comma(sum(dives_by_cell$n_dives_extrap))))+ -->
+<!--   map_theme -->
+
+<!-- dives_map_extrap -->
+
+<!-- ggsave(paste0(results_dir, "marine_dives_map_extrapolated.png"), dives_map_extrap, width = 7.5, height = 4.5, units = "in") -->
+<!-- ``` -->
+
+<!-- # ```{r} -->
+<!-- # # Let's also plot the actual number -->
+<!-- # dives_map_actual <- ocean_df %>% -->
+<!-- #   left_join(dives_by_cell, by = "cell_id") %>% -->
+<!-- #   ggplot()+ -->
+<!-- #   map_layer+ -->
+<!-- #   geom_tile(aes(x = lon, y = lat, fill = n_dives)) + -->
+<!-- #   scale_fill_gradientn(colours=viridis(7), -->
+<!-- #                        na.value = "#D3D3D3", -->
+<!-- #                        limits=c(0,200), -->
+<!-- #                        labels=c("0", "50", "100", "150", "\U02265 200"), -->
+<!-- #                        oob=squish, -->
+<!-- #                        guide = guide_colorbar(keyheight = unit(2.5, units = "mm"), keywidth=unit(10, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1, title.hjust = 0.5))+ -->
+<!-- #   labs(fill = "Dives (#)", title = paste0("Total marine dives (actual, 2010-2020): ", comma(sum(dives_by_cell$n_dives))))+ -->
+<!-- #   map_theme -->
+<!-- #  -->
+<!-- # ggsave(paste0(results_dir, "marine_dives_map_actual.png"), dives_map_actual, width = 7.5, height = 4.5, units = "in") -->
+<!-- # ``` -->

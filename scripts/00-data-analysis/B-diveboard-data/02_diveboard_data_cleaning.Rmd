@@ -1,0 +1,365 @@
+---
+output:
+  html_document: default
+
+title: 'diveboard.com data: Cleaning'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+# Packages
+#devtools::install_github("ropensci/rnaturalearthhires")
+library(rnaturalearthhires) # To do the land area mapping
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script details the cleaning and wrangling of the crowdsourced database obtained from diveboard.com. 
+
+```{r}
+# Load misc helper files from diveboard
+countries_df <- read_csv(file.path(emlab_project_dir, "data", "01-raw", "diveboard", "countries.csv")) # Country lookup file
+locations_df <- read_csv(file.path(emlab_project_dir, "data", "01-raw", "diveboard", "locations.csv")) # Location lookup file
+
+# Load spots data 
+spots_df <- read_csv(file.path(emlab_project_dir, "data", "01-raw", "diveboard", "spots.csv")) # Dive sites lookup file
+
+# Load dives data
+dives_filtered_df <- readRDS(file.path(emlab_project_dir, "data", "01-raw", "diveboard", "dives_filtered_1.rds")) # Raw dive data
+```
+
+```{r}
+# Get natural earth data for countries
+world_sf <- ne_countries(scale = "large", returnclass = "sf") %>%
+    dplyr::select(country_type = type,
+                sov_name = sovereignt,
+                sov_iso3 = sov_a3,
+                admin_name = admin,
+                admin_iso3 = adm0_a3,
+                geounit_name = geounit,
+                geounit_iso3 = gu_a3,
+                subunit_name = subunit,
+                subunit_iso3 = su_a3,
+                continent,
+                region_un,
+                subregion_un = subregion,
+                region_wb)
+
+# Get EEZ data (marine regions v11)
+eez_sf <- st_read(file.path(emlab_data_dir, "marine-regions-eez-v11", "World_EEZ_v11_20191118_gpkg", "eez_v11.gpkg")) %>%
+  janitor::clean_names() %>%
+  dplyr::select(mrgid,
+                eez_name = geoname,
+                eez_type = pol_type,
+                eez_ter1_name = territory1,
+                eez_ter1_iso3 = iso_ter1,
+                eez_sov1_name = sovereign1,
+                eez_ter2_name = territory2,
+                eez_ter2_iso3 = iso_ter2,
+                eez_sov2_name = sovereign2,
+                eez_ter3_name = territory3,
+                eez_ter3_iso3 = iso_ter3,
+                eez_sov3_name = sovereign3,
+                eez_area_km = area_km2)
+```
+
+# Locations / Regions 
+
+What are the locations? Are they geographic regions? Or cities? Or countries? 
+
+It appears that the "locations" and "regions" allow for aggregating or disaggregating data for the maps on Diveboard.com as you zoom in or out. I don't think they will be useful for our analysis. Let's do a quick visualization and move on.
+
+```{r}
+# Number of locations by country
+locations_by_country <- locations_df %>%
+  left_join(countries_df %>% dplyr::select(country_id = id, country_name = cname), by = "country_id") %>%
+  group_by(country_id, country_name) %>%
+  summarize(n_locations = n_distinct(id))
+
+# Plot locations by country
+locations_by_country_plot <- locations_by_country %>%
+  ggplot()+
+  aes(x = reorder(country_name, n_locations), y = n_locations)+
+  geom_bar(stat = "identity")+
+  labs(x = "", y = "Locations (#)")+
+  scale_y_continuous(expand = c(0,0))+
+  coord_flip()+
+  theme_basic()+
+  theme(axis.text = element_text(size = 5))
+
+# Output
+save_plots(locations_by_country_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_locations_by_country.png"),
+           width_in = 7.5,
+           height_in = 10)
+
+locations_by_country_plot
+```
+
+# Cleaing - Dive Sites 
+
+We first need to clean the database of dive sites. This database forms a major part of our analysis.  
+
+```{r}
+# According to the folks at diveboard, we should remove some of these where the user didn't assign coordinates. Let's do that now and save a clean version. 
+spots_df_edit <- spots_df %>%
+  dplyr::filter(!is.na(lat) & !is.na(long)) %>% # Remove entries with no Lat or Lon
+  dplyr::filter(lat != 0 | long != 0) %>% # Remove entries with the default Lat and Lon (there is nothing at 0,0)
+  dplyr::filter(long >= -180 & long <= 180 & lat >= -90 & lat <= 90) # Valid coordinates only
+
+# Lets also remove some columns we aren't going to need
+spots_df_edit <- spots_df_edit %>%
+  dplyr::select(spot_id = id,
+                spot_name = name,
+                created_at,
+                updated_at,
+                lat,
+                lon = long,
+                location_id,
+                country_id,
+                score)
+```
+
+Now we want to add country and location data as reported from diveboard.
+
+```{r}
+spots_df_edit <- spots_df_edit %>%
+  left_join(locations_df %>% 
+              dplyr::select(location_id = id,
+                            location_name = name,
+                            country_id), 
+            by = c("location_id", "country_id")) %>%
+  left_join(countries_df %>%
+              dplyr::select(country_id = id, 
+                            country_name = cname),
+            by = c("country_id")) %>%
+  rename(diveboard_country_name = country_name)
+```
+
+Next, we overlay EEZ boundaries and land area boundaries on the site coordinates in order to determine which sites are marine and which are freshwater (terrestrial). 
+
+```{r}
+# Turn lat/lon from our dive spots database into spatial points
+spot_coords_sf <- spots_df_edit %>%
+  distinct(spot_id, lat, lon) %>%
+  st_as_sf(coords = c("lon", "lat"),
+           remove = T)
+```
+
+## Land matching
+
+```{r}
+# Check for valid geometries and fix where needed
+world_sf <- st_make_valid(world_sf)
+
+# Check that none are invalid - We're good
+which(!st_is_valid(world_sf))
+
+# Convert our dive site coords
+st_crs(spot_coords_sf) <- st_crs(world_sf)
+
+# Find sites within country boundaries and drop geometry
+sites_by_country <- st_join(spot_coords_sf, world_sf, join = st_within) %>%
+  st_drop_geometry() %>%
+  mutate(is_land = ifelse(is.na(country_type), F, T))
+
+# Now match it back to our database
+spots_df_out <- spots_df_edit %>%
+   left_join(sites_by_country, by = "spot_id")
+```
+
+## EEZ matching
+
+```{r}
+# Check for valid geometries and fix where needed
+eez_sf <- st_make_valid(eez_sf)
+
+# Check that none are invalid - We're good
+which(!st_is_valid(eez_sf))
+
+# Convert our dive site coords
+st_crs(spot_coords_sf) <- st_crs(eez_sf)
+
+# Find sites within country boundaries and drop geometry
+sites_by_eez <- st_join(spot_coords_sf, eez_sf, join = st_within) %>%
+  st_drop_geometry() %>%
+  mutate(is_eez = ifelse(is.na(mrgid), F, T))
+
+# Now let's match this back to our dataset 
+spots_df_out <- spots_df_out %>%
+   left_join(sites_by_eez, by = "spot_id")
+```
+
+```{r}
+spots_df_final <- spots_df_out %>%
+  mutate(is_unknown = ifelse(!is_eez & !is_land, T, F))
+```
+
+## Summary
+
+```{r}
+site_plot_lat <- spots_df_final %>%
+  gather("area", "value", c(is_land, is_eez, is_unknown)) %>%
+  mutate(area = case_when(area == "is_land" ~ "Freshwater",
+                          area == "is_eez" ~ "Marine",
+                          area == "is_unknown" ~ "Unknown")) %>%
+  ggplot()+
+  aes(x = lat, fill = fct_rev(area))+
+  geom_histogram()+
+  coord_flip()+
+  theme_basic()+
+  labs(x = "Latitude", y = "Dive Sites (#)",
+       title = paste0("Total number of dive sites: ", format(n_distinct(spots_df_final$spot_id), big.mark = ",")))+
+  guides(fill = guide_legend(title = "", reverse = T))+
+  scale_x_continuous(limits = c(-90,90))+
+  scale_fill_manual(values = c("purple", "darkblue", "aquamarine3"))
+
+site_plot_lat
+```
+```{r}
+site_plot_lon <- spots_df_final %>%
+  gather("area", "value", c(is_land, is_eez, is_unknown)) %>%
+  mutate(area = case_when(area == "is_land" ~ "Freshwater",
+                          area == "is_eez" ~ "Marine",
+                          area == "is_unknown" ~ "Unknown")) %>%
+  ggplot()+
+  aes(x = lon, fill = fct_rev(area))+
+  geom_histogram()+
+  theme_basic()+
+  labs(x = "Longitude", y = "Dive Sites (#)")+
+  guides(fill = guide_legend(title = "", reverse = T))+
+  scale_x_continuous(limits = c(-180,180))+
+  scale_fill_manual(values = c("purple", "darkblue", "aquamarine3"))
+
+site_plot_lon
+```
+
+```{r}
+site_plot_lat_lon <- plot_grid(site_plot_lat + theme(legend.position = "none"),
+                               site_plot_lon,
+                               ncol = 1,
+                               labels = "AUTO")
+
+# Output
+save_plots(site_plot_lat_lon, 
+           file_name = file.path(emlab_project_dir, "data", "diagnostics", "data-prep", "diveboard_sites_all_lat_lon.png"),
+           width_in = 7.5,
+           height_in = 6)
+
+site_plot_lat_lon
+```
+
+```{r}
+# Now let's save the spots dataset
+write_csv(spots_df_final, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_sites_all_clean.csv"))
+```
+
+# Cleaning - Dives
+
+Now let's turn turn the raw dive data which we can match back to the dive sites
+
+```{r}
+# Select only the dives meeting our criteria
+dives_filtered_df_out <- dives_filtered_df %>%
+  dplyr::select(time_in, duration, user_id, spot_id, maxdepth_value, maxdepth_unit, score) %>%
+  dplyr::filter(time_in != "time_in") %>% # remove bad rows
+  mutate(duration = as.numeric(duration),
+         user_id = as.numeric(user_id),
+         spot_id = as.numeric(spot_id),
+         maxdepth_value = as.numeric(maxdepth_value),
+         maxdepth_unit = str_replace_all(maxdepth_unit, "'", ""),
+         score = as.numeric(score),
+         time_in = str_replace_all(time_in, "'", ""),
+         year = lubridate::year(time_in),
+         month = lubridate::month(time_in),
+         day = lubridate::day(time_in)) %>%
+  dplyr::filter(year >= 1900 & year <= 2022) %>% # keep good years
+  dplyr::filter(month >= 1 & month <= 12) %>% # keep good months
+  dplyr::filter(day >= 1 & day <= 31) %>% # keep good days
+  dplyr::filter(!is.na(maxdepth_value) & !is.null(maxdepth_value)) %>%
+  dplyr::filter((maxdepth_value <= 43 & maxdepth_unit == "m") | (maxdepth_value <= 140 & maxdepth_unit == "ft")) %>% # filter for recreational diving (extra margin) 
+  arrange(year, month, day, spot_id) %>%
+  rowid_to_column("dive_id")
+```
+
+## Summary
+
+```{r}
+dive_plot_year <- dives_filtered_df_out %>%
+  dplyr::filter(year >= 2010 & year <= 2020) %>%
+  mutate(month_abb = month.abb[month]) %>%
+  group_by(year, month, month_abb) %>%
+  summarize(n_dives = n_distinct(dive_id)) %>%
+  ungroup() %>%
+  ggplot()+
+  aes(x = as.factor(year), y = n_dives, fill = fct_reorder(month_abb, desc(month)))+
+  geom_bar(stat = "identity")+
+  theme_basic()+
+  labs(x = "Year", y = "Dives (#)",
+       title = paste0("Total number of dives (2010 - 2020): ", format(n_distinct(dives_filtered_df_out$dive_id[dives_filtered_df_out$year >= 2010 & dives_filtered_df_out$year <=2020]), big.mark = ",")))+
+  guides(fill = guide_legend(title = "", reverse = T, byrow = T))
+
+# Output
+save_plots(dive_plot_year, 
+           file_name = file.path(emlab_project_dir, "data", "diagnostics", "data-prep", "diveboard_dives_all_by_year_2010_2020.png"),
+           width_in = 7.5,
+           height_in = 6)
+
+dive_plot_year
+```
+
+```{r}
+dive_plot_depth <- dives_filtered_df_out %>%
+  dplyr::filter(year >= 2010 & year <= 2020) %>%
+  mutate(maxdepth_value = -1*maxdepth_value) %>%
+  ggplot()+
+  aes(x = maxdepth_value)+
+  geom_histogram()+
+  theme_basic()+
+  coord_flip()+
+  facet_grid(rows = "maxdepth_unit", scales = "free_y")+
+  labs(x = "Max Depth", y = "Dives (#)",
+       title = paste0("Total number of dives (2010 - 2020): ", format(n_distinct(dives_filtered_df_out$dive_id[dives_filtered_df_out$year >= 2010 & dives_filtered_df_out$year <=2020]), big.mark = ",")))
+
+# Output
+save_plots(dive_plot_depth, 
+           file_name = file.path(emlab_project_dir, "data", "diagnostics", "data-prep", "diveboard_dives_all_by_depth_2010_2020.png"),
+           width_in = 7.5,
+           height_in = 7.5)
+
+dive_plot_depth
+```
+
+```{r}
+write_csv(dives_filtered_df_out, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_dives_all_clean.csv"))
+```
+
+# Combine and Output
+
+To form our final database, we need to match the sites database back to the dives database. We're therefore going to eliminate any dives for which we don't have an associated site and any sites for which we don't have an associated dive. 
+
+```{r}
+# Match the dive data set to the dive site dataset 
+dives_sites_combined <- dives_filtered_df_out %>%
+  dplyr::select(dive_id, 
+                year, 
+                month, 
+                day, 
+                user_id, 
+                spot_id, 
+                maxdepth_value, 
+                maxdepth_unit) %>%
+  inner_join(spots_df_out, by = "spot_id") 
+
+write_csv(dives_sites_combined, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_dives_matched_to_sites_all_years.csv"))
+```
+
+```{r}
+write_csv(dives_sites_combined %>% dplyr::filter(year >= 2010 & year <= 2020), file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_dives_matched_to_sites_2010_2020.csv"))
+```
+

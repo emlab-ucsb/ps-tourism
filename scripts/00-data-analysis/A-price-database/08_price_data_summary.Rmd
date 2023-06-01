@@ -1,0 +1,593 @@
+---
+output:
+  html_document: default
+
+title: 'Price Data - Summary/Visualization'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Packages
+library(ggridges)
+library(gt)
+library(gtsummary)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script summarizes and visualizes the price data collected from shops included in the dive operator database.
+
+```{r}
+# Load cleaned price dat
+price_dat_day <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "prices_day_trips_clean.csv"))
+price_dat_liveaboard <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "prices_liveaboards_clean.csv"))
+```
+
+# Plot Settings & Setup
+
+```{r}
+barwidth = 15
+barheight = 1
+```
+
+```{r}
+# Now let's extract what we need from our operator database
+price_dat_day_spatial <- price_dat_day %>%
+  dplyr::select(lon = longitude, lat = latitude, ID) %>%
+  distinct()
+
+# Make it a SPDF and transform
+price_dat_spdf <- SpatialPointsDataFrame(cbind(price_dat_day_spatial$lon, price_dat_day_spatial$lat), as.data.frame(price_dat_day_spatial$ID), proj4string=CRS("+proj=longlat"))
+
+price_dat_moll_df <- spTransform(price_dat_spdf, CRS = prj_moll) %>%
+  as.data.frame() %>%
+  rename(ID = `price_dat_day_spatial.ID`,
+         x_coord = `coords.x1`,
+         y_coord = `coords.x2`)
+```
+
+```{r}
+# Now let's set a bin size
+bin_size <- 50000 # in meters (50x50 km)
+bin_size_txt <- "50km"
+
+# Match Mollewiede coordinates back to the dive operator data and bin
+price_dat_day_binned <- price_dat_day %>%
+  left_join(price_dat_moll_df, by = "ID") %>%
+  mutate(x_coord_cen = bin_spatial_data(x_coord, bin_size = bin_size),
+         y_coord_cen = bin_spatial_data(y_coord, bin_size = bin_size))
+```
+
+# Summaries: Day Trips and Classes 
+
+```{r}
+# See what we've got for descriptions
+unique(price_dat_day$description)
+```
+
+## Overall
+
+Let's first make overall summaries for our single day dives and classes
+
+```{r}
+# Create a summary table by continent
+price_dat_summary_table <- price_dat_day %>% 
+  dplyr::filter(description %in% c("Snorkel", "1 Dive", "2 Dives", "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+   mutate(description = fct_relevel(description, 
+                                   "Snorkel", "1 Dive", "2 Dives", "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  dplyr::select(description, price_converted) %>%
+  tbl_summary(., missing = "no",
+              by = description,
+              statistic = list(all_categorical() ~ "{n} / {N} ({p}%)"),
+              label = list(price_converted ~ "Price (USD)")) %>%
+  bold_labels()
+
+# Save
+price_dat_summary_table %>%
+  as_gt() %>%
+  gt::gtsave(filename = "prices_day_trips_and_courses.html", path = file.path(emlab_project_dir, "figures", "data-prep"))
+
+price_dat_summary_table
+```
+
+```{r}
+# Make a boxplot (most items)
+price_dat_summary_ridges_all <- price_dat_day %>% 
+  dplyr::filter(description %in% c("Snorkel", "1 Dive", "2 Dives", "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Snorkel", "1 Dive", "2 Dives", "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+ ggplot(aes(x = price_converted, y = description))+
+  geom_density_ridges()+
+  labs(y = "", x = "Price (USD)")+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_all, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_day_trips_and_courses_ridges.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+price_dat_summary_ridges_all
+```
+
+### Day trips only
+
+```{r}
+# Make a desnity plot (just dives)
+price_dat_summary_ridges_dives_only <- price_dat_day %>% 
+  dplyr::filter(description %in% c("1 Dive", "2 Dives", "Snorkel")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Snorkel", "1 Dive", "2 Dives")) %>%
+  ggplot(aes(x = price_converted, y = description))+
+  geom_density_ridges()+
+  labs(y = "", x = "Price (USD)")+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_dives_only, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_day_trips_ridges.png"),
+           width_in = 7.5,
+           height_in = 3)
+
+price_dat_summary_ridges_dives_only
+```
+
+```{r}
+# Density plot by boat/shore (just dives)
+price_dat_summary_ridges_dives_only_type <- price_dat_day %>%
+  dplyr::filter(description %in% c("1 Dive", "2 Dives", "Snorkel")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Snorkel", "1 Dive", "2 Dives")) %>%
+  ggplot(aes(x = price_converted, y = description))+
+  geom_density_ridges(aes(fill = type), alpha = 0.7)+
+  labs(y = "", x = "Price (USD)", fill = "Type")+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_dives_only_type, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_day_trips_by_type_ridges.png"),
+           width_in = 7.5,
+           height_in = 3.5)
+
+price_dat_summary_ridges_dives_only_type
+```
+
+```{r}
+# Density plot by equiptment (just dives)
+price_dat_summary_ridges_dives_only_equipment <- price_dat_day %>%
+  dplyr::filter(description %in% c("1 Dive", "2 Dives", "Snorkel")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Snorkel", "1 Dive", "2 Dives")) %>%
+  mutate(includes_full_equipment = fct_relevel(includes_full_equipment,
+                                               "T", "F", "Unknown")) %>%
+  ggplot(aes(x = price_converted, y = description))+
+  geom_density_ridges(aes(fill = includes_full_equipment), alpha = 0.7)+
+  labs(y = "", x = "Price (USD)", fill = "Includes all equipment?")+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_dives_only_equipment, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_day_trips_by_equipment_ridges.png"),
+           width_in = 7.5,
+           height_in = 3.5)
+
+price_dat_summary_ridges_dives_only_equipment
+```
+
+### Courses only
+
+```{r}
+# Make a desnity plot (just courses)
+price_dat_summary_ridges_courses_only <- price_dat_day %>% 
+  dplyr::filter(description %in% c("Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  ggplot(aes(x = price_converted, y = description))+
+  geom_density_ridges()+
+  labs(y = "", x = "Price (USD)")+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_courses_only, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_courses.png"),
+           width_in = 7.5,
+           height_in = 3)
+
+price_dat_summary_ridges_courses_only
+```
+
+```{r}
+# Density plot by boat/shore (just courses)
+price_dat_summary_ridges_courses_only_type <- price_dat_day %>%
+  dplyr::filter(description %in% c("Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  ggplot(aes(x = price_converted, y = description))+
+  geom_density_ridges(aes(fill = type), alpha = 0.7)+
+  labs(y = "", x = "Price (USD)", fill = "Type")+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_courses_only_type, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_courses_by_type.png"),
+           width_in = 7.5,
+           height_in = 3.5)
+
+price_dat_summary_ridges_courses_only_type
+```
+
+```{r}
+# Density plot by equiptment (just dives)
+price_dat_summary_ridges_courses_only_equipment <- price_dat_day %>%
+  dplyr::filter(description %in% c("Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  mutate(includes_full_equipment = fct_relevel(includes_full_equipment,
+                                               "T", "F", "Unknown")) %>%
+  ggplot(aes(x = price_converted, y = description))+
+  geom_density_ridges(aes(fill = includes_full_equipment), alpha = 0.7)+
+  labs(y = "", x = "Price (USD)", fill = "Includes all equipment?")+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_courses_only_equipment, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_courses_by_equipment_ridges.png"),
+           width_in = 7.5,
+           height_in = 3.5)
+
+price_dat_summary_ridges_courses_only_equipment
+```
+
+## By Continent
+
+```{r}
+# Make a density plot (most items)
+price_dat_summary_ridges_all_continent <- price_dat_day %>% 
+  dplyr::filter(description %in% c("Snorkel", "1 Dive", "2 Dives", "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Snorkel", "1 Dive", "2 Dives", "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+ ggplot(aes(x = price_converted, y = description, fill = factor(continent, levels = c("Oceania", "Europe", "Asia", "Americas", "Africa"))))+
+  geom_density_ridges(alpha = 0.7)+
+  labs(y = "", x = "Price (USD)")+
+  theme_minimal()+
+  scale_fill_brewer(palette = "Set1", name = "", guide = guide_legend(reverse = T))+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_all_continent, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_day_trips_and_courses_by_continent.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+price_dat_summary_ridges_all_continent
+```
+
+### Day trips only
+
+```{r}
+# Make a desnity plot (just dives)
+price_dat_summary_ridges_dives_only_continent <- price_dat_day %>% 
+  dplyr::filter(description %in% c("1 Dive", "2 Dives", "Snorkel")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Snorkel", "1 Dive", "2 Dives")) %>%
+  ggplot(aes(x = price_converted, y = description, fill = factor(continent, levels = c("Oceania", "Europe", "Asia", "Americas", "Africa"))))+
+  geom_density_ridges(alpha = 0.7)+
+  labs(y = "", x = "Price (USD)")+
+  scale_fill_brewer(palette = "Set1", name = "", guide = guide_legend(reverse = T))+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_dives_only_continent, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_day_trips_by_continent.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+price_dat_summary_ridges_dives_only_continent
+```
+
+```{r}
+# Make a desnity plot (just courses)
+price_dat_summary_ridges_courses_only_continent <- price_dat_day %>% 
+  dplyr::filter(description %in% c("Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Discover Scuba (or Intro Dive)", "Open Water (or Level 1)", "Adv. Open Water (or Level 2)", "Rescue (or Level 3)")) %>%
+  ggplot(aes(x = price_converted, y = description, fill = factor(continent, levels = c("Oceania", "Europe", "Asia", "Americas", "Africa"))))+
+  geom_density_ridges(alpha = 0.7)+
+  labs(y = "", x = "Price (USD)")+
+  theme_minimal()+
+  scale_fill_brewer(palette = "Set1", name = "", guide = guide_legend(reverse = T))+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_courses_only_continent, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_courses_by_continent.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+price_dat_summary_ridges_courses_only_continent
+```
+
+## By Country
+
+```{r}
+# Make a density plot (single dives only) by country
+price_dat_summary_ridges_dives_only_country <- price_dat_day %>%
+  dplyr::filter(description %in% c("1 Dive", "2 Dives", "Snorkel")) %>%
+  mutate(description = fct_relevel(description, 
+                                   "Snorkel", "1 Dive", "2 Dives")) %>%
+  ggplot(aes(x = price_converted, y = country_name, fill = factor(continent, levels = c("Oceania", "Europe", "Asia", "Americas", "Africa"))))+
+  geom_density_ridges(alpha = 0.8)+
+  labs(y = "", x = "Price (USD)")+
+  theme_minimal()+
+  scale_fill_brewer(palette = "Set1", name = "", guide = guide_legend(reverse = T))+
+  facet_wrap(~description)+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_dat_summary_ridges_dives_only_country, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_day_trips_by_country_and_continent.png"),
+           width_in = 8.5,
+           height_in = 8)
+
+price_dat_summary_ridges_dives_only_country
+```
+
+## By Coordinates
+
+Now let's look at it spatially
+
+```{r}
+# Calculate some binned stats
+price_dat_binned_stats <- price_dat_day_binned %>%
+  group_by(x_coord_cen, y_coord_cen) %>%
+  summarize(med_price_snorkel = median(price_converted[description == "Snorkel"], na.rm = T),
+            med_price_1_dive = median(price_converted[description == "1 Dive"], na.rm = T),
+            med_price_2_dives = median(price_converted[description == "2 Dives"], na.rm = T)) %>%
+  ungroup()
+```
+
+```{r}
+# plot single dive prices
+price_dat_binned_med_price_1_dive <- price_dat_binned_stats %>%
+  dplyr::filter(!is.na(med_price_1_dive)) %>%
+  ggplot()+
+  map_layer_moll +
+  geom_raster(aes(x = x_coord_cen, y = y_coord_cen, fill = med_price_1_dive), show.legend = T)+
+  scale_fill_viridis(option = "plasma", breaks = c(0, 100, 200, 300), oob = squish, limits = c(0, 300), labels = dollar)+
+  theme(legend.position = "bottom",
+        title = element_text(hjust = 0.5))+
+  guides(fill = guide_colorbar(barwidth = barwidth, barheight = barheight, title = "Median price - 1 tank dive (USD)", title.position = "top", title.hjust = 0.5))+
+  theme_basic()+
+  labs(x = "", y = "")
+
+# Output
+save_plots(price_dat_binned_med_price_1_dive, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_median_1_tank_50km_50km_bins.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+price_dat_binned_med_price_1_dive
+```
+
+```{r}
+# plot 2 dive prices
+price_dat_binned_med_price_2_dive <- price_dat_binned_stats %>%
+  dplyr::filter(!is.na(med_price_2_dives)) %>%
+  ggplot()+
+  map_layer_moll +
+  geom_raster(aes(x = x_coord_cen, y = y_coord_cen, fill = med_price_1_dive), show.legend = T)+
+  scale_fill_viridis(option = "plasma", breaks = c(0, 100, 200, 300), oob = squish, limits = c(0, 300), labels = dollar)+
+  theme(legend.position = "bottom",
+        title = element_text(hjust = 0.5))+
+  guides(fill = guide_colorbar(barwidth = barwidth, barheight = barheight, title = "Median price - 2 tank dive (USD)", title.position = "top", title.hjust = 0.5))+
+  theme_basic()+
+  labs(x = "", y = "")
+
+# Output
+save_plots(price_dat_binned_med_price_2_dive, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_median_2_tank_50km_50km_bins.png"),
+           width_in = 7.5,
+           height_in = 5)
+
+price_dat_binned_med_price_2_dive
+```
+
+# Summaries: Price per Dive
+
+For our input raster, we're going to combine prices for 1-tank, 2-tank, and N-tank dives to get the "per dive" price so we have greater spatial coverage of our price dataset. It turns out that these prices are actually significantly different, so we'll only keep the "best" per dive price for each operator, giving first priority to the price for a 1-tank dive if it's available, followed by the 2-tank dive price, and then the N-tank dive price. 
+
+```{r}
+# Let's first get the entries where we have 1-tank data - 262 entries
+price_dat_1_dive <- price_dat_day %>%
+  dplyr::filter(description %in% c("1 Dive")) %>%
+  mutate(per_dive_price_best = price_converted)
+
+# Then 2-tank data for operators where we don't have 1-tank data - 102 entries
+price_dat_2_dive <- price_dat_day %>%
+  dplyr::filter(description %in% c("2 Dives")) %>%
+  dplyr::filter(!(ID %in% price_dat_1_dive$ID)) %>%
+  mutate(per_dive_price_best = price_converted/2)
+
+# Then N-tank data for operators where we don't have 1-tank or 2-tank data - 6 entries
+price_dat_n_dive <- price_dat_day %>%
+  dplyr::filter(description %in% c("N Dives")) %>%
+  dplyr::filter(!(ID %in% price_dat_1_dive$ID) & !(ID %in% price_dat_2_dive$ID)) %>%
+  mutate(per_dive_price_best = price_converted/n_dives) %>%
+  dplyr::filter(!is.na(per_dive_price_best))
+
+# Combine
+price_dat_per_dive <- price_dat_1_dive %>%
+  bind_rows(price_dat_2_dive) %>%
+  bind_rows(price_dat_n_dive)
+``` 
+
+```{r}
+# Including N-tank dive prices
+anova <- aov(per_dive_price_best ~ description, data = price_dat_per_dive)
+summary(anova)
+
+# Only 1 and 2 tank dives
+price_dat_per_dive_no_n <- price_dat_per_dive %>%
+  dplyr::filter(description != "N Dives")
+
+t_test <- t.test(price_dat_per_dive_no_n$per_dive_price_best ~ price_dat_per_dive_no_n$description)
+t_test
+```
+
+```{r}
+# Get quantiles 
+price_summary_quantiles <- quantile(price_dat_per_dive$per_dive_price_best,
+         probs = c(0, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99, 1))
+
+price_summary_quantiles_table <- tibble() %>%
+  bind_rows(price_summary_quantiles) %>%
+  gather("quantile", "price", 1:11) %>%
+  mutate(price = round(price, 2))
+
+price_quantiles_table <- basic_table_html(price_summary_quantiles_table,
+                                          column_names = c("Quantile", "Price Per Dive (USD)"),
+                                          fig_caption = "")
+
+save_table(price_quantiles_table,
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_per_dive_quantiles_table.png"))
+ 
+price_quantiles_table
+```
+
+## By Country
+
+```{r}
+# Make a density plot of prices per dive by country
+price_per_dive_country_plot <- price_dat_per_dive %>%
+  ggplot(aes(x = per_dive_price_best, y = country_name, fill = factor(continent, levels = c("Oceania", "Europe", "Asia", "Americas", "Africa"))))+
+  geom_density_ridges(alpha = 0.8)+
+  labs(y = "", x = "Price per Dive (USD)")+
+  scale_fill_brewer(palette = "Set1", name = "", guide = guide_legend(reverse = T))+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_per_dive_country_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_per_dive_by_country_and_continent.png"),
+           width_in = 8.5,
+           height_in = 8)
+
+price_per_dive_country_plot
+```
+
+```{r}
+# Make a density plot of prices per dive by country
+price_per_dive_country_plot_bar <- price_dat_per_dive %>%
+  ggplot(aes(x = per_dive_price_best, y = country_name, fill = factor(continent, levels = c("Oceania", "Europe", "Asia", "Americas", "Africa"))))+
+  geom_boxplot()+
+  labs(y = "", x = "Price per Dive (USD)")+
+  scale_fill_brewer(palette = "Set1", name = "", guide = guide_legend(reverse = T))+
+  scale_x_continuous(label = scales::dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_per_dive_country_plot_bar, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_per_dive_by_country_and_continent_boxplot.png"),
+           width_in = 8.5,
+           height_in = 8)
+
+price_per_dive_country_plot_bar
+```
+
+# Summaries: Liveaboards 
+
+## By Destination (Total Price)
+
+```{r}
+# See what we've got for descriptions
+unique(price_dat_liveaboard$dive_location)
+
+# Do some wrangling
+price_dat_liveaboard_edited <- price_dat_liveaboard %>%
+  mutate(n_dives = case_when(!is.na(n_dives_total) ~ n_dives_total,
+                             n_dives_per_day != "unlimited" ~ n_dive_days * as.numeric(n_dives_per_day)),
+         min_price_per_dive = min_price/n_dives,
+         max_price_per_dive = max_price/n_dives) 
+
+# Get prices by location
+price_dat_liveaboard_location <- price_dat_liveaboard_edited %>%
+  group_by(dive_location) %>%
+  summarize(min_price = min(min_price, na.rm = T),
+            median_price = median(c(min_price, max_price), na.rm = T),
+         max_price = max(max_price, na.rm = T),
+         min_price_per_dive = min(min_price_per_dive, na.rm = T),
+         median_price_per_dive = median(c(min_price_per_dive, max_price_per_dive), na.rm = T),
+         max_price_per_dive = max(max_price_per_dive, na.rm = T)) %>%
+  dplyr::filter(min_price_per_dive != Inf) %>%
+  dplyr::filter(dive_location != "Guadalupe Island")
+
+# And get the totals
+price_dat_liveaboard_total <- price_dat_liveaboard_edited %>%
+  summarize(min_price = min(min_price, na.rm = T),
+            median_price = median(c(min_price, max_price), na.rm = T),
+            max_price = max(max_price, na.rm = T),
+            min_price_per_dive = min(min_price_per_dive, na.rm = T),
+            median_price_per_dive = median(c(min_price_per_dive, max_price_per_dive), na.rm = T),
+            max_price_per_dive = max(max_price_per_dive, na.rm = T)) %>%
+  dplyr::filter(min_price_per_dive != Inf)%>%
+  mutate(dive_location = "All")
+
+# Join back together
+price_dat_liveaboard_location <- price_dat_liveaboard_location %>%
+  bind_rows(price_dat_liveaboard_total) 
+```
+
+```{r}
+price_range_liveaboard_location_total <- price_dat_liveaboard_location %>%
+  ggplot(aes(x = dive_location, y = median_price))+
+  geom_crossbar(aes(ymin = min_price, ymax = max_price), width = 0.5, fill = "red", color = "black")+
+  coord_flip()+
+  labs(x = "Location", y = "Total Price (USD)")+
+  scale_y_continuous(labels = dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_range_liveaboard_location_total, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_liveaboard_totals_by_location.png"),
+           width_in = 8.5,
+           height_in = 8)
+
+price_range_liveaboard_location_total
+```
+
+```{r}
+price_range_liveaboard_location_per_dive <- price_dat_liveaboard_location %>%
+  ggplot(aes(x = dive_location, y = median_price_per_dive))+
+  geom_crossbar(aes(ymin = min_price_per_dive, ymax = max_price_per_dive), width = 0.5, fill = "red", color = "black")+
+  coord_flip()+
+  labs(x = "Location", y = "Price per Dive (USD)")+
+  scale_y_continuous(labels = dollar)+
+  theme_basic()
+
+# Output
+save_plots(price_range_liveaboard_location_per_dive, 
+           file_name = file.path(emlab_project_dir, "figures", "data-prep", "prices_liveaboard_per_dive_by_location.png"),
+           width_in = 8.5,
+           height_in = 8)
+
+price_range_liveaboard_location_per_dive
+```
+

@@ -1,0 +1,934 @@
+---
+output:
+  html_document: default
+
+title: 'Tourism Model Inputs'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+# Source common R file
+source(here::here("common.R"))
+
+# Do we need to rematch our ocean pixel raster to EEZs? This is time consuming, so if the pixel resolution hasn't changed it's best to skip this. 
+rematch_eez <- F
+```
+
+# Introduction
+
+This script creates the supply and demand inputs for the tourism model:
+- Dive suitability by cell
+- Number of extrapolated dives by cell
+- Price by cell (global median price)
+
+It also generates a couple of additional inputs for use in the sensitivity analysis:
+- Price by cell (median price by country/region)
+- Price by cell (spatially interpolated median price)
+
+# Load and Process Data
+
+```{r}
+# Let's turn our ocean data frame back into a raster stack...
+ocean_low_res_moll <- raster::raster(file.path(emlab_data_dir, "ocean-conservation-priorities", "inputs", "ocean_low_res_moll.tif"))
+
+# Get our cell ids
+ocean_df <- ocean_low_res_moll %>% 
+  raster::as.data.frame(xy = T) %>% 
+  set_names(c("lon", "lat", "ocean")) %>% 
+  filter(!is.na(ocean)) %>% 
+  rowid_to_column(var = "cell_id") %>% 
+  as_tibble() %>%
+  relocate(lon, lat, cell_id, ocean)
+
+write_csv(ocean_df, file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "ocean_moll_df.csv"))
+
+# Now we need to turn this back into a raster brick
+ocean_raster <- rasterFromXYZ(ocean_df)
+
+plot(ocean_raster, "ocean")
+```
+
+```{r}
+# Get our non-ocean cells and give them an id too...
+land_df <- ocean_low_res_moll %>%
+  raster::as.data.frame(xy = T) %>%
+  set_names(c("lon", "lat", "ocean")) %>%
+  filter(is.na(ocean))
+
+land_df$cell_id <- seq(max(ocean_df$cell_id)+1, max(ocean_df$cell_id)+nrow(land_df), by = 1)
+
+land_df <- land_df %>%
+  mutate(ocean = 0) %>%
+  as_tibble() %>%
+  relocate(lon, lat, cell_id, ocean)
+
+# Now we need to turn this back into a raster brick
+land_raster <- rasterFromXYZ(land_df)
+
+plot(land_raster, "ocean")
+
+# Now let's lump them back together...
+world_df <- ocean_df %>%
+  bind_rows(land_df) %>%
+  as_tibble() %>%
+  relocate(lon, lat, cell_id, ocean)
+
+write_csv(world_df, file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "world_moll_df.csv"))
+
+# Now we need to turn this back into a raster brick
+world_raster <- rasterFromXYZ(world_df)
+
+plot(world_raster, "ocean")
+```
+
+```{r}
+# Load the cleaned dive database
+dive_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_database_extrapolated_2010_2020_final.csv"))
+
+# Load cleaned price data
+price_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "prices_day_trips_clean.csv"))
+```
+
+```{r}
+# Extract all of our dives cooresponding to marine sites
+dive_dat_marine <- dive_dat %>%
+  dplyr::filter(site_classification == "Marine")
+```
+
+# Inputs #1-2: Dive Suitability and Number of Dives
+
+```{r}
+# Rename
+dives_sites_out <- dive_dat_marine 
+
+# Now let's convert the coordinate system on our dive spot data so it matches up with our ocean pixels... 
+dives_spdf <- SpatialPointsDataFrame(cbind(dives_sites_out$lon, dives_sites_out$lat), as.data.frame(dives_sites_out$dive_id), proj4string=CRS("+proj=longlat"))
+
+dives_spdf_moll <- spTransform(dives_spdf, CRS = prj_moll)
+
+# Now we want to overlay the ocean raster onto our points so we get the ocean cell corresponding to each dive  
+dives_matched_to_cell_id <- cbind(dives_spdf_moll, raster::extract(ocean_raster, dives_spdf_moll)) %>%
+  as.data.frame() %>%
+  rename(dive_id = `dives_sites_out.dive_id`,
+         x_coord = `coords.x1`,
+         y_coord = `coords.x2`)
+
+# I think it would be useful to add info we want back in here... 
+dives_matched_out <- dives_matched_to_cell_id %>%
+  left_join(dives_sites_out, by = "dive_id")
+
+write_csv(dives_matched_out, file.path(emlab_project_dir, "data", "diagnostics", "marine_dives_matched_to_cell_id_raw.csv"))
+```
+
+Figure out which of our marine dives didn't match to a cell and find the nearest pixel. Since the model pixels don't cover every inch of EEZs, we're going to allocate those dives to their nearest ocean pixel so they aren't excluded from the analysis. 
+
+```{r}
+# Find marine dives with no matched cell
+marine_dives_no_cell <- dives_matched_out %>%
+  dplyr::filter(is.na(cell_id))
+
+# Convert to spatial object
+dives_no_cell_spdf <- SpatialPointsDataFrame(cbind(marine_dives_no_cell$lon, marine_dives_no_cell$lat), as.data.frame(marine_dives_no_cell$dive_id), proj4string=CRS("+proj=longlat"))
+
+dives_no_cell_spdf_moll<- spTransform(dives_no_cell_spdf, CRS = prj_moll)
+
+# Output df
+dives_no_cell_match <- tibble()
+
+for(i in 1:nrow(marine_dives_no_cell)){
+  # Get distances
+  dist <- distanceFromPoints(ocean_raster, dives_no_cell_spdf_moll[i,])
+  
+  # Match back to cell ids and find the ocean cell with the shortest distance
+  dist_df <- dist %>%
+    raster::as.data.frame(xy = T) %>%
+    set_names(c("lon", "lat", "distance")) %>%
+    left_join(ocean_df, by = c("lon", "lat")) %>%
+    dplyr::filter(!is.na(cell_id) & ocean == 1) %>%
+    dplyr::filter(distance == min(distance, na.rm = T))
+
+  o <- cbind("dive_id" = marine_dives_no_cell$dive_id[1], dist_df)
+  # Add 
+  dives_no_cell_match <- dives_no_cell_match %>%
+    bind_rows(o)
+}
+
+# Save
+dives_no_cell_match_out <- dives_no_cell_match %>%
+  dplyr::select(dive_id, cell_id, ocean, x_coord = lon, y_coord = lat)
+
+# Now let's remove those dives from our original df and add the newly matched cells back in
+dives_matched_out_fixed <- dives_matched_to_cell_id %>%
+  dplyr::filter(!dive_id %in% marine_dives_no_cell$dive_id) %>%
+  bind_rows(dives_no_cell_match_out) %>%
+  left_join(dives_sites_out, by = "dive_id")
+
+# Save
+write_csv(dives_matched_out_fixed, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "marine_dives_matched_to_cell_id_all.csv"))
+```
+
+## Aggregate by Cell and Make Inputs
+
+Now time to aggregate at the cell level and make our rasters. First let's summarize our raw number of dives data by cell...
+
+```{r}
+# Let's double check that we don't have any not falling within our ocean pixels. We're good. 
+dives_matched_out_marine <- dives_matched_out_fixed %>%
+  dplyr::filter(!is.na(ocean) & ocean == 1 & !is.na(cell_id)) %>%
+  ungroup()
+
+write_csv(dives_matched_out_marine, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "marine_dives_matched_to_cell_id_ocean_only.csv"))
+
+# Just our of curiosity, let's see what we have by cell and year
+dives_by_cell_year_marine <- dives_matched_out_marine %>%
+  group_by(year, cell_id) %>%
+  summarize(n_spots = n_distinct(spot_id),
+            n_dives = n_distinct(dive_id),
+            n_dives_extrap = sum(n_dives_extrap, na.rm = T),
+            n_dives_extrap_min = sum(n_dives_extrap_min, na.rm = T),
+            n_dives_extrap_max = sum(n_dives_extrap_max, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(year, cell_id)
+
+write_csv(dives_by_cell_year_marine, 
+          file.path(emlab_project_dir, "data", "diagnostics", "number_of_marine_sites_and_dives_by_cell_and_year_raw.csv"))
+```
+
+Now let's calculate the total number of marine dives we ended up with and the range
+
+```{r}
+# Global estimate of the number of dives
+n_global_dives <- sum(dive_dat$n_dives_extrap, na.rm = T)
+n_global_dives_range <- c(sum(dive_dat$n_dives_extrap_min, na.rm = T),
+                          sum(dive_dat$n_dives_extrap_max, na.rm = T))
+
+# See what we ended up with in our raster
+n_dives_model <- sum(dives_by_cell_year_marine$n_dives_extrap, na.rm = T) # 33,079,176
+n_dives_model_range <- c(sum(dives_by_cell_year_marine$n_dives_extrap_min, na.rm = T), # 17,100,252
+                         sum(dives_by_cell_year_marine$n_dives_extrap_max, na.rm = T)) # 53,963,910
+
+# Proportion marine
+prop_marine <- n_dives_model/n_global_dives # 65.26%
+```
+
+### Number of dives
+
+```{r}
+# Now let's sum across all years and get the dives per cell
+dives_by_cell_marine <- dives_by_cell_year_marine %>%
+  group_by(cell_id) %>%
+  summarize(n_spots = sum(n_spots, na.rm = T),
+            n_dives = sum(n_dives, na.rm = T),
+            n_dives_extrap = sum(n_dives_extrap, na.rm = T),
+            n_dives_extrap_min = sum(n_dives_extrap_min, na.rm = T),
+            n_dives_extrap_max = sum(n_dives_extrap_max, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(cell_id)
+
+# Make sure we still have the same total
+n_dives_model_diff <- n_dives_model - sum(dives_by_cell_marine$n_dives_extrap, na.rm = T) 
+
+# And finally, match back to our full ocean_df 
+dives_by_cell_out <- ocean_df %>%
+  left_join(dives_by_cell_marine, by = "cell_id")
+
+# Save
+write_csv(dives_by_cell_out %>% dplyr::select(-lat, -lon, -ocean), file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "number_of_marine_sites_and_dives_by_cell.csv"))
+```
+
+```{r}
+barwidth = 15
+barheight = 1
+
+dive_extrap_breaks = c(100,1000,1e4,1e5,1e6)
+```
+
+```{r}
+# Plot
+dives_by_cell_input_plot <- dives_by_cell_out %>%
+  dplyr::filter(!is.na(n_dives_extrap)) %>%
+  ggplot()+
+  map_layer_moll+
+  geom_raster(aes(x = lon, y = lat, fill = n_dives_extrap))+
+  scale_fill_viridis(name = "Dives (thousands, extrapolated)",
+                      trans = "log",
+                      breaks = dive_extrap_breaks, 
+                      labels = dive_extrap_breaks/1e4,
+                      limits = c(100,1e6),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(x = "", y = "", title = paste0("Total number of marine dives included in model pixels (extrapolated): ",
+                                      format(sum(dives_by_cell_out$n_dives_extrap, na.rm = T), big.mark = ",")))
+  
+# Output
+save_plots(dives_by_cell_input_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "model-inputs", "number_of_dives_by_cell.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+dives_by_cell_input_plot
+```
+
+### Dive suitability
+
+Make a dive site suitability input now... 
+
+```{r}
+# Now summarize by cell across all years
+spots_by_cell <- dives_by_cell_out %>%
+  mutate(suitable = ifelse(!is.na(n_spots) & n_spots >= 1, 1, 0))
+
+write_csv(spots_by_cell %>% dplyr::select(cell_id, suitable), file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "dive_suitability_by_cell.csv"))
+```
+
+```{r}
+# Let's get the ocean area that is suitable
+total_ocean_area <- n_distinct(ocean_df$cell_id[ocean_df$ocean == 1])*2500
+suitable_area <- n_distinct(spots_by_cell$cell_id[spots_by_cell$suitable == 1])*2500
+
+# Plot
+suitability_by_cell_input_plot <- spots_by_cell %>%
+  mutate(suitability = case_when(suitable == 0 ~ "No",
+                              suitable == 1 ~ "Yes")) %>%
+  ggplot()+
+  map_layer_moll+
+  geom_raster(aes(x = lon, y = lat, fill = suitability))+
+  guides(fill = guide_legend(title = "Suitable for Recreational Diving?"))+
+  theme_basic_map()+
+  scale_fill_manual(values = c(NA, "aquamarine3"), na.value = NA)+
+  labs(x = "", y = "",
+       title = paste0("Total ocean area suitable for diving: ", percent(suitable_area/total_ocean_area, accuracy = 0.01)))+
+  theme(legend.key=element_rect(colour="black"))
+  
+# Output
+save_plots(suitability_by_cell_input_plot, 
+           file_name = file.path(emlab_project_dir, "figures", "model-inputs", "dive_suitability_by_cell.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+suitability_by_cell_input_plot
+```
+
+```{r}
+# Turn into a real raster so we can use it for masking
+spots_raster <- spots_by_cell %>%
+  dplyr::select(lon, lat, suitable) %>%
+  rasterFromXYZ()
+
+plot(spots_raster, "suitable")
+writeRaster(spots_raster, file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "dive_suitability_by_cell_raster.tif"), overwrite = T)
+```
+
+# Input #3: Price
+
+## Match to cells
+
+```{r}
+# Assign row identifier to the price data so we can match up later... 
+price_df <- price_dat %>%
+  rename(shop_id = ID) %>%
+  rowid_to_column(var = "row_id")
+
+# Now let's convert the coordinate system on our price data so it matches up with our ocean pixels... 
+price_df_filtered <- price_df %>% dplyr::select(lon=longitude, lat=latitude, row_id) %>%
+  dplyr::filter(lon >= -180 & lon <= 180) %>% 
+  dplyr::filter(lat >= -90 & lat <=90)
+
+prices_spdf <- SpatialPointsDataFrame(cbind(price_df_filtered$lon, price_df_filtered$lat), as.data.frame(price_df_filtered$row_id), proj4string=CRS("+proj=longlat"))
+
+prices_spdf_moll <- spTransform(prices_spdf, CRS = prj_moll)
+
+# Now we want to try to overlay the global raster onto our points...  
+prices_matched_to_cell_id <- cbind(prices_spdf_moll, raster::extract(world_raster, prices_spdf_moll)) %>%
+  as.data.frame() %>%
+  rename(row_id = `price_df_filtered.row_id`,
+         lon = `coords.x1`,
+         lat = `coords.x2`)
+
+# Let's add our complete price data back in before saving... 
+prices_matched_out <- prices_matched_to_cell_id %>%
+  left_join(price_df %>% dplyr::select(-longitude, -latitude), by = "row_id")
+
+write_csv(prices_matched_out, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "prices_matched_to_cell_id_world.csv"))
+```
+
+## Calculate Aggregate Prices and Make Inputs
+
+Since we often have multiple prices from the same shop, let's get our "best" per dive price and then aggregate only those. 
+
+```{r}
+# Let's first get the entries where we have 1-tank data - 262 entries
+price_dat_1_dive <- prices_matched_out %>%
+  dplyr::filter(description %in% c("1 Dive")) %>%
+  mutate(per_dive_price_best = price_converted)
+
+# Then 2-tank data for operators where we don't have 1-tank data - 102 entries
+price_dat_2_dive <- prices_matched_out %>%
+  dplyr::filter(description %in% c("2 Dives")) %>%
+  dplyr::filter(!(shop_id %in% price_dat_1_dive$shop_id)) %>%
+  mutate(per_dive_price_best = price_converted/2)
+
+# Then N-tank data for operators where we don't have 1-tank or 2-tank data - 6 entries
+price_dat_n_dive <- prices_matched_out %>%
+  dplyr::filter(description %in% c("N Dives")) %>%
+  dplyr::filter(!(shop_id %in% price_dat_1_dive$shop_id) & !(shop_id %in% price_dat_2_dive$shop_id)) %>%
+  mutate(per_dive_price_best = price_converted/n_dives) %>%
+  dplyr::filter(!is.na(per_dive_price_best))
+
+# Combine - 370 entries total
+price_dat_per_dive <- price_dat_1_dive %>%
+  bind_rows(price_dat_2_dive) %>%
+  bind_rows(price_dat_n_dive)
+```
+
+### Globally Constant Price
+
+```{r}
+# Global median price - $58.75
+median_single_price_globally <- price_dat_per_dive %>%
+  dplyr::filter(is_liveaboard == F) %>% # just in case
+  summarize(median_single_price_global = median(per_dive_price_best, na.rm = T)) %>%
+  dplyr::pull(median_single_price_global)
+
+## Make raster
+price_constant <- spots_by_cell %>%
+  mutate(price = ifelse(suitable == 1, median_single_price_globally, NA)) %>%
+  dplyr::select(cell_id, price)
+
+write_csv(price_constant, file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "price_constant_by_cell.csv"))
+```
+
+```{r}
+price_breaks <- c(0,30,60,90,120)
+price_limits <- c(0,120)
+```
+
+```{r}
+# Now we match back to our ocean df and plot
+prices_constant_map <- price_constant %>%
+  right_join(ocean_df, by = "cell_id") %>%
+  dplyr::filter(!is.na(price)) %>%
+  ggplot()+
+  map_layer_moll+
+  geom_raster(aes(x = lon, y = lat, fill = price))+
+  scale_fill_viridis(name = "Price per Dive (USD)",
+                      breaks = price_breaks,
+                      limits = price_limits,
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(x = "", y = "", title = paste0("Median dive price for all model pixels (USD): ",
+                                      dollar(median(price_constant$price, na.rm = T))))
+  
+# Output
+save_plots(prices_constant_map, 
+           file_name = file.path(emlab_project_dir, "figures", "model-inputs", "price_constant_by_cell.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+prices_constant_map
+```
+
+### Constant Within each Country (or Region)
+
+The second price input we're going to make is one for the sensitivty analysis. Instead of assuming a constant global price, we're going to apply median prices by country or by region (if we don't have price data for that country) to all pixels under that country's jurisdiction. 
+
+```{r}
+# By region
+median_single_price_region <- price_dat_per_dive %>%
+  dplyr::filter(is_liveaboard == F) %>% # just in case
+  mutate(region = countrycode(country_name, "country.name", "region")) %>%
+  group_by(region) %>%
+  summarize(median_single_price_continent = median(per_dive_price_best, na.rm = T)) %>%
+  ungroup()
+
+# By country
+median_single_price_country <- price_dat_per_dive %>%
+  dplyr::filter(is_liveaboard == F) %>% # just in case
+  mutate(country_code_a3 = countrycode(country_name, "country.name", "iso3c")) %>%
+  group_by(country_code_a3) %>%
+  summarize(median_single_price_country = median(per_dive_price_best, na.rm = T)) %>%
+  ungroup()
+```
+
+Approach #1: We need to overlay the EEZ boundaries over our ocean pixels to figure out the best administering country for each ocean pixel. We're going to do this based on the center coordinates of each cell. This process is pretty time consuming (3+ hours), so it is suggested to not rerun this portion unless absolutely needed. This shouldn't change unless a different version of the EEZ boundaries needs to be used or our pixel resolution changes. 
+
+
+```{r}
+shp2raster <- function(shp, mask.raster, label, value, transform = FALSE, proj.from = NA,
+    proj.to = NA, map = TRUE) {
+    require(raster, rgdal)
+    # use transform==TRUE if the polygon is not in the same coordinate system as
+    # the output raster, setting proj.from & proj.to to the appropriate
+    # projections
+    if (transform == TRUE) {
+        proj4string(shp) <- proj.from
+        shp <- spTransform(shp, proj.to)
+    }
+    # convert the shapefile to a raster based on a standardized background raster
+    r <- rasterize(shp, mask.raster)
+                   
+    # set the cells associated with the shapefile to the specified value
+    r[!is.na(r)] <- value
+    # merge the new raster with the mask raster and export to the working
+    # directory as a tif file
+    r <- mask(merge(r, mask.raster), mask.raster, filename = label, format = "GTiff",
+        overwrite = T)
+    # plot map of new raster
+    if (map == TRUE) {
+        plot(r, main = label, axes = F, box = F)
+    }
+    names(r) <- label
+    return(r)
+}
+```
+
+```{r}
+if(rematch_eez){
+  
+# Get EEZ data (marine regions v11)
+eez_sf <- st_read(file.path(emlab_data_dir, "marine-regions-eez-v11", "World_EEZ_v11_20191118_gpkg", "eez_v11.gpkg")) %>%
+  janitor::clean_names() %>%
+  dplyr::select(mrgid,
+                eez_name = geoname,
+                eez_type = pol_type,
+                eez_ter1_name = territory1,
+                eez_ter1_iso3 = iso_ter1,
+                eez_sov1_name = sovereign1,
+                eez_ter2_name = territory2,
+                eez_ter2_iso3 = iso_ter2,
+                eez_sov2_name = sovereign2,
+                eez_ter3_name = territory3,
+                eez_ter3_iso3 = iso_ter3,
+                eez_sov3_name = sovereign3,
+                eez_area_km = area_km2) %>%
+  sf::st_transform(crs = st_crs(prj_moll))
+
+# Fix invalid geometries
+eez_sf <- st_make_valid(eez_sf)
+
+# Figure out which are still not valid - none, we're good
+which(!st_is_valid(eez_sf))
+  
+# Convert the EEZ shapefile to a raster based on the suitability raster
+r <- rasterize(eez_sf, spots_raster)
+
+plot(r, "mrgid")
+
+r1 <- r %>%
+  as.data.frame(xy=T)
+
+# Get EEZ code for each lat/lon
+r_eez <- r1 %>%
+  dplyr::filter(!is.na(layer_mrgid)) %>%
+  group_by(x,y) %>%
+  summarize(mrgid = unique(layer_mrgid)) %>%
+  rename(lon = x, lat = y)
+
+# Now try matching back to our dives by cell and see if we end up with any cells with dives but no EEZ
+test <- dives_by_cell_out %>%
+  left_join(r_eez, by = c("lon", "lat")) # Same number of rows
+
+# Do we have any cells with dives but no EEZ? Yes, 399. 
+test2 <- test %>%
+  dplyr::filter(!is.na(n_dives_extrap) & is.na(mrgid))
+
+}
+```
+
+
+```{r}
+if(rematch_eez){
+  
+# Get EEZ data (marine regions v11)
+eez_sf <- st_read(file.path(emlab_data_dir, "marine-regions-eez-v11", "World_EEZ_v11_20191118_gpkg", "eez_v11.gpkg")) %>%
+  janitor::clean_names() %>%
+  dplyr::select(mrgid,
+                eez_name = geoname,
+                eez_type = pol_type,
+                eez_ter1_name = territory1,
+                eez_ter1_iso3 = iso_ter1,
+                eez_sov1_name = sovereign1,
+                eez_ter2_name = territory2,
+                eez_ter2_iso3 = iso_ter2,
+                eez_sov2_name = sovereign2,
+                eez_ter3_name = territory3,
+                eez_ter3_iso3 = iso_ter3,
+                eez_sov3_name = sovereign3,
+                eez_area_km = area_km2) %>%
+  sf::st_transform(crs = st_crs(prj_moll))
+
+# Fix invalid geometries
+eez_sf <- st_make_valid(eez_sf)
+
+# Figure out which are still not valid
+which(!st_is_valid(eez_sf))
+
+# Get cell coordinates
+cell_coords <- ocean_df %>%
+  distinct(cell_id, lat, lon)
+
+# Make coordinates into spatial points
+cell_coords_sf <- cell_coords %>%
+  st_as_sf(coords = c("lon", "lat"),
+           remove = T)
+
+# Convert coords
+st_crs(cell_coords_sf) <- st_crs(eez_sf)
+
+# Find cells within EEZ boundaries
+cells_by_eez <- st_join(cell_coords_sf, eez_sf, join = st_within)
+
+# Match back to all pixels (HS are NA)
+cells_by_eez_all <- cells_by_eez %>%
+  st_drop_geometry() %>%
+  right_join(ocean_df, by = "cell_id")
+
+}
+```
+
+We apparently need to deal with a few duplicates because of overlapping areas. Examples include: 
+- Jan Mayen Exclusive Economic Zone (8437) and Joint regime area Iceland / Norway (Jan Mayen) (48975)
+- Icelandic Exclusive Economic Zone (5680) and Joint regime area Iceland / Norway (Jan Mayen) (48975)
+- United Kingdom Exclusive Economic Zone (5696) and Joint regime area United Kingdom / Denmark (Faeroe Islands) (48967)
+
+There are more, but it looks like we can just give priority to the 200NM area in all cases. 
+
+```{r}
+if(rematch_eez){
+  
+# Find duplicate cells
+cell_duplicates <- cells_by_eez_all %>%
+  dplyr::filter(!is.na(mrgid)) %>%
+  group_by(cell_id) %>%
+  count() %>%
+  dplyr::filter(n > 1)
+
+# Get details - we need to get this down to 88
+cell_duplicate_details <- cells_by_eez_all %>%
+  dplyr::filter(cell_id %in% c(cell_duplicates$cell_id)) %>%
+  group_by(cell_id) %>%
+  mutate(choose = case_when(eez_type == "200NM" ~ "Y",
+                            eez_type == "Joint regime" ~ "N")) %>%
+  ungroup() %>%
+  dplyr::filter(choose == "Y")
+
+# Now join back together
+cells_by_eez_out <- cells_by_eez_all %>%
+  dplyr::filter(!(cell_id %in% cell_duplicate_details$cell_id)) %>%
+  bind_rows(cell_duplicate_details) %>%
+  arrange(cell_id) %>%
+  mutate(region = countrycode(eez_ter1_iso3, "iso3c", "region")) %>%
+  dplyr::select(-choose)
+
+# Save
+write_csv(cells_by_eez_out, file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "ocean_moll_df_with_eezs.csv"))
+
+}else{
+  
+  cells_by_eez_out <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "ocean_moll_df_with_eezs.csv"))
+  
+}
+```
+
+Now to match. 
+
+```{r}
+# Join price data back
+prices_by_cell_country_region <- spots_by_cell %>%
+  dplyr::select(cell_id, suitable) %>%
+  left_join(cells_by_eez_out %>% dplyr::select(cell_id, mrgid, eez_name, eez_ter1_iso3, region), by = "cell_id") %>%
+  left_join(median_single_price_country, by = c("eez_ter1_iso3" = "country_code_a3")) %>%
+  left_join(median_single_price_region, by = "region") %>%
+  mutate(price = case_when(!is.na(mrgid) & !is.na(median_single_price_country) ~ median_single_price_country,
+                           !is.na(mrgid) & !is.na(median_single_price_continent) ~ median_single_price_continent,
+                           !is.na(mrgid) ~ median_single_price_globally,
+                           suitable == 1 ~ median_single_price_globally)) %>%
+  dplyr::select(cell_id, suitable, price, eez_ter1_iso3, region)
+
+# Let's see if we have any missing values. We're mostly concerned about areas we've deemed suitable that don't have a price
+price_test1 <- prices_by_cell_country_region %>% dplyr::filter(suitable == 1 & is.na(price))
+# Looks like we're good. 
+```
+
+Let's map this before removing prices for non-suitable pixels.
+
+```{r}
+# Now we match back to our ocean df and plot
+prices_country_region_map <- prices_by_cell_country_region %>%
+  right_join(ocean_df, by = "cell_id") %>%
+  dplyr::filter(!is.na(price)) %>%
+  ggplot()+
+  map_layer_moll+
+  geom_raster(aes(x = lon, y = lat, fill = price))+
+  scale_fill_viridis(name = "Price per Dive (USD)",
+                      breaks = price_breaks,
+                      limits = price_limits,
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(x = "", y = "", title = paste0("Median dive price for all EEZ pixels (USD): ",
+                                      dollar(median(prices_by_cell_country_region$price, na.rm = T))))
+  
+# Output
+save_plots(prices_country_region_map, 
+           file_name = file.path(emlab_project_dir, "figures", "model-inputs", "price_country_region_all_by_cell.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+prices_country_region_map
+```
+
+Now, remove prices for non-suitable pixels, plot again, and save. 
+
+```{r}
+# Filter and save
+prices_by_cell_country_region_out <- prices_by_cell_country_region %>%
+  mutate(price = ifelse(suitable == 1, price, NA))
+
+write_csv(prices_by_cell_country_region_out, file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "price_country_region_by_cell.csv"))
+
+# Now we match back to our ocean df and plot
+prices_country_region_suitable_map <- prices_by_cell_country_region_out %>%
+  right_join(ocean_df, by = "cell_id") %>%
+  dplyr::filter(!is.na(price)) %>%
+  ggplot()+
+  map_layer_moll+
+  geom_raster(aes(x = lon, y = lat, fill = price))+
+  scale_fill_viridis(name = "Price per Dive (USD)",
+                      breaks = price_breaks,
+                      limits = price_limits,
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(x = "", y = "", title = paste0("Median dive price for all model pixels (USD): ",
+                                      dollar(median(prices_by_cell_country_region_out$price, na.rm = T))))
+  
+# Output
+save_plots(prices_country_region_suitable_map, 
+           file_name = file.path(emlab_project_dir, "figures", "model-inputs", "price_country_region_suitable_by_cell.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+prices_country_region_suitable_map
+```
+
+### Interpolated
+
+Our last price input (also for the sensitivity analysis) involves spatially interpolating prices based on distance from the dive operators. 
+
+```{r}
+median_prices_by_world_cell <- price_dat_per_dive %>%
+  group_by(cell_id) %>%
+  summarize(median_price = median(per_dive_price_best, na.rm = T)) %>%
+  ungroup()
+```
+
+```{r}
+# Join back to raster
+world_df_w_prices <- world_df %>%
+  left_join(median_prices_by_world_cell, by = "cell_id")
+
+price_raster_raw <- rasterFromXYZ(world_df_w_prices)
+plot(price_raster_raw, "median_price")
+
+# Extract just coords
+coord <- world_df_w_prices %>% dplyr::select(lon, lat)
+price <- world_df_w_prices$median_price
+
+# Remove NA's
+i <- !is.na(world_df_w_prices$median_price)
+xy <- coord[i,]
+v <- price[i]
+
+# Thin plate spline model
+library(fields) 
+tps <- Tps(xy, v)
+p <- raster(price_raster_raw)
+
+# Use model to predict values at all locations
+p <- interpolate(p, tps)
+p <- mask(p, price_raster_raw, maskvalue = 0)
+
+# Plot interpolated raster
+plot(p)
+
+# Convert back to DF and match to cell ids
+price_interpolated_df <- p %>% 
+  raster::as.data.frame(xy = T) %>% 
+  set_names(c("lon", "lat", "price", "ocean", "unknown")) %>% 
+  dplyr::select(lon, lat, price) %>%
+  left_join(world_df, by = c("lon", "lat")) %>%
+  as_tibble() %>%
+  relocate(lon, lat, cell_id, ocean, price)
+
+# Save raw interpolation
+write_csv(price_interpolated_df, file.path(emlab_project_dir, "data", "diagnostics", "prices_interpolated_matched_to_world_cell_id.csv"))
+```
+
+```{r}
+# Now we match back to our ocean df and plot
+prices_interpolated_map_all <- price_interpolated_df %>%
+  dplyr::select(-lon, -lat) %>%
+  dplyr::filter(ocean != 0) %>%
+  right_join(ocean_df, by = "cell_id") %>%
+  dplyr::filter(!is.na(price)) %>%
+  ggplot()+
+  map_layer_moll+
+  geom_raster(aes(x = lon, y = lat, fill = price))+
+  scale_fill_viridis(name = "Price per Dive (USD)",
+                      breaks = price_breaks,
+                      limits = price_limits,
+                     oob = squish,
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(x = "", y = "", title = paste0("Median dive price for all ocean pixels (USD): ",
+                                      dollar(median(price_interpolated_df$price[price_interpolated_df$ocean ==1], na.rm = T))))
+  
+# Output
+save_plots(prices_interpolated_map_all, 
+           file_name = file.path(emlab_project_dir, "figures", "model-inputs", "price_interpolated_all_by_cell.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+prices_interpolated_map_all
+```
+
+Finally, we need to limit our interpolated prices to the cells deemed suitable. 
+
+```{r}
+# Limit prices to suitable cells... 
+price_interpolated_out <- price_interpolated_df %>%
+  dplyr::filter(ocean != 0) %>%
+  dplyr::select(cell_id, price) %>%
+  right_join(ocean_df, by = "cell_id") %>%
+  left_join(spots_by_cell %>% dplyr::select(cell_id, suitable)) %>%
+  mutate(price = ifelse(suitable == 1, price, NA)) %>%
+  dplyr::select(cell_id, suitable, price)
+
+write_csv(price_interpolated_out, file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "price_interpolated_by_cell.csv"))
+```
+  
+```{r}
+# And plot again
+prices_interpolated_map_suitable <- price_interpolated_out %>%
+  right_join(ocean_df, by = "cell_id") %>%
+  dplyr::filter(!is.na(price)) %>%
+  ggplot()+
+  map_layer_moll+
+  geom_raster(aes(x = lon, y = lat, fill = price))+
+  scale_fill_viridis(name = "Price per Dive (USD)",
+                      breaks = price_breaks,
+                      limits = price_limits,
+                     oob = squish,
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(x = "", y = "", title = paste0("Median dive price for all model pixels (USD): ",
+                                      dollar(median(price_interpolated_out$price, na.rm = T))))
+  
+# Output
+save_plots(prices_interpolated_map_suitable, 
+           file_name = file.path(emlab_project_dir, "figures", "model-inputs", "price_interpolated_suitable_by_cell.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+prices_interpolated_map_suitable
+```
+
+And finally, let's combine our final four price plots into one to show the process of creating the sensitivity price layers. 
+
+```{r}
+top <- plot_grid(prices_country_region_map + theme(legend.position = "none"), 
+                 prices_country_region_suitable_map + theme(legend.position = "none"), 
+                 prices_interpolated_map_all + theme(legend.position = "none"), 
+                 prices_interpolated_map_suitable + theme(legend.position = "none"),
+                 ncol = 2,
+                 nrow = 2,
+                 labels = "AUTO",
+                 label_y = 1.02)
+
+prices_combined_map <- plot_grid(top,
+                                 get_legend(prices_interpolated_map_suitable),
+                                 ncol = 1,
+                                 rel_heights = c(1,0.25))
+
+# Output
+save_plots(prices_combined_map, 
+           file_name = file.path(emlab_project_dir, "figures", "model-inputs", "price_sensitivity_combo_plot.png"),
+           width_in = 7.5,
+           height_in = 6.5)
+
+prices_combined_map
+```
+
+# Final Checks
+
+Let's do a final check that we have the same number of cells with data in each of our model inputs. We can then filter these and save them as a .Rds object for Ren. 
+
+```{r}
+# Rename our 5 input layers
+ocean_df_with_eezs <- cells_by_eez_out
+dives_input_raw <- dives_by_cell_out
+suitability_input_raw <- spots_by_cell
+price_constant_input_raw <- price_constant
+price_country_region_input_raw <- prices_by_cell_country_region_out
+price_interpolated_input_raw <- price_interpolated_out
+
+# Dives - 1814 rows
+dives_input <- dives_input_raw %>%
+  dplyr::filter(!is.na(n_dives_extrap) & ocean ==1) %>%
+  dplyr::select(cell_id, n_dives_extrap, n_dives_extrap_min, n_dives_extrap_max)
+
+nrow(dives_input)
+
+# Suitability _ 1814 rows
+suitability_input <- suitability_input_raw %>%
+  dplyr::filter(suitable == 1) %>%
+  dplyr::select(cell_id, suitable)
+
+nrow(suitability_input)
+
+# Prices constant  - 1814 rows
+price_constant_input <- price_constant_input_raw %>%
+  dplyr::filter(!is.na(price)) %>%
+  dplyr::select(cell_id, price)
+
+nrow(price_constant_input)
+
+# Prices country/region - 1814 rows
+price_country_region_input <- price_country_region_input_raw %>%
+  dplyr::filter(!is.na(price)) %>%
+  dplyr::select(cell_id, price, country_iso3 = eez_ter1_iso3, region)
+
+nrow(price_country_region_input)
+
+# Prices interpolated - 1814 rows
+price_interpolated_input <- price_interpolated_input_raw %>%
+  dplyr::filter(!is.na(price)) %>%
+  dplyr::select(cell_id, price)
+
+nrow(price_interpolated_input)
+
+# And save
+save(ocean_df_with_eezs,
+     dives_input,
+     suitability_input,
+     price_constant_input,
+     price_country_region_input,
+     price_interpolated_input,
+     file = file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "tourism_model_input.RData"))
+```
+
+```{r}
+# Which cells have dives, but no EEZ info? 425 cells...
+cells_with_dives_but_no_eez_info <- dives_input %>%
+  dplyr::filter(!is.na(n_dives_extrap)) %>%
+  left_join(ocean_df_with_eezs, by = "cell_id") %>%
+  dplyr::filter(is.na(mrgid))
+```
+

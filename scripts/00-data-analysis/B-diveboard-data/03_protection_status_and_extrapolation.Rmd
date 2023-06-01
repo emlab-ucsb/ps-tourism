@@ -1,0 +1,315 @@
+---
+output:
+  html_document: default
+
+title: 'diveboard.com data: Determine protection status of dive sites/dives'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+# Packages
+library(rgdal)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script determines the protection status of each dive site in our database based on the boundaries of protected areas. 
+
+```{r}
+# Load the dive data matched to site.
+dive_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_dives_matched_to_sites_2010_2020.csv"))
+```
+
+# MPA Classification
+
+The most recent data from MPA Atlas no longer contains the "Fully/Highly Protected" or "Less Protected/Unknown" classifications. Therefore, we need to recreate these ourselves. We can follow the process used by Sala et al. (2021) to recreate these classifications. 
+
+```{r}
+# # Data file from Sala et al. (2021) denoting the final subset of fully/highly protected MPAs used in their analysis
+# fully_highly_protected_mpas_path <- paste0(emlab_data_dir, "ocean-conservation-priorities/inputs/fully_highly_protected_reviewed_MPAs.gpkg")
+# fully_highly_protected_mpas_sf <- st_read(fully_highly_protected_mpas_path)
+# 
+# test_plot <- fully_highly_protected_mpas_sf %>%
+#   ggplot()+
+#   geom_sf(aes(fill = protection_level))
+
+# Read in the old MPA Atlas data (used in Sala et al. (2021))
+mpa_sf_old <- st_read(file.path(emlab_data_dir, "mpa-atlas", "mpatlas_20190910.gdb")) %>%
+   janitor::clean_names()
+
+# Extract non-spatial attributes
+mpa_info_old <- mpa_sf_old %>%
+  st_drop_geometry
+
+# Get implemented and highly protected
+implemented_highly_protected_mpas <- mpa_info_old %>%
+  dplyr::filter(is_mpa == 1,
+                status != "Proposed",
+                implemented == 1,
+                protection_level %in% c("Full, High", "Full, High (Partially Zoned)")) %>%
+  dplyr::filter(mpa_id != 68808627) # remove Pacifico Mexicano Profundo
+
+# Juan previously looked at those that had been designated and identified a few that should be removed. Let's do the same
+designated_highly_protected_mpas <- mpa_info_old %>%
+  dplyr::filter(is_mpa == 1,
+                status == "Designated",
+                protection_level %in% c("Full, High", "Full, High (Partially Zoned)"))
+
+mpas_to_xclude <- c(68808636, # Rapa Nui Rahui
+                    68808621, # Islas del Pacífico de la Península de Baja California Core Zone
+                    68807893, # Ascension
+                    15625) # Natural Park of the Coral Sea
+
+mpas_to_add <- designated_highly_protected_mpas %>%
+  dplyr::filter(!mpa_id %in% implemented_highly_protected_mpas$mpa_id,
+                !mpa_id %in% mpas_to_xclude)
+
+# Get implemented and less protected
+implemented_less_protected_mpas <- mpa_info_old %>%
+  dplyr::filter(is_mpa == 1,
+                status != "Proposed",
+                implemented == 1,
+                protection_level == "Light, Minimal, or Unknown")
+
+# Get designated and unimplemented MPAs
+designated_mpas <- mpa_info_old %>%
+  dplyr::filter(is_mpa == 1,
+                status != "Proposed",
+                implemented != 1)
+
+# Get proposed or commited MPAs
+proposed_mpas <- mpa_info_old %>%
+  dplyr::filter(is_mpa == 1,
+                status == "Proposed")
+
+# Now create new categories based on these
+mpa_info_old_out <- mpa_info_old %>%
+  mutate(category = case_when(mpa_id %in% implemented_highly_protected_mpas$mpa_id ~ "Fully / Highly Protected",
+                              mpa_id %in% mpas_to_add$mpa_id ~ "Fully / Highly Protected",
+                              country == "GAB" ~ "Fully / Highly Protected",
+                              mpa_id %in% implemented_less_protected_mpas$mpa_id ~ "Less Protected / Unknown",
+                              mpa_id == 68808627 ~ "Less Protected / Unknown",
+                              mpa_id %in% designated_mpas$mpa_id ~ "Designated & Unimplemented",
+                              mpa_id %in% proposed_mpas$mpa_id ~ "Proposed / Committed",
+                              T ~ "Other"))
+```
+
+```{r}
+# Read in the new data
+mpa_sf <- st_read(file.path(emlab_data_dir, "mpa-atlas", "mpatlas_20201223_clean", "mpatlas_20201223_clean.shp")) %>%
+  janitor::clean_names()
+
+# Join to recreated classifications and classify a few missing values
+mpa_info <- mpa_sf %>%
+  st_drop_geometry() %>%
+  left_join(mpa_info_old_out %>% dplyr::select(mpa_id, category), by = "mpa_id") %>%
+  mutate(category = case_when(!is.na(category) ~ category,
+                              is_mpa == 0 ~ "Not MPA",
+                              mpa_id %in% c(68817257, 68817256, 68817246, 68817245) ~ "Less Protected / Unknown", # Weddell Sea & Western Antarctic Peninsula
+                              T ~ "Less Protected / Unknown"))
+
+# Check to make sure we don't have any left unclassified - we're good
+mpa_unknowns <- mpa_info %>%
+  dplyr::filter(is.na(category)) %>%
+  arrange(country)
+```
+
+## Prepare MPA Atlas Spatial Data
+
+```{r}
+# Fix invalid geometries
+mpa_sf <- st_make_valid(mpa_sf)
+
+# Figure out which are still not valid
+which(!st_is_valid(mpa_sf))
+
+# Remove the two features that still aren't valid
+mpa_sf_out <- mpa_sf %>%
+  slice(-9241, -10441) %>%
+  left_join(mpa_info %>% dplyr::select(mpa_id, category), by = "mpa_id")
+```
+
+# Global Number of Dives Extrapolation
+
+From our previous exploration of the diveboard data, we know we have sites that we weren't able to match to either an EEZ or land area - We're going to remove these from the database before doing our extrapolation. If a site matches both an EEZ area and a land area (likely right on the coast), we're going to give priority to the EEZ area and consider the site marine. 
+
+```{r}
+# Filter data
+dive_dat_use <- dive_dat %>%
+  dplyr::filter(is_eez | is_land) %>%
+  mutate(site_classification = case_when(is_eez ~ "Marine",
+                                         is_land & !is.na(country_type) ~ "Freshwater",
+                                         T ~ "Unknown"))
+
+# Check to make sure we don't have any unknown sites - we're good. 
+unique(dive_dat_use$site_classification)
+```
+
+```{r}
+# Global estimate of the number of dives
+n_global_dives <- 50700000
+n_global_dives_range <- c(26200000, 82700000)
+
+# Get current totals 
+n_dives <- n_distinct(dive_dat_use$dive_id)
+
+# Get number of equivalent dives
+n_dives_equivalent <- round(n_global_dives/n_dives, 0)
+n_dives_equivalent_range <- round(n_global_dives_range/n_dives, 0)
+
+# Filter for year and get proportion of total dives by site
+dive_dat_extrap <- dive_dat_use %>%
+  mutate(n_dives_extrap = n_dives_equivalent,
+         n_dives_extrap_min = n_dives_equivalent_range[1],
+         n_dives_extrap_max = n_dives_equivalent_range[2])
+
+  # group_by(spot_id) %>%
+  # summarize(n_dives = n_distinct(dive_id)) %>%
+  # ungroup() %>%
+  # mutate(total_dives = sum(n_dives, na.rm = T),
+  #        prop_dives = n_dives/total_dives,
+  #        n_dives_extrap = round(prop_dives*n_global_dives))
+```
+
+# Determine Protection Status
+
+```{r}
+# Extract the spot IDs and lat/lon
+site_coords <- dive_dat_extrap %>%
+  distinct(spot_id, lat, lon)
+
+# Make coordinates into spatial points
+site_coords_sf <- site_coords %>%
+  st_as_sf(coords = c("lon", "lat"),
+           remove = T)
+```
+
+## Overlay dive sites with MPA boundaries from MPA Atlas
+
+```{r}
+### Convert our coords
+st_crs(site_coords_sf) <- st_crs(mpa_sf_out)
+
+### Find sites within the MPA boundaries
+sites_by_mpa_atlas <- st_join(site_coords_sf, mpa_sf_out, join = st_within)
+
+### Match back to dive dataset
+matched_sites_mpa_atlas <- sites_by_mpa_atlas %>%
+  st_drop_geometry() %>%
+  left_join(dive_dat_extrap, by = "spot_id")
+
+### Correct one designation
+matched_sites_mpa_atlas_out <- matched_sites_mpa_atlas %>%
+  mutate(category = ifelse(category == "Not MPA", "Less Protected / Unknown", category))
+
+write_csv(matched_sites_mpa_atlas_out, file.path(emlab_project_dir, "data", "diagnostics", "diveboard_sites_matched_to_mpa_atlas.csv"))
+```
+
+## Deal with sites with multiple designations
+
+We have some sites that will be covered my multiple overlapping designations (e.g., national vs. regional), and thus we now have duplicates. In these cases we want to keep the protected area with the highest protection status. Let's consider the following: 
+- category: “Fully/Highly Protected”, “Less Protected/Unknown”, “Designated & Unimplemented”, “Proposed/Committed”
+
+```{r}
+### How many unique sites do we have? - 43,023
+unique_sites <- length(unique(matched_sites_mpa_atlas_out$spot_id))
+
+### Extract entries corresponding to multiple protected area designations - 37,749
+duplicate_sites <- matched_sites_mpa_atlas_out %>%
+  group_by(spot_id) %>%
+  dplyr::filter(n_distinct(mpa_id) > 1) %>%
+  ungroup() %>%
+  arrange(spot_id, mpa_id, wdpa_id, designat_2, iucn_categ, status, is_mpa, implemente, rep_m_area, category) %>%
+  mutate(multiple_designations = T)
+  
+### We now want to create some rankings to prioritize the protected area characteristics 
+duplicate_entries_ranking <- duplicate_sites %>%
+  mutate(category_factor = factor(category,
+                                  levels = c("Fully / Highly Protected", 
+                                             "Less Protected / Unknown", 
+                                             "Designated & Unimplemented", 
+                                             "Proposed / Committed"))) %>%
+  mutate(category_n = as.numeric(category_factor))
+
+### Entries we want to end up with - 11,838 sites
+length(unique(duplicate_entries_ranking$spot_id))
+
+### Now let's start filtering... protection status first
+best_protection_cat <- duplicate_entries_ranking %>%
+  group_by(spot_id) %>%
+  dplyr::filter(category_n == min(category_n, na.rm = T)) %>%
+  ungroup()
+
+### Now let's go for mpa/implementation/no take area
+best_mpa_take <- best_protection_cat %>%
+  group_by(spot_id) %>%
+  dplyr::filter(is_mpa == max(is_mpa, na.rm = T),
+                implemente == max(implemente, na.rm = T)) %>%
+  ungroup()
+
+### And finally, let's keep the oldest designation
+oldest <- best_mpa_take %>%
+  group_by(spot_id) %>%
+  dplyr::filter(status_yea == min(status_yea, na.rm = T)) %>%
+  dplyr::filter(wdpa_id == min(wdpa_id, na.rm = T)) %>%
+  dplyr::filter(mpa_id == min(mpa_id, na.rm = T)) %>%
+  ungroup()
+
+### Keep those - 30,699 entries
+duplicate_entries_keep <- oldest %>%
+  dplyr::select(-category_n, -category_factor)
+
+# How many sites is that - 11,835
+n_distinct(duplicate_entries_keep$spot_id)
+
+### Figure out which we missed (3 sites)
+missing_entries <- duplicate_entries_ranking %>%
+  dplyr::filter(!spot_id %in% duplicate_entries_keep$spot_id) %>%
+  group_by(spot_id) %>%
+  dplyr::filter(is_mpa == max(is_mpa, na.rm = T)) %>%
+  ungroup() %>%
+  dplyr::select(-category_n, -category_factor)
+
+### Final subset to output - 30,702 entries
+duplicate_entries_keep <- duplicate_entries_keep %>%
+  bind_rows(missing_entries)
+
+# Check that we have all sites - 11,838 - we're good. 
+n_distinct(duplicate_entries_keep$spot_id)
+```
+
+Now we need to remove these from our original data frame, and add the kept rows back in. 
+
+```{r}
+### Add everything back together
+all_sites <- matched_sites_mpa_atlas_out %>%
+  dplyr::filter(!(spot_id %in% duplicate_entries_keep$spot_id)) %>%
+  mutate(multiple_designations = F) %>%
+  bind_rows(duplicate_entries_keep) %>%
+  arrange(spot_id)
+
+### We're good, back to our original number of sites - 43,023 - we're good
+n_distinct(all_sites$spot_id)
+```
+
+```{r}
+# Match back to original dataset
+dive_dat_protection <- dive_dat_extrap %>%
+  left_join(all_sites %>%
+            dplyr::select(dive_id, spot_id, mpa_id, wdpa_id, wdpa_name = name, iucn_cat = iucn_categ, status, category), by = c("dive_id", "spot_id"))
+
+# Add "Not Protected" Classification to our marine sites
+dive_dat_protection_out <- dive_dat_protection %>%
+  mutate(category_use = case_when(site_classification == "Marine" & !is.na(category) ~ category,
+                                  site_classification == "Marine" & is.na(category) ~ "Not MPA",
+                                  site_classification == "Freshwater" ~ "Not Marine"))
+  
+
+# Save
+write_csv(dive_dat_protection_out, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diveboard_database_extrapolated_2010_2020_final.csv"))
+```

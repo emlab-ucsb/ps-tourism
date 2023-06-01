@@ -1,0 +1,482 @@
+---
+output:
+  html_document: default
+
+title: 'Figures for "Marine protected areas for dive tourism"'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+# Packages
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script generates Fig. 1 and Fig 2. for "Marine protected areas for dive tourism" submitted to Science in April 2023. 
+
+```{r}
+# Load plots on number of dives by EEZ area and by protection status
+load(file.path(emlab_project_dir, "figures", "data-prep", "fig_1_a.Rdata"))
+load(file.path(emlab_project_dir, "figures", "data-prep", "fig_1_b.Rdata"))
+
+# Load model input raster of extrapolated number of dives 
+n_dives_input <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "number_of_marine_sites_and_dives_by_cell.csv"))
+
+ocean_df <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "model-inputs", "files", "ocean_moll_df.csv"))
+```
+
+# Fig. 1
+
+We've already made panels A and B of this figure in `scripts/B-diveboard-data/04_dive_database_summary.Rmd`. 
+
+```{r}
+# Panel A
+fig_1_a <- dives_extrap_by_protection_country_marine_plot
+
+fig_1_a
+```
+
+```{r}
+# Panel B 
+fig_1_b
+```
+
+```{r}
+fig_1_breaks <- c(300, 3000, 30000, 300000, 3000000)
+fig_1_labels <- format(fig_1_breaks, big.mark = ",", scientific = F)
+
+# Global map of extrapolated number of dives by pixel
+dive_map_global_pixel <- ocean_df %>% 
+  left_join(n_dives_input, by = "cell_id") %>%
+  dplyr::filter(!is.na(n_dives_extrap)) %>%
+  ggplot() +
+  geom_tile(aes(x = lon, y = lat, fill = n_dives_extrap)) +
+  map_layer_moll+
+  scale_fill_viridis(name = "Dives (# per year, extrapolated)",
+                     trans = "log",
+                     breaks = fig_1_breaks,
+                     labels = fig_1_labels,
+                     limits = c(300,3000000),
+                     option = "D",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5))+
+  theme_basic_map()+
+  labs(x = "", y = "")+
+  theme(legend.position = "bottom")
+
+dive_map_global_pixel
+```
+
+```{r}
+# Get bounding box coordinates for area we want to plot
+c_coords = data.frame(lon = c(-100, -100, -60, -60, -100),
+                       lat = c(-10, 30, 30, -10, -10)) %>%
+  st_as_sf(coords = c("lon", "lat"),
+           crs = 4326) %>%
+  st_transform(crs = st_crs(prj_moll)) %>%
+  st_bbox() # xmin, ymin, xmax, ymax
+
+# Global map of extrapolated number of dives (subplot B)
+fig_1_c <- dive_map_global_pixel +
+  coord_sf(xlim = c(c_coords[1], c_coords[3]),
+           ylim = c(c_coords[2], c_coords[4]))+
+  theme(panel.border = element_rect(color = "black", fill = NA))
+
+fig_1_c
+```
+
+```{r}
+# Get bounding box coordinates for area we want to plot
+d_coords = data.frame(lon = c(-10, -10, 40, 40, -10),
+                       lat = c(20, 70, 70, 20, 20)) %>%
+  st_as_sf(coords = c("lon", "lat"),
+           crs = 4326) %>%
+  st_transform(crs = st_crs(prj_moll)) %>%
+  st_bbox() # xmin, ymin, xmax, ymax
+
+# Global map of extrapolated number of dives]
+fig_1_d <- dive_map_global_pixel +
+  coord_sf(xlim = c(d_coords[1], d_coords[3]),
+           ylim = c(d_coords[2], d_coords[4])) +
+  theme(panel.border = element_rect(color = "black", fill = NA))
+
+
+fig_1_d
+```
+
+
+```{r}
+# Get bounding box coordinates for area we want to plot
+e_coords = data.frame(lon = c(95, 95, 145, 145, 95),
+                       lat = c(-20, 25, 25, -20, -20)) %>%
+  st_as_sf(coords = c("lon", "lat"),
+           crs = 4326) %>%
+  st_transform(crs = st_crs(prj_moll)) %>%
+  st_bbox() # xmin, ymin, xmax, ymax
+
+# Global map of extrapolated number of dives]
+fig_1_e <- dive_map_global_pixel +
+  coord_sf(xlim = c(e_coords[1], e_coords[3]),
+           ylim = c(e_coords[2], e_coords[4]))+
+  theme(panel.border = element_rect(color = "black", fill = NA))
+
+
+fig_1_e
+```
+
+
+```{r}
+# Combine subplots
+map_row_2 <- cowplot::plot_grid(fig_1_c + theme(legend.position = "none"),
+                                fig_1_d + theme(legend.position = "none"),
+                                fig_1_e + theme(legend.position = "none"),
+                                nrow = 1,
+                                rel_widths = c(1,1,1.01),
+                                labels = c("C", "D", "E"),
+                                label_y = 1.1)
+
+map_row_2
+```
+
+```{r}
+# Now add bigger map
+map_column <- cowplot::plot_grid(fig_1_b + theme(legend.position = "none") + labs(title = ""),
+                                 map_row_2,
+                                 cowplot::get_legend(fig_1_b +
+                                                       theme(legend.margin = margin(t = -0.05, unit='cm'))),
+                                 nrow = 3,
+                                 labels = c("B", ""),
+                                 rel_heights = c(5,3.5,1))
+
+map_column
+```
+
+```{r}
+# Now add left plot
+fig_1 <- cowplot::plot_grid(fig_1_a,
+                            map_column,
+                            nrow = 1,
+                            rel_widths = c(1,1.5),
+                            labels = c("A", "B"),
+                            label_y = 1)
+
+save_plots(fig_1, 
+           file_name = file.path(emlab_project_dir, "figures", "paper", "fig_1.png"),
+           width_in = 10.5,
+           height_in = 6.7)
+
+fig_1
+```
+# Fig. 2
+
+For now this is just going to be a mock-up, but we will replace this with real data once updated. 
+
+```{r}
+### Load in file with % change in tourism value (change in dives * price) by cell 
+# [placeholder]
+
+# Let's simulate some data for now
+fig_2_dat <- n_dives_input %>%
+  mutate(change_in_dives = runif(1)*n_dives_extrap,
+         change_in_value = change_in_dives*60)
+  
+# fig_2_dat_country <- sites_by_protection_country %>%
+#   mutate(change_in_dives = runif(1)*n_dives_extrap,
+#          change_in_value = change_in_dives*60)
+```
+
+```{r}
+# Make a plot of arbitrary winners/losers
+driver_color_pal <- c("#6bd2db", "#0c457d", "#7ad151")
+
+# # Dive sites by protection status (subplot A)
+# fig_2_a <- fig_2_dat_country %>%
+#   mutate(driver = case_when(protection_level == "Unprotected" ~ "Biomass",
+#                             protection_level == "Not highly protected" ~ "Biodiversity",
+#                             protection_level == "Highly protected" ~ "MPA name effect")) %>% 
+#   group_by(country_code, country_name) %>%
+#   mutate(total_change_in_value = sum(change_in_value)) %>%
+#   ungroup() %>%
+#   mutate(site_rank = dense_rank(desc(total_change_in_value))) %>%
+#   dplyr::filter(site_rank <= 40) %>%
+#   mutate(display_name = ifelse(is_SID, paste0(country_name, "*"), country_name)) %>%
+#   ggplot()+
+#   aes(x = fct_reorder(display_name, total_change_in_value), y = change_in_value/1e6, fill = driver)+
+#   geom_bar(stat = "identity", width = 0.8)+
+#   theme_linedraw()+
+#   labs(x = "Country or territory", y = "Change in dive revenue ($ per year, millions)", fill = "Driver of benefits")+
+#   scale_y_continuous(expand = c(0,0), limits = c(0,150), labels = comma)+
+#   theme(legend.position = "top")+
+#   scale_fill_manual(values = driver_color_pal,
+#                     guide = guide_legend(reverse = T, title.position = "top", title.hjust = 0.5,
+#                                          direction = "vertical"))+
+#   coord_flip()+
+#   theme(plot.margin = unit(c(0.2,1.5,0.2,0.2), "cm"))
+# 
+# fig_2_a
+```
+
+```{r}
+barwidth = 15
+barheight = 1
+
+# Global map of change in biomass by pixel
+biomass_map_global_pixel <- ocean_df %>% 
+  left_join(fig_2_dat, by = "cell_id") %>%
+  dplyr::filter(!is.na(change_in_dives)) %>%
+  ggplot() +
+  geom_tile(aes(x = lon, y = lat, fill = change_in_dives/1e3)) +
+  map_layer_moll+
+  scale_fill_viridis(name = "Increase in biomass (%)",
+                     breaks = c(0, 100, 200, 300),
+                     labels = c(0, 100, 200, 300),
+                     limits = c(0,300),
+                     oob = squish,
+                     option = "C",
+                     guide = guide_colorbar(title.position = "top", title.hjust = 0.5, barwidth = barwidth, barheight = barheight))+
+  theme_basic_map()+
+  labs(x = "", y = "")+
+  theme(legend.position = "bottom")
+
+biomass_map_global_pixel
+```
+
+```{r}
+biomass_c <- biomass_map_global_pixel +
+  coord_sf(xlim = c(c_coords[1], c_coords[3]),
+           ylim = c(c_coords[2], c_coords[4]))+
+  theme(panel.border = element_rect(color = "black", fill = NA))
+```
+
+
+```{r}
+# Make subplots
+biomass_d <- biomass_map_global_pixel +
+  coord_sf(xlim = c(d_coords[1], d_coords[3]),
+           ylim = c(d_coords[2], d_coords[4]))+
+  theme(panel.border = element_rect(color = "black", fill = NA))
+```
+
+```{r}
+biomass_e <- biomass_map_global_pixel +
+  coord_sf(xlim = c(e_coords[1], e_coords[3]),
+           ylim = c(e_coords[2], e_coords[4]))+
+  theme(panel.border = element_rect(color = "black", fill = NA))
+
+biomass_e
+```
+
+
+```{r}
+# Combine subplots
+fig_2_map_row_2 <- cowplot::plot_grid(biomass_c + theme(legend.position = "none"), 
+                                biomass_d + theme(legend.position = "none"), 
+                                biomass_e + theme(legend.position = "none"),
+                                nrow = 1,
+                                rel_widths = c(1,1,1.01),
+                                labels = c("B", "C", "D"),
+                                label_y = 1.1)
+
+fig_2_map_row_2
+```
+
+
+```{r}
+# Now add bigger map
+fig_2<- cowplot::plot_grid(biomass_map_global_pixel + theme(legend.position = "none"),
+                           fig_2_map_row_2,
+                           cowplot::get_legend(biomass_map_global_pixel),
+                           nrow = 3,
+                           labels = c("A", ""),
+                           rel_heights = c(7,3.5,1))
+
+# # Now add left plot
+# fig_2 <- cowplot::plot_grid(fig_2_a + theme(legend.position = "bottom"),
+#                             fig_2_map_column,
+#                             nrow = 1,
+#                             rel_widths = c(1,2),
+#                             labels = c("A)", "B)"),
+#                             label_y = 1)
+
+save_plots(fig_2, 
+           file_name = file.path(emlab_project_dir, "figures", "paper", "fig_2.png"),
+           width_in = 7.5,
+           height_in = 8)
+
+fig_2
+```
+
+# ```{r}
+# # Combine subplots
+# fig_2b_map_col_1 <- cowplot::plot_grid(fig_1_c + theme(legend.position = "none") + labs(title = "Caribbean Sea"), 
+#                                        fig_1_d + theme(legend.position = "none") + labs(title = "Europe"),
+#                                        fig_1_e + theme(legend.position = "bottom") + 
+#                                          labs(title = "Western Pacific Ocean", fill = "Biomass") +
+#                                          ,
+#                                        rel_heights = c(1,1,1.5),
+#                                        ncol = 1)
+# 
+# fig_2b_map_col_2 <- cowplot::plot_grid(fig_1_c + theme(legend.position = "none"), 
+#                                        fig_1_d + theme(legend.position = "none"),
+#                                        fig_1_e + theme(legend.position = "bottom") + labs(fill = "Biodiversity"),
+#                                        rel_heights = c(1,1,1.5),
+#                                        ncol = 1)
+# 
+# fig_2b_map_col_3 <- cowplot::plot_grid(change_in_value_c + theme(legend.position = "none"), 
+#                                        change_in_value_d + theme(legend.position = "none"),
+#                                        change_in_value_e + theme(legend.position = "bottom"),
+#                                        rel_heights = c(1,1,1.5),
+#                                        ncol = 1)
+# 
+# fig_2b_map_col <- cowplot::plot_grid(fig_2b_map_col_1,
+#                                      fig_2b_map_col_2,
+#                                      fig_2b_map_col_3,
+#                                      ncol = 3)
+# 
+# fig_2b_map_col
+# 
+# ggsave(paste0(results_dir, "fig_2_alt_2.png"), fig_2b_map_col, height = 8, width = 7.5, units = "in")
+# ```
+
+```{r}
+# # Need to rotate the ocean df to match up with our rotated projection
+# ocean_df_rot_sf <- st_as_sf(x = ocean_df, 
+#                         coords = c("lon", "lat"),
+#                         crs = st_crs(prj)) %>%
+#   st_transform(crs = st_crs(prj_rot))
+# 
+# ocean_df_rot <- do.call(rbind, st_geometry(ocean_df_rot_sf)) %>% 
+#   as_tibble() %>% 
+#   setNames(c("lon","lat")) %>%
+#   bind_cols(st_drop_geometry(ocean_df_rot_sf))
+# 
+# # Get bounding box coordinates for area of Western Pacific we want to plot
+# wp_coords = data.frame(lon = c(30, 30, 300, 300, 30), 
+#                        lat = c(-20, 20, 20, -20, -20)) %>%
+#   st_as_sf(coords = c("lon", "lat"),
+#            crs = 4326) %>%
+#   st_transform(crs = st_crs(prj_rot)) %>%
+#   st_bbox() # xmin, ymin, xmax, ymax
+#   
+# # Plot
+# dive_map_pacific <- ocean_df_rot %>%
+#   left_join(dives_marine_extrap, by = "cell_id") %>%
+#   ggplot()+
+#   map_layer_pacific+
+#   geom_tile(aes(x = lon, y = lat, fill = n_dives_extrap)) +
+#   scale_fill_gradientn(colours=viridis(7),
+#                        na.value = NA,
+#                        limits=c(0,200000),
+#                        labels=c("0", "50,000", "100,000", "150,000", "\U02265 200,000"),
+#                        oob=squish,
+#                        guide = guide_colorbar(keyheight = unit(2.5, units = "mm"), 
+#                                               keywidth=unit(10, units = "mm"), 
+#                                               label.position = "bottom", 
+#                                               title.position = 'top', nrow=1, title.hjust = 0.5))+
+#   labs(fill = "Dives (per year, extrapolated)") + 
+#        #title = paste0("Total marine dives (extrapolated, annual): ", comma(sum(dives_marine_extrap$n_dives_extrap))))+
+#   theme_linedraw()+
+#   theme(axis.title = element_blank(),
+#         axis.text = element_blank(),
+#         legend.position = "bottom",
+#         legend.key.width = unit(2, "cm"),
+#         plot.title = element_text(size= 13, hjust=0.5, color = "#4e4d47"))+
+#   coord_sf(xlim = c(wp_coords[1], wp_coords[3]),
+#            ylim = c(wp_coords[2], wp_coords[4]))
+# 
+# dive_map_pacific
+```
+
+
+
+```{r}
+# # Data files that Ren has
+# suitability_input <- read_csv(paste0(edited_data_dir, "dive_suitability_by_cell.csv"))
+# n_dives_input <- read_csv(paste0(edited_data_dir, "number_of_dives_extrapolated_by_cell.csv"))
+# country_classification <- read.csv(here("data","UN_territory_classification.csv"))
+```
+
+```{r}
+# # Load the dive suitability layer
+# dive_suitability <- read.csv(here("data","dive","dive_suitability_by_cell.csv"))
+# head(dive_suitability)
+# dim(dive_suitability)#1997 dive sites!!!
+# #Fraction and absolute size of global ocean suitable for diving
+# dim(dive_suitability)[1]*100/dim(transformed_stockdistrib)[1] #this is the fraction of ocean with diving.
+# dim(dive_suitability)[1]*50*50# this is in km2. This is the total area of ocean surface with diving.
+# 
+# #check other files
+# #number of dives
+# number_of_dives <- read.csv(here("data","dive","number_of_dives_extrapolated_by_cell.csv"))
+# head(number_of_dives)
+# dim(number_of_dives)#1997
+# sum(number_of_dives$n_dives_extrap)#50700017 dives.
+# hist(number_of_dives$n_dives_extrap)
+# ggplot(data.frame(log(number_of_dives$n_dives_extrap)), aes(log(number_of_dives$n_dives_extrap))) +     # Histogram with logarithmic axis
+#   geom_histogram(bins=10)
+# 
+# #load country classification (SIDS, developing, etc.)
+# country_classification <- read.csv(here("data","UN_territory_classification.csv"))
+# country_classification$SIDS <-as.factor(country_classification$SIDS)
+# 
+# #plot number of dives per country
+# dive_per_country <- left_join(number_of_dives,cell_id_with_country,by="cell_id")
+# 
+# head(dive_per_country)
+# plot_number_dives <- dive_per_country %>% group_by(territory1) %>% summarize(n_dive=sum(n_dives_extrap)) %>% left_join(country_classification,by="territory1") %>%
+#   arrange(-n_dive) %>% slice(1:50) %>%
+#   #ggplot(aes(x=as.factor(territory1),y=n_dive)) + geom_col()
+#   ggplot(aes(x = reorder(as.factor(territory1), n_dive/1000000), y = n_dive/1000000, fill=SIDS))+
+#   geom_bar(stat = "identity")+ theme_classic()+#theme_minimal()+#theme_classic()+
+#   coord_flip()+ labs(y = "Dive per year, million")+theme(axis.title.y = element_blank())
+# plot_number_dives
+# 
+# 
+# #plot number of dive pixels per country
+# plot_number_divepexels_country <- dive_per_country %>% group_by(territory1) %>% summarize(n_divesites=n()) %>% filter(territory1!="NA") %>%
+#   arrange(-n_divesites) %>% slice(1:50) %>%
+#   #ggplot(aes(x=as.factor(territory1),y=n_dive)) + geom_col()
+#   ggplot(aes(x = reorder(as.factor(territory1), n_divesites), y = n_divesites))+
+#   geom_bar(stat = "identity")+ theme_classic()+#theme_minimal()+#theme_classic()+
+#   coord_flip()+ labs(y = "Number of dive site pixel")+theme(axis.title.y = element_blank())
+# plot_number_divepexels_country
+# 
+# 
+# #number of pixels per territory
+# ndivepixel_territory <- cell_id_with_country  %>% group_by(territory1) %>% summarize(total_territory_pixel=n())
+# #plot % of the eez that are number of dive sites
+# plot_number_divesites <- dive_per_country %>% group_by(territory1) %>% summarize(n_divesites=n()) %>% left_join(ndivepixel_territory,by="territory1") %>% mutate(percent_divearea = n_divesites*100/total_territory_pixel) %>% filter(territory1!="NA") %>%
+#   arrange(-percent_divearea) %>% slice(1:50) %>%
+#   #ggplot(aes(x=as.factor(territory1),y=n_dive)) + geom_col()
+#   ggplot(aes(x = reorder(as.factor(territory1), percent_divearea), y = percent_divearea))+
+#   geom_bar(stat = "identity")+ theme_classic()+#theme_minimal()+#theme_classic()+
+#   coord_flip()+ labs(y = "% of EEZ that is dive sites")+theme(axis.title.y = element_blank())
+# plot_number_divesites
+# 
+# ##--correlate # of dives with on-reef values
+# #number of dive per country
+# ndive_per_country <- dive_per_country %>% group_by(territory1) %>% summarize(n_dive=sum(n_dives_extrap))
+# head(ndive_per_country)
+# dim(ndive_per_country)
+# #on-reef tourism value per territory from Spalding et al.
+# onreef_values <- read.csv(here("data","Tourvalues_Spalding.csv")) 
+# head(onreef_values)
+# dim(onreef_values)
+# #now perform inner join
+# correlate_dive_and_value <- merge(x=ndive_per_country,y=onreef_values,by="territory1")
+# dim(correlate_dive_and_value)
+# head(correlate_dive_and_value)
+# 
+# plot_correlate_dive_and_value<- ggplot(correlate_dive_and_value, aes(x=OnReef/1000000,y=n_dive/1000000))+geom_point()+geom_smooth(method = lm,colour="gray")+
+#   geom_text_repel(aes(OnReef/1000000, n_dive/1000000, label = territory1), size = 3)+ 
+#   labs(x="On-reef tourism value, billion US$", y = "Dive per year, million")+theme_classic()
+# plot_correlate_dive_and_value
+# 
+# plotme<-cowplot::plot_grid(plot_number_divepexels_country, plot_number_dives,plot_correlate_dive_and_value,NULL, ncol = 2, labels = "AUTO",rel_heights=c(1,0.5))
+# plotme
+# ggsave(here("figures","main","plot_number_dives.jpg"),plotme, width = 20, height = 20, units = "cm")
+```

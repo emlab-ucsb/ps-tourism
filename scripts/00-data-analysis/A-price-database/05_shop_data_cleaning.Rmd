@@ -1,0 +1,495 @@
+---
+output:
+  html_document: default
+
+title: 'Dive Operator Metadata - Cleaning'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Packages
+library(readxl)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script cleans the metadata collected for each dive operator as part of the price data collection. 
+
+Lesley and Bergen each collected data on 535 distinct operators, for a total initial sample size of 1,070. After removing duplicates introduced for QA/QC, we ended up with a total of 1,021 distinct operators sampled. 
+
+```{r}
+# Load original dive operator database
+diving_center_dat<- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diving_center_database_clean.csv"))
+
+# Load shop metadata
+shop_dat_lesley_1_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "2021_07_28_lesley_price_data_collection_phase1.xlsx"), sheet = 1) %>%
+  rename(advertised_species = `advertised species`)
+shop_dat_bergen_1_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "2021_07_28_bergen_price_data_collection_phase1.xlsx"), sheet = 1)
+shop_dat_lesley_2_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "2021_08_18_lesley_price_data_collection_phase2.xlsx"), sheet = 1) %>%
+  rename(advertised_species = `advertised species`)
+shop_dat_bergen_2_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "2021_08_18_bergen_price_data_collection_phase2.xlsx"), sheet = 1) %>%
+  rename(advertised_species = `advertised species`)
+```
+
+# Cleaning: Basic Criteria
+
+On the shop metadata side, there's not a ton of cleaning that we will need to do because many of these fields were T/F. We may however need to fill in missing values or deal with cases where values exist when they shouldn't. We should also go ahead and generate statistics related to the proportion of sampled operators that fulfill the criteria for our study. 
+
+```{r}
+# Step #1 - Remove duplicate entries (this was my error when generating the first sample - should have used replace = F)
+shop_dat_lesley_edit <- shop_dat_lesley_1_raw %>%
+  bind_rows(shop_dat_lesley_2_raw) %>%
+  mutate(source = "Lesley") %>%
+  dplyr::filter(is_duplicate == "F") 
+
+n_lesley <- nrow(shop_dat_lesley_edit)
+
+shop_dat_bergen_edit <- shop_dat_bergen_1_raw %>%
+  bind_rows(shop_dat_bergen_2_raw) %>%
+  mutate(source = "Bergen") %>%
+  dplyr::filter(is_duplicate == "F") 
+
+n_bergen <- nrow(shop_dat_bergen_edit)
+
+shop_dat_edit <- shop_dat_lesley_edit %>%
+  bind_rows(shop_dat_bergen_edit)
+```
+
+```{r}
+# Look at what we've got... 
+shop_dat_edit %>%
+  count(is_valid_url,
+        is_readable,
+        is_dive_related,
+        offers_marine_dive_services)
+
+# Looks like we need to correct a few columns because we have "T's" after a "F" that should have been disqualifying. Most of these appear to be early entries while the data collectors were figuring things out, but let's check. 
+```
+
+Let's first look at and clean up entries where the URL was marked as not being valid.
+
+```{r}
+# Make sure we have no unexpected values here
+unique(shop_dat_edit$is_valid_url)
+
+# Look at our entries without a valid URL (73 entries)
+shop_dat_edit %>%
+  dplyr::filter(is_valid_url == "F")
+
+# Looks like the few cases where additional columns were filled out past this point were all in the first two days and because the error page gave some message (shop closed, coming soon, etc.). Looks like we might have a couple that are real shops though (website coming soon) that we want to flag for later. 
+potentially_valid_IDs <- c(16101, 4154)
+
+# We can go ahead and set the rest to NAs
+shop_dat_edit <- shop_dat_edit %>%
+  dplyr::mutate_at(vars(c("original_site_language", "google_translate_used", "is_readable", "is_dive_related", "offers_marine_dive_services", "is_travel_agency", "business_name_if_different", "business_location", "is_PADI", "is_NAUI", "is_SSI_TDI", "other_cert_agencies", "advertised_species", "advertised_attractions", "has_species_or_attraction_photos")), ~replace(., is_valid_url == "F", NA))
+```
+
+Next, let's look at and clean up entries that were marked as not readable. 
+
+```{r}
+# Make sure we have no unexpected values here
+unique(shop_dat_edit$is_readable)
+
+# Filter for not readable (45 entries)
+shop_dat_edit %>%
+  dplyr::filter(is_readable == "F")
+
+# It looks like some of these might actually be real dive shops, but these were cases where Google translate didn't work or the website was misbehaving. Let's first flag the IDs of those that we might actually be able to revisit in case there's time later, and then set the rest of our values to NAs. 
+potentially_valid_IDs <- c(potentially_valid_IDs, 15664, 476, 4701, 4622, 6628, 1974, 3171, 3269, 10227, 9111, 3110)
+
+# We can go ahead and set the rest to NAs
+shop_dat_edit <- shop_dat_edit %>%
+  dplyr::mutate_at(vars(c("is_dive_related", "offers_marine_dive_services", "is_travel_agency", "business_name_if_different", "business_location", "is_PADI", "is_NAUI", "is_SSI_TDI", "other_cert_agencies", "advertised_species", "advertised_attractions", "has_species_or_attraction_photos")), ~replace(., is_readable == "F", NA))
+```
+
+Third, let's look at and clean up entries that were marked as not being dive related.
+
+```{r}
+# Make sure we have no unexpected values here
+unique(shop_dat_edit$is_dive_related)
+
+# Filter for not dive related (140 entries)
+shop_dat_edit %>%
+  dplyr::filter(is_dive_related == "F")
+
+# It looks like only a couple of these might actually be real dive shops. Let's first flag the IDs of those that we might actually be able to revisit in case there's time later, and then set the rest of our values to NA's. 
+potentially_valid_IDs <- c(potentially_valid_IDs, 2685, 11976, 1798)
+
+# Manually correct one entry with a couple of missing values where there should be values
+shop_dat_edit$original_site_language[shop_dat_edit$ID == 3203] <- "Portuguese"
+shop_dat_edit$google_translate_used[shop_dat_edit$ID == 3203] <- "T"
+shop_dat_edit$is_readable[shop_dat_edit$ID == 3203] <- "T"
+shop_dat_edit$notes[shop_dat_edit$ID == 3203] <- "Store selling freediving equipment"
+
+# We can go ahead and set the rest to NAs
+shop_dat_edit <- shop_dat_edit %>%
+  dplyr::mutate_at(vars(c("offers_marine_dive_services", "is_travel_agency", "business_name_if_different", "business_location", "is_PADI", "is_NAUI", "is_SSI_TDI", "other_cert_agencies", "advertised_species", "advertised_attractions", "has_species_or_attraction_photos")), ~replace(., is_dive_related == "F", NA))
+```
+
+And finally let's check on those not offering marine dive services. 
+
+```{r}
+# Make sure we have no unexpected values here - We do have an Unknown here... Let's look at that one first. 
+unique(shop_dat_edit$offers_marine_dive_services)
+
+# Filter for "unknown" on offering marine dive services (5 entries)
+shop_dat_edit %>%
+  dplyr::filter(offers_marine_dive_services == "Unknown")
+
+# It looks like all of these are likely real shops, but probably don't offer marine diving (and don't have prices anyways). Let's go ahead and change these to "F". 
+shop_dat_edit$offers_marine_dive_services[shop_dat_edit$offers_marine_dive_services == "Unknown"] <- "F"
+
+# Filter for not offering dive services (277 entries)
+shop_dat_edit %>%
+  dplyr::filter(offers_marine_dive_services == "F")
+
+# In addition to those we just looked at, it looks like most of the rest of these are likely real dive shops, but don't offer marine diving (lakes, rivers, quarries only) and thus we do want to remove them from our data. We will therefore go ahead and replace any filled in values with NAs just to be consistent so we're only analyzing marine diving. 
+shop_dat_edit <- shop_dat_edit %>%
+  dplyr::mutate_at(vars(c("is_travel_agency", "business_name_if_different", "business_location", "is_PADI", "is_NAUI", "is_SSI_TDI", "other_cert_agencies", "advertised_species", "advertised_attractions", "has_species_or_attraction_photos")), ~replace(., offers_marine_dive_services == "F", NA))
+```
+
+Let's now generate another summary table and see if we've cleaned up a lot of the weird values. 
+
+```{r}
+# Look at what we've got... 
+shop_dat_edit %>%
+  count(is_valid_url,
+        is_readable,
+        is_dive_related,
+        offers_marine_dive_services)
+
+# Looks like there are only two odd entries where we have a valid URL and the site is marked as readable, but we've got NAs in the later columns. Let's look at those quickly 
+shop_dat_edit %>%
+  dplyr::filter(is_readable == "T" & is.na(is_dive_related))
+
+# Both appear to be real dive shops. The first has a problem with cookies so you can't easily access the content on the site, and the second just looks like it's missing a value. 
+
+# Set the first to "not readable" and replace any later values with NAs
+shop_dat_edit <- shop_dat_edit %>%
+  dplyr::mutate_at(vars(c("is_readable")), ~replace(., ID == 9993, "F")) %>%
+  dplyr::mutate_at(vars(c("is_dive_related", "offers_marine_dive_services", "is_travel_agency", "business_name_if_different", "business_location", "is_PADI", "is_NAUI", "is_SSI_TDI", "other_cert_agencies", "advertised_species", "advertised_attractions", "has_species_or_attraction_photos")), ~replace(., ID == 9993, NA))
+
+# Add the missing "T" to the second
+shop_dat_edit$is_dive_related[shop_dat_edit$ID == 13775] <- "T"
+```
+
+```{r}
+# Let's save the table of potentially valid shops to check out later (17 entries)
+potentially_valid <- shop_dat_edit %>%
+  dplyr::filter(ID %in% potentially_valid_IDs) %>%
+  arrange(ID, source)
+
+write_csv(potentially_valid, file.path(emlab_project_dir, "data", "diagnostics", "data-prep", "prices_qa_qc_potentially_valid_operators.csv"))
+```
+
+Final check before we move on...
+
+```{r}
+# Final look...
+shop_dat_edit %>%
+  count(is_valid_url,
+        is_readable,
+        is_dive_related,
+        offers_marine_dive_services)
+
+# Everything looks good!
+```
+
+# Price Collector QA/QC
+
+Before we start filtering our shop data set and generating summaries, we need to remove half of the intentional duplicates we introduced for QA/QC purposes. Let's look at those here. 
+
+```{r}
+# Let's see how many of our main data points match
+qa_qc_list <- shop_dat_edit %>%
+  group_by(ID) %>%
+  mutate(n_entries = n()) %>%
+  dplyr::filter(n_entries == 2) %>%
+  ungroup()
+
+write_csv(qa_qc_list, file.path(emlab_project_dir, "data", "diagnostics", "data-prep", "prices_qa_qc_shops_all.csv"))
+
+shop_dat_qa_qc <- qa_qc_list %>%
+  group_by(ID) %>%
+  summarize(same_url = case_when(n_distinct(is_valid_url) == 1 ~ T,
+                              T ~ F),
+         same_readable = case_when(n_distinct(is_readable) == 1 ~ T,
+                                   T ~ F),
+         same_dive_related = case_when(n_distinct(is_dive_related) == 1 ~ T,
+                                       T ~ F),
+         same_offers_marine_dive_services = case_when(n_distinct(offers_marine_dive_services) == 1 ~ T,
+                                                      T ~ F)) %>%
+  mutate(all_same = case_when(same_url & same_readable & same_dive_related & same_offers_marine_dive_services ~ T,
+                              T ~ F))
+
+# Let's extract the shops that had some differences (14 out of 49 operators)
+no_match <- shop_dat_edit %>%
+  dplyr::filter(ID %in% shop_dat_qa_qc$ID[shop_dat_qa_qc$all_same == F]) %>%
+  arrange(ID, source) %>%
+  mutate(choose = NA)
+
+write_csv(no_match, file.path(emlab_project_dir, "data", "diagnostics", "data-prep", "prices_qa_qc_shops_no_match.csv"))
+
+### Manually review and correct some characteristics on these
+# 3672
+no_match$is_dive_related[no_match$ID == 3672] <- "T"
+no_match$offers_marine_dive_services[no_match$ID == 3672] <- "F"
+no_match$notes[no_match$ID == 3672] <- "Freediving only"
+no_match$choose[no_match$ID == 3672 & no_match$source == "Bergen"] <- T
+
+# 3982
+no_match$offers_marine_dive_services[no_match$ID == 3982] <- "T"
+no_match$is_PADI[no_match$ID == 3982] <- "T"
+no_match$notes[no_match$ID == 3982] <- "Marine diving assumed based on location"
+no_match$choose[no_match$ID == 3982 & no_match$source == "Lesley"] <- T
+
+# 5057
+no_match$business_location[no_match$ID == 5057] <- "Berching"
+no_match$is_PADI[no_match$ID == 5057] <- "T"
+no_match$is_NAUI[no_match$ID == 5057] <- "F"
+no_match$is_SSI_TDI[no_match$ID == 5057] <- "F"
+no_match$choose[no_match$ID == 5057 & no_match$source == "Bergen"] <- T
+
+# 5057
+no_match$business_location[no_match$ID == 5057] <- "Berching"
+no_match$is_PADI[no_match$ID == 5057] <- "T"
+no_match$is_NAUI[no_match$ID == 5057] <- "F"
+no_match$is_SSI_TDI[no_match$ID == 5057] <- "F"
+no_match$choose[no_match$ID == 5057 & no_match$source == "Bergen"] <- T
+
+# 5382
+no_match$business_location[no_match$ID == 5382] <- "Kuopio"
+no_match$choose[no_match$ID == 5382 & no_match$source == "Bergen"] <- T
+
+# 6255
+no_match$choose[no_match$ID == 6255 & no_match$source == "Bergen"] <- T
+
+# 6909
+no_match$offers_marine_dive_services[no_match$ID == 6909] <- "F"
+no_match$notes[no_match$ID == 6909] <- "Commercial dive training only"
+no_match$choose[no_match$ID == 6909 & no_match$source == "Lesley"] <- T
+
+# 7626
+no_match$choose[no_match$ID == 7626 & no_match$source == "Bergen"] <- T
+
+# 8302
+no_match$is_valid_url[no_match$ID == 8302] <- "F"
+no_match$original_site_language[no_match$ID == 8302] <- NA
+no_match$google_translate_used[no_match$ID == 8302] <- NA
+no_match$is_readable[no_match$ID == 8302] <- NA
+no_match$is_dive_related[no_match$ID == 8302] <- NA
+no_match$offers_marine_dive_services[no_match$ID == 8302] <- NA
+no_match$is_travel_agency[no_match$ID == 8302] <- NA
+no_match$choose[no_match$ID == 8302 & no_match$source == "Bergen"] <- T
+
+# 10690
+no_match$choose[no_match$ID == 10690 & no_match$source == "Lesley"] <- T
+
+# 11601
+no_match$notes[no_match$ID == 11601] <- "Retail only"
+no_match$choose[no_match$ID == 11601 & no_match$source == "Bergen"] <- T
+
+# 12306
+no_match$choose[no_match$ID == 12306 & no_match$source == "Lesley"] <- T
+
+# 15288
+no_match$choose[no_match$ID == 15288 & no_match$source == "Bergen"] <- T
+
+# 15369
+no_match$choose[no_match$ID == 15369 & no_match$source == "Bergen"] <- T
+
+# 15627
+no_match$choose[no_match$ID == 15627 & no_match$source == "Lesley"] <- T
+
+# Keep entries we chose from the non-matching ones
+no_match_keep <- no_match %>%
+  dplyr::filter(choose) %>%
+  dplyr::select(-choose)
+
+# Just for consistency, let's make sure that any later values are set to NAs for those that don't offer marine diving
+no_match_keep <- no_match_keep %>%
+  dplyr::mutate_at(vars(c("is_travel_agency", "business_name_if_different", "business_location", "is_PADI", "is_NAUI", "is_SSI_TDI", "other_cert_agencies", "advertised_species", "advertised_attractions", "has_species_or_attraction_photos")), ~replace(., offers_marine_dive_services == "F", NA))
+
+# And finally, for our QA/QC entries that matched, we'll randomly select which entries to keep in our sample 
+shop_dat_qa_qc_keep <- shop_dat_edit %>%
+  dplyr::filter(ID %in% shop_dat_qa_qc$ID[shop_dat_qa_qc$all_same == T]) %>%
+  arrange(ID, source) %>%
+  group_by(ID) %>%
+  sample_n(1) %>%
+  ungroup() %>%
+  bind_rows(no_match_keep)
+```
+
+## Remove QA/QC duplicates
+
+```{r}
+# Get our final list of shops to keep
+shop_dat_out <- shop_dat_edit %>%
+  dplyr::filter(!(ID %in% qa_qc_list$ID)) %>%
+  bind_rows(shop_dat_qa_qc_keep) 
+
+# Seemingly, we've corrected all duplicates
+find_duplicates <- shop_dat_out %>%
+  group_by(ID) %>%
+  summarize(n_row = n()) %>%
+  dplyr::filter(n_row == 2)
+```
+
+# Cleaning: Other Information
+
+## Language Standardization
+
+Let's quickly make sure the original site languages are cleaned up so we can use these later if needed
+
+```{r}
+# Manually standardize some languages
+shop_dat_final <- shop_dat_out %>%
+  mutate(original_site_language = str_to_sentence(original_site_language),
+         original_site_language = case_when(original_site_language == "Ukranian" ~ "Ukrainian",
+                                            original_site_language == "Italy" ~ "Italian",
+                                            original_site_language == "Chinese (traditional)" ~ "Chinese",
+                                            original_site_language == "German, english" ~ "English",
+                                            original_site_language == "English, french" ~ "French",
+                                            T ~ original_site_language))
+
+# Check
+unique(shop_dat_final$original_site_language)
+# Looks good!
+```
+
+## Certification agency standardization
+
+Now let's try to extract our manually entered certification agencies and fix any spelling mistakes here.
+
+```{r}
+# Get list of other agencies
+other_agencies <- shop_dat_final %>%
+  dplyr::select(ID, other_cert_agencies) %>%
+  mutate(other_cert_agencies = str_split(other_cert_agencies, ", ")) %>%
+  unnest(other_cert_agencies) %>%
+  group_by(ID) %>% 
+  mutate(key = row_number()) %>% 
+  spread(key, other_cert_agencies) %>%
+  gather("num", "agency", -ID) %>%
+  dplyr::filter(!is.na(agency))
+
+# There appear to be quite a few on here that are not actually certification agencies
+unique(other_agencies$agency)
+
+# Ones to keep: 
+# SDI/TDI/ERDI/PFI - Scuba Diving International/Technical Diving International/Emergency Response Diving International/Performance Freediving International
+# CMAS/FEDAS/NOB/TSSF - Confédération Mondiale des Activités Subaquatiques (French)/Federación Española de Actividades Subacuáticas (Spanish)/Turkish Underwater Sports Federation/Nederlandse Onderwatersport Bond/International Aquanautic Club
+# FFESSM - French Federation of Underwater Study and Sport (French)
+# ANMP - Association Nationale des Moniteurs de Plongée (French)
+# IANTD - International Association of Nitrox and Technical Divers
+# NDL - National Dive League (British)
+# GUE - Global Underwater Explorers
+# DDI - Disabled Divers International
+# ACUC - American and Canadian Underwater Certifications Inc. 
+# BSAC - British Subaquatic Club 
+# ESA - European Scuba Agency (Italian/German/Spanish/British)
+# UTD - Unified Team Diving
+# RAID - The Rebreather Association of International Divers
+# SNSI - Scuba Nitrox Safety International
+# PSS - Professional Scuba Schools
+# IART - International Association of Rebreather Trainers (German)
+# IAHD - International Association for Handicapped Divers
+# ANDI - American Nitrox Divers International
+# PSAI - Professional Scuba Association International
+# STARS - ??? (but it's clearly a thing)
+# Note: DSAT and EFR are PADI subsidiaries 
+
+other_agencies <- other_agencies %>%
+  mutate(agency_keep = case_when(agency %in% c("SDI", "TDI", "PFI", "ERDI") ~ "SDI/TDI/ERDI/PFI",
+                                 agency %in% c("CMAS", " CMAS") ~ "CMAS",
+                                 agency %in% c("TSSF") ~ "TSSF",
+                                 agency %in% c("FEDAS", "FECDAS") ~ "FEDAS",
+                                 agency %in% c("Nadd / Cmas") ~ "NADD",
+                                 agency %in% c("NOB") ~ "NOB",
+                                 agency %in% c("FFESSM") ~ "FFESSM",
+                                 agency %in% c("IAC") ~ "IAC",
+                                 agency %in% c("ANMP") ~ "ANMP",
+                                 agency %in% c("IANTD", "IANT", "Iantd") ~ "IANTD",
+                                 agency %in% c("NDL") ~ "NDL",
+                                 agency %in% c("GUE") ~ "GUE",
+                                 agency %in% c("DDI") ~ "DDI",
+                                 agency %in% c("ACUC") ~ "ACUC",
+                                 agency %in% c("BSAC", "Possibly BSAC???") ~ "BSAC",
+                                 agency %in% c("ESA") ~ "ESA",
+                                 agency %in% c("UTD") ~ "UTD",
+                                 agency %in% c("RAID", "Raid") ~ "RAID",
+                                 agency %in% c("SNSI") ~ "SNSI",
+                                 agency %in% c("PSS") ~ "PSS",
+                                 agency %in% c("IART") ~ "IART",
+                                 agency %in% c("IAHD") ~ "IAHD",
+                                 agency %in% c("ANDI") ~ "ANDI",
+                                 agency %in% c("PSAI") ~ "PSAI",
+                                 agency %in% c("STARS net-diver school", "STARS") ~ "STARS")) %>% 
+  mutate(value = "T") %>%
+  dplyr::select(-num) %>%
+  dplyr::filter(!is.na(agency_keep)) %>%
+  arrange(agency_keep) %>%
+  distinct(ID, agency_keep)
+
+# Which are our most frequent other agencies? 
+other_agencies %>%
+  group_by(agency_keep) %>%
+  summarize(count = n_distinct(ID)) %>%
+  arrange(desc(count))
+
+# CMAS, SDI/TDI, BSAC, IANTD, FFESSM, GUE.... 
+
+# Let's add distinct columns for a couple of these
+other_agencies_out <- other_agencies %>%
+  group_by(ID) %>%
+  summarize(is_CMAS = ifelse(any(agency_keep == "CMAS"), "T", "F"),
+            is_SDI_TDI = ifelse(any(agency_keep == "SDI/TDI/ERDI/PFI"), "T", "F"),
+            is_BSAC = ifelse(any(agency_keep == "BSAC"), "T", "F"),
+            is_IANTD = ifelse(any(agency_keep == "IANTD"), "T", "F"),
+            is_CMAS_fed = ifelse(any(agency_keep %in% c("TSSF", "FEDAS", "NADD", "NOB", "FFESSM")), "T", "F"),
+            other_cert_agencies = paste0(agency_keep[!(agency_keep %in% c("CMAS", "SDI/TDI/ERDI/PFI", "BSAC", "IANTD"))], 
+                                    collapse = ", "))
+
+# And now let's add everything back to our main dataset
+shop_dat_final_save <- shop_dat_final %>%
+  rename(is_SSI = is_SSI_TDI, 
+         other_cert_agencies_raw = other_cert_agencies) %>%
+  left_join(other_agencies_out, by = "ID") %>%
+  relocate(any_of(c("is_CMAS", "is_CMAS_fed", "is_SDI_TDI", "is_BSAC", "is_IANTD", "other_cert_agencies")), .after = is_SSI) %>%
+  mutate(across(is_PADI:is_IANTD, ~ ifelse(offers_marine_dive_services == "T" & is.na(.x), "F", .x))) %>%
+  mutate(other_cert_agencies = ifelse(offers_marine_dive_services == "T" & other_cert_agencies == "", NA, other_cert_agencies)) %>%
+  mutate(is_SDI_TDI = ifelse(is_SSI == "T", "T", is_SDI_TDI)) 
+
+# Final check for duplicates
+length(unique(shop_dat_final_save$ID))
+nrow(shop_dat_final_save)
+
+# We're good - no duplicates. 
+```
+
+<!-- ## Output clean version -->
+
+<!-- ```{r} -->
+<!-- write_csv(shop_dat_final_save %>% dplyr::select(-source), file.path(emlab_project_dir, "data", "02-processed", "data-prep", "sampled_operators_metadata_clean.csv")) -->
+<!-- ``` -->
+
+## Output clean version with all original scraped characteristics attached
+
+```{r}
+# Select columns to keep from the original dataset
+shop_dat_final_extended <- diving_center_dat %>%
+  dplyr::select(ID, continent, latitude, longitude, type_of_business = type_of_business_new, territory_type, country_name = country_scraped, country_iso3 = country_code_scraped_a3, sov_name = sovereignt, sov_iso3 = sov_code_a3, country_pop = population_est, country_gdp = gdp_median_est, country_economy_category = economy_category, country_income_group = income_grp) %>%
+  right_join(shop_dat_final_save, by = "ID")
+
+# Save this just in case
+write_csv(shop_dat_final_extended %>% dplyr::select(-source), file.path(emlab_project_dir, "data", "02-processed", "data-prep", "sampled_operators_metadata_clean.csv"))
+```
+
+

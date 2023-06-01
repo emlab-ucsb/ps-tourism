@@ -1,0 +1,343 @@
+---
+output:
+  html_document: default
+
+title: 'Price Data - Cleaning'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Packages
+library(readxl)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script cleans the price data collected from the websites of different dive operators. 
+
+Lesley and Bergen each collected data on 535 distinct operators, for a total initial sample size of 1,070. After removing duplicates introduced for QA/QC, we ended up with a total of 1,021 distinct operators sampled. Of those, we were able to collect price data pertaining to marine dive activities for 352 different shops.  
+
+```{r}
+# Load cleaned shop metadata where all characteristics have been added back in 
+sampled_operator_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "sampled_operators_metadata_clean.csv"))
+
+## Then we have the price data
+price_dat_lesley_1_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "2021_07_28_lesley_price_data_collection_phase1.xlsx"), sheet = 2) %>%
+  mutate(n_dives = as.character(n_dives))
+price_dat_bergen_1_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "2021_07_28_bergen_price_data_collection_phase1.xlsx"), sheet = 2) %>%
+  mutate(n_dives = as.character(n_dives))
+price_dat_lesley_2_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "2021_08_18_lesley_price_data_collection_phase2.xlsx"), sheet = 2) %>%
+  mutate(n_dives = as.character(n_dives))
+price_dat_bergen_2_raw <- readxl::read_xlsx(file.path(emlab_project_dir, "data", "01-raw", "prices", "2021_08_18_bergen_price_data_collection_phase2.xlsx"), sheet = 2) %>%
+  mutate(n_dives = as.character(n_dives))
+
+# Load index of QA/QC data
+qa_qc_list <- read_csv(file.path(file.path(emlab_project_dir, "data", "diagnostics", "data-prep", "prices_qa_qc_shops_all.csv")))
+```
+
+# Cleaning: Remove entries with no price data
+
+```{r}
+# Step #1 - Combine datasets and fill empty rows where needed
+price_dat_lesley_edit <- price_dat_lesley_1_raw %>%
+  bind_rows(price_dat_lesley_2_raw) %>%
+  mutate(source = "Lesley") %>%
+  mutate(has_marine_dive_prices = case_when(has_marine_dive_prices == "T" ~ "T",
+                                            has_marine_dive_prices == "F" ~ "F",
+                                            is.na(has_marine_dive_prices) & is.na(price) ~ "F",
+                                            T ~ "T")) %>%
+  fill(ID, business_name, website) %>%
+  dplyr::filter(has_marine_dive_prices == "T") %>%
+  fill(currency)
+
+price_dat_bergen_edit <- price_dat_bergen_1_raw %>%
+  bind_rows(price_dat_bergen_2_raw) %>%
+  mutate(source = "Bergen") %>%
+  mutate(has_marine_dive_prices = case_when(has_marine_dive_prices == "T" ~ "T",
+                                            has_marine_dive_prices == "F" ~ "F",
+                                            is.na(has_marine_dive_prices) & is.na(price) ~ "F",
+                                            T ~ "T")) %>%
+  fill(ID, business_name, website) %>%
+  dplyr::filter(has_marine_dive_prices == "T")
+
+# Combine
+price_dat_edit <- price_dat_lesley_edit %>%
+  bind_rows(price_dat_bergen_edit)
+
+# We have 8 entries with no prices 
+entries_to_check <- price_dat_edit %>%
+  dplyr::filter(is.na(price))
+
+# Remove these
+price_dat_edit <- price_dat_edit %>%
+  dplyr::filter(!is.na(price))
+
+# How many unique shops did we get price data from
+n_shops_price_dat <- n_distinct(price_dat_edit$ID)
+```
+
+Let's load our main database so we can add continent and other descriptors to our data and then start breaking these apart into some descriptive stats. 
+
+```{r}
+# Characteristics to keep 
+sampled_operator_dat_keep <- sampled_operator_dat %>%
+  dplyr::select(ID, continent, sov_name, sov_iso3, country_name, country_iso3, latitude, longitude, country_economy_category, country_income_group, type_of_business)
+
+# Add them to our new dataset
+price_dat_extended <- price_dat_edit %>%
+  left_join(sampled_operator_dat_keep, by = "ID")
+```
+
+# Cleaning: Currancy conversions
+
+Since our input data were recorded in the local currency, and we need to convert those so that they are in US dollars.
+
+```{r}
+# Let's see what we've got...
+list_of_all_currencies <- price_dat_extended %>%
+  distinct(sov_name, country_name, currency) %>%
+  mutate(to = "USD") %>%
+  mutate(from = currency)
+
+# Let's make manual corrections to the "to" columns so we have the correct units for the currency conversion
+list_of_all_currencies$from[list_of_all_currencies$from == "Rand"] <- "ZAR"
+list_of_all_currencies$from[list_of_all_currencies$from == "Dinars"] <- "TND"
+list_of_all_currencies$from[list_of_all_currencies$from %in% c("Euro", "Euros")] <- "EUR"
+list_of_all_currencies$from[list_of_all_currencies$from == "HK"] <- "HKD"
+list_of_all_currencies$from[list_of_all_currencies$from == "SR"] <- "SAR"
+list_of_all_currencies$from[list_of_all_currencies$from == "TL"] <- "TRY"
+list_of_all_currencies$from[list_of_all_currencies$from %in% c("yen", "Yen")] <- "JPY"
+list_of_all_currencies$from[list_of_all_currencies$from == "฿"] <- "THB"
+list_of_all_currencies$from[list_of_all_currencies$from == "₹"] <- "INR"
+list_of_all_currencies$from[list_of_all_currencies$from %in% c("Rubles", "rubles")] <- "RUB"
+list_of_all_currencies$from[list_of_all_currencies$from == "A$"] <- "AUD"
+list_of_all_currencies$from[list_of_all_currencies$from == "pp?"] <- "PHP"
+list_of_all_currencies$from[list_of_all_currencies$from == "JD"] <- "JOD"
+list_of_all_currencies$from[is.na(list_of_all_currencies$from) & list_of_all_currencies$country_scraped == "Latvia"] <- "LVL"
+list_of_all_currencies$from[list_of_all_currencies$from %in% c("RPS", "Rp")] <- "IDR" # not sure about this one, but RPS is definitely not correct - results in $5000 single dives... 
+list_of_all_currencies$from[list_of_all_currencies$from == "R" & list_of_all_currencies$country_scraped == "South Africa"] <- "ZAR"
+list_of_all_currencies$from[list_of_all_currencies$from == "R" & list_of_all_currencies$country_scraped == "Brazil"] <- "BRL"
+list_of_all_currencies$from[list_of_all_currencies$from == "Mexican Pesos"] <- "MXN"
+list_of_all_currencies$from[list_of_all_currencies$from == "$"] <- "USD"
+list_of_all_currencies$from[list_of_all_currencies$from %in% c("Bht", "Bat", "baht", "TNV")] <- "THB"
+list_of_all_currencies$from[list_of_all_currencies$from == "RM"] <- "MYR"
+list_of_all_currencies$from[list_of_all_currencies$from == "RM"] <- "MYR"
+list_of_all_currencies$from[is.na(list_of_all_currencies$from)] <- "USD" # seems this was a US one
+
+# # Now let's get our unique values to convert
+# currency_to_change <- list_of_all_currencies %>%
+#   distinct(to, from) %>%
+#   arrange(to)
+# 
+# # Now let's try and get conversion rates
+# currency_exchange_rates <- getQuote(paste0(currency_to_change$from, currency_to_change$to, "=X"))
+# 
+# # Now keep only the exchange rate
+# currency_conversion_dat <- currency_to_change %>%
+#   bind_cols(currency_exchange_rates %>% dplyr::select(exchange_rate = Last)) %>%
+#   arrange(from)
+# 
+# # And manually add one that's missing (6/22/22)
+# currency_conversion_dat$exchange_rate[currency_conversion_dat$from == "NIS"] <- 0.29
+# 
+# # Save
+# write_csv(currency_conversion_dat, file.path(emlab_project_dir, "data" , "02-processed", "data-prep", "currency_conversion_dat_06_22_22.csv"))
+
+# Going to read in the file from 2022 since conversion rates have changed since then
+currency_conversion_dat <- read_csv(file.path(emlab_project_dir, "data" , "02-processed", "data-prep", "currency_conversion_dat_06_22_22.csv"))
+```
+
+Now we need to make those same corrections to currency to our price data and apply the exchange rates
+
+```{r}
+# Now let's check our matched currencies to make sure we're not missing any
+currency_match <- list_of_all_currencies %>%
+  dplyr::select(sov_name, country_name, currency, currency_clean = from) %>%
+  distinct() %>%
+  arrange(currency_clean)
+  
+# Add them to our new dataset and convert prices
+price_dat_extended_clean <- price_dat_extended %>%
+  left_join(currency_match, by = c("currency", "sov_name", "country_name")) %>%
+  relocate(currency_clean, .after = currency)
+
+# Check to see if everything matched - We're good
+no_match <- price_dat_extended_clean %>%
+   dplyr::filter(is.na(currency_clean))
+
+# Now add exchange rates and convert prices
+price_dat_extended_clean <- price_dat_extended_clean %>%
+  left_join(currency_conversion_dat %>% dplyr::select(currency_clean = from, exchange_rate), by = c("currency_clean")) %>%
+  mutate(price_converted = round(price*exchange_rate, 2)) %>%
+  relocate(price_converted, .after = price)
+```
+
+I'm noticing that there are some high price outliers that we probably need to deal with. 
+
+```{r}
+# Let's check on a few of our outliers - some appear to be liveabords or courses which is fine, but it also appears that there might be some problems
+high_prices <- price_dat_extended_clean %>%
+  dplyr::filter(price_converted > 1000)
+
+# 16020 - NEMO's dive
+price_dat_extended_clean$n_dives[price_dat_extended_clean$ID == 16020 & price_dat_extended_clean$price == 461] <- 6
+price_dat_extended_clean$n_dives[price_dat_extended_clean$ID == 16020 & price_dat_extended_clean$price == 746] <- 10
+price_dat_extended_clean$n_dives[price_dat_extended_clean$ID == 16020 & price_dat_extended_clean$price == 1425] <- 20
+
+# 14953 - Taiwan shop. I think it should actually be in Taiwanese dollars, not Chinese yuan even though the google translate uses "yuan/won"
+price_dat_extended_clean$currency_clean[price_dat_extended_clean$ID == 14953] <- "TWD"
+price_dat_extended_clean$exchange_rate[price_dat_extended_clean$ID == 14953] <- currency_conversion_dat$exchange_rate[currency_conversion_dat$from == "TWD"]
+
+# Now let's recalculate prices
+price_dat_extended_clean <- price_dat_extended_clean %>%
+  mutate(price_converted = round(price*exchange_rate, 2))
+
+# Check again - I think most of these are reasonable now
+high_prices_2 <- price_dat_extended_clean %>%
+  dplyr::filter(price_converted > 1000)
+```
+
+# Cleaning: Dive Type
+
+We need to fill in some missing values for our additional characteristics now before we're done. Starting with dive type. 
+
+```{r}
+# Let's see what we've got for type... 
+unique(price_dat_extended_clean$type)
+
+# Reclassify
+price_dat_characteristics_clean <- price_dat_extended_clean %>%
+  mutate(type = case_when(type == "Boat Dive" ~ "Boat Dive",
+                          type == "Shore Dive" ~ "Shore Dive",
+                          type == "pool" ~ "Pool Dive",
+                          type == "Pool & Shore Dive" ~ "Shore Dive",
+                          type == "Pool & Boat Dive" ~ "Boat Dive",
+                          type %in% c("Boat/Shore Dive", "Both", "Shore/Boat Dive") ~ "Both",
+                          T ~ "Unknown"))
+```
+
+# Cleaning: Liveaboards
+
+```{r}
+# Now let's look at liveaboards
+unique(price_dat_characteristics_clean$is_liveabord)
+
+# Look at those where this was left blank or marked as unknown - 24 observations
+liveaboards_unknown <- price_dat_characteristics_clean %>% 
+  dplyr::filter(is_liveabord %in% c(NA, "Unknown"))
+
+# These are not liveaboards
+price_dat_characteristics_clean$is_liveabord[price_dat_characteristics_clean$is_liveabord %in% c(NA, "Unknown")] <- F
+```
+
+# Cleaning: Equipment
+
+```{r}
+# See what we have in terms of equipment
+unique(price_dat_characteristics_clean$includes_full_equipment)
+
+# Replace the NAs with "unknown"
+price_dat_characteristics_clean$includes_full_equipment[is.na(price_dat_characteristics_clean$includes_full_equipment)] <- "Unknown"
+```
+
+# Cleaning: Food/Drink
+
+```{r}
+# Now food/drink
+unique(price_dat_characteristics_clean$includes_food_drink)
+
+# Replace NAs with "unknown`
+price_dat_characteristics_clean$includes_food_drink[is.na(price_dat_characteristics_clean$includes_food_drink)] <- "Unknown"
+```
+
+# Cleaning: Dive Type
+
+```{r}
+# Now description
+unique(price_dat_characteristics_clean$description)
+
+# Look at some of our special cases
+descriptions_odd <- price_dat_characteristics_clean %>%
+  dplyr::filter(description %in% c("Shark", "Night Dive", NA, "Whale Dive"))
+
+# Reclassify
+price_dat_characteristics_clean <- price_dat_characteristics_clean %>%
+  mutate(notes = case_when(ID == 3005 & description == "Shark" ~ "shark dive",
+                           ID == 12802 & description == "Night Dive" ~ "night dive",
+                           ID == 14008 & description == "Whale Dive" ~ "whale dive",
+                           ID == 10475 & description == "Shark" ~ "shark dive",
+                           T ~ notes),
+         description = case_when(description %in% c("Shark", "Whale Dive", "Night Dive")  ~ "1 Dive",
+                                 is.na(description) ~ "Snorkel",
+                                 T ~ description))
+```
+
+# Final adjustments and save
+
+Now we make a couple of final adjustments and save our output dataset
+
+```{r}
+# Remove/rename a few last columns
+price_dat_out <- price_dat_characteristics_clean %>%
+  dplyr::select(-currency) %>%
+  rename(is_liveaboard = is_liveabord, currency_local = currency_clean, price_local = price) %>%
+  dplyr::filter(is_liveaboard == "F" | is_liveaboard == "FALSE") %>%
+  mutate(is_liveaboard = "F") %>%
+  mutate(n_dives = as.numeric(n_dives))
+
+# Look at entries where both Lesley and Bergen collected data
+qa_qc_keep <- price_dat_out %>%
+  dplyr::filter(ID %in% qa_qc_list$ID) %>%
+  arrange(ID, description, source) %>%
+  mutate(choose = NA)
+
+# Select which to keep
+qa_qc_keep$choose[qa_qc_keep$ID == 319 & qa_qc_keep$source == "Lesley"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 1798] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 5320] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 6255] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 6747] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 7251 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 7426 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 7905 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 8030 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 8279 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 8302] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 11432] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 12306] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 12338 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 12745 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 14322 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 14427 & qa_qc_keep$source == "Lesley"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 14817] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 15059] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 15189 & qa_qc_keep$source == "Bergen"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 15210 & qa_qc_keep$source == "Lesley"] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 15288] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 15369] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 15627] <- T
+qa_qc_keep$choose[qa_qc_keep$ID == 15773 & qa_qc_keep$source == "Bergen"] <- T
+
+# Now filter
+qa_qc_keep_out <- qa_qc_keep %>%
+  dplyr::filter(choose) %>%
+  dplyr::select(-choose)
+
+# Now drop those rows from our earlier analysis
+price_dat_final <- price_dat_out %>%
+  dplyr::filter(!(ID %in% qa_qc_keep$ID)) %>%
+  bind_rows(qa_qc_keep_out) %>%
+  dplyr::select(-source)
+
+n_shops_price_dat_final <- n_distinct(price_dat_final$ID)
+
+# Save
+write_csv(price_dat_final, file.path(emlab_project_dir, "data", "02-processed", "data-prep", "prices_day_trips_clean.csv"))
+```

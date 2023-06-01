@@ -1,0 +1,201 @@
+---
+output:
+  html_document: default
+
+title: 'Price Data Collection Sheets - Week 1'
+author: "Kat Millage"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+set.seed(123)
+
+# Sheet Specific Packages
+library(googlesheets4)
+
+# Source common R file
+source(here::here("common.R"))
+```
+
+# Introduction
+
+This script generates the first set of price data collection sheets from the dive operator database.
+
+```{r}
+# Load data
+diving_center_dat <- read_csv(file.path(emlab_project_dir, "data", "02-processed", "data-prep", "diving_center_database_clean.csv"))
+```
+
+## Diving Center Selection
+
+We have 9909 diving centers in our database with URLs. For week 1, let's set the goal of collecting data on 5% of these shops. If this bleeds over into week 2 that's fine as well. 
+
+```{r}
+# Extract only shops with websites
+diving_center_dat_good_url <- diving_center_dat %>%
+  dplyr::filter(!is.na(website))
+
+# How many shops would be 5%? 
+n_5percent <- ceiling(0.05*nrow(diving_center_dat_good_url))
+
+# Now let's randomly generate a testing sample. 
+testing_sample <- diving_center_dat_good_url %>%
+  dplyr::filter(!is.na(continent)) %>%
+  group_by(continent) %>%
+  sample_n(5, replace = T) %>%
+  ungroup()
+
+# Keep only the rows we need
+testing_sample_keep <- testing_sample %>%
+  dplyr::select(ID, business_name, website)
+```
+
+### Lesley
+
+```{r}
+# Now let's randomly generate a geographically representative sample for Lesley. Let's give her a sample comprising 2.75% of our total, and we'll make sure that they share 0.25% for QA/QC (works out to be 25 shops). 
+n_2_75percent <- ceiling(0.0275*nrow(diving_center_dat_good_url))
+n_0_25percent <- ceiling(0.0025*nrow(diving_center_dat_good_url))
+
+# Extract sample 
+lesley_sample <- diving_center_dat_good_url %>%
+  dplyr::filter(!is.na(continent)) %>%
+  group_by(continent) %>%
+  sample_frac(0.0275, replace = T) %>%
+  ungroup()
+
+write_csv(lesley_sample, file.path(emlab_project_dir, "data", "01-raw", "prices", "lesley_sample_week1.csv"))
+
+lesley_sample_keep <- lesley_sample %>%
+  dplyr::select(ID, business_name, website)
+```
+
+### Bergen
+
+Now for Bergen's sample, we want to give her 0.25% overlap with Lesley's sample so that I can check them. Let's do that first by randomly drawing 25 shops out of Lesley's sample. 
+
+```{r}
+# Randomly extract 0.25% overlap between the samples (actually about 10% for this sample)
+bergen_qa_qc_sample <- lesley_sample %>%
+  sample_n(n_0_25percent, replace = T)
+
+write_csv(bergen_qa_qc_sample, file.path(emlab_project_dir, "data", "01-raw", "prices", "overlap_sample_week1.csv"))
+
+# Size of database remaining
+diving_center_dat_good_url_remaining <- diving_center_dat_good_url %>%
+  dplyr::filter(!is.na(continent)) %>%
+  anti_join(lesley_sample_keep %>% dplyr::select(ID), by = "ID") 
+
+# Calculate the fraction we need to get the same sample size
+frac_needed <- (n_2_75percent-nrow(bergen_qa_qc_sample))/nrow(diving_center_dat_good_url_remaining)
+
+# Now let's extract the remaining sample for Bergen that's not in Lesley's sample and add the QA/QC rows
+bergen_sample <- diving_center_dat_good_url_remaining %>%
+  group_by(continent) %>%
+  sample_frac(frac_needed, replace = T) %>%
+  ungroup() %>%
+  bind_rows(bergen_qa_qc_sample)
+
+write_csv(bergen_sample, file.path(emlab_project_dir, "data", "01-raw", "prices", "bergen_sample_week1.csv"))
+
+bergen_sample_keep <- bergen_sample %>%
+  dplyr::select(ID, business_name, website)
+```
+
+## Make Google Sheets
+
+### Lesley
+
+```{r}
+lesley_nrow <- nrow(lesley_sample_keep)
+
+lesley_sheet_1_blank <- tibble(date_accessed = character(lesley_nrow),
+                        original_site_language = character(lesley_nrow),
+                        google_translate = character(lesley_nrow),
+                        can_read = character(lesley_nrow),
+                        business_name_manual = character(lesley_nrow),
+                        country = character(lesley_nrow),
+                        is_dive_related = character(lesley_nrow),
+                        is_PADI = character(lesley_nrow),
+                        is_NAUI = character(lesley_nrow),
+                        is_SSI_TDI = character(lesley_nrow),
+                        other_cert_agencies = character(lesley_nrow),
+                        notes = character(lesley_nrow))
+
+lesley_sheet_2_blank <- tibble(currency = character(lesley_nrow),
+                        location_type = character(lesley_nrow),
+                        p_type = character(lesley_nrow),
+                        p_description = character(lesley_nrow),
+                        p = character(lesley_nrow),
+                        includes_equiptment = character(lesley_nrow),
+                        includes_food_drink = character(lesley_nrow),
+                        n_dives = character(lesley_nrow),
+                        notes = character(lesley_nrow))
+
+lesley_sheet_1 <- lesley_sample_keep %>%
+  bind_cols(lesley_sheet_1_blank)
+
+lesley_sheet_2 <- lesley_sample_keep %>%
+  bind_cols(lesley_sheet_2_blank)
+```
+
+### Bergen
+
+```{r}
+bergen_nrow <- nrow(bergen_sample_keep)
+
+bergen_sheet_1_blank <- tibble(date_accessed = character(bergen_nrow),
+                        original_site_language = character(bergen_nrow),
+                        google_translate = character(bergen_nrow),
+                        can_read = character(bergen_nrow),
+                        business_name_manual = character(bergen_nrow),
+                        country = character(bergen_nrow),
+                        is_dive_related = character(bergen_nrow),
+                        is_PADI = character(bergen_nrow),
+                        is_NAUI = character(bergen_nrow),
+                        is_SSI_TDI = character(bergen_nrow),
+                        other_cert_agencies = character(bergen_nrow),
+                        notes = character(bergen_nrow))
+
+bergen_sheet_2_blank <- tibble(currency = character(bergen_nrow),
+                        location_type = character(bergen_nrow),
+                        p_type = character(bergen_nrow),
+                        p_description = character(bergen_nrow),
+                        p = character(bergen_nrow),
+                        includes_equiptment = character(bergen_nrow),
+                        includes_food_drink = character(bergen_nrow),
+                        n_dives = character(bergen_nrow),
+                        notes = character(bergen_nrow))
+
+bergen_sheet_1 <- bergen_sample_keep %>%
+  bind_cols(bergen_sheet_1_blank)
+
+bergen_sheet_2 <- bergen_sample_keep %>%
+  bind_cols(bergen_sheet_2_blank)
+```
+
+### Send to Google Sheets
+
+```{r}
+# sheet_3 <- tibble(col1 = c("T", "F"),
+#                   col2 = c("Certification Course", "Boat Dive", "Shore Dive", "Other"),
+#                   col3 = c("Marine", "Freshwater", "Unknown"),
+#                   col4 = c("Snorkel", "Discover Scuba", "Open Water", "Adv. Open Water", "Rescue", "1 Dive", "2 Dives", "N Dives"))
+```
+
+
+```{r}
+lesley_data <- list(center_info = lesley_sheet_1, prices = lesley_sheet_2)
+bergen_data <- list(center_info = bergen_sheet_1, prices = bergen_sheet_2)
+
+lesley_gs <- gs4_create(
+  "lesley_price_data_collection_week1",
+  sheets = lesley_data)
+
+bergen_gs <- gs4_create(
+  "bergen_price_data_collection_week1",
+  sheets = bergen_data)
+
+```
+
