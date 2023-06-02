@@ -337,7 +337,9 @@ save_plots(fig_1_b,
            width_in = 7.5,
            height_in = 4.5)
 
+# Save plot and data 
 save(fig_1_b,
+     eez_summary,
      file = file.path(emlab_project_dir, "figures", "data-prep", "fig_1_b.Rdata"))
 
 fig_1_b
@@ -360,8 +362,14 @@ sites_map_land_eez <- ggplot()+
   labs(title = paste0("Total number of dive sites: ", format(n_sites, big.mark = ",")))+
   theme_basic_map()
 
+# Output
 save_plots(sites_map_land_eez, 
            file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_sites_by_land_and_EEZ_area.png"),
+           width_in = 7.5,
+           height_in = 4.5)
+
+save_plots(sites_map_land_eez, 
+           file_name = "/Users/kat/Github/tourism-mpa/figures/supplementary/fig_s12.png",
            width_in = 7.5,
            height_in = 4.5)
 
@@ -564,6 +572,11 @@ save_plots(sites_by_protection_marine_plot,
            width_in = 7.5,
            height_in = 5)
 
+save_plots(sites_by_protection_marine_plot, 
+           file_name = "/Users/kat/Github/tourism-mpa/figures/supplementary/fig_s13.png",
+           width_in = 7.5,
+           height_in = 5)
+
 sites_by_protection_marine_plot
 ```
 
@@ -617,14 +630,20 @@ dives_extrap_by_protection_marine_plot <- dive_dat_edit %>%
   theme_basic()+
   theme(legend.position = "none")
 
-
+# Output
 save_plots(dives_extrap_by_protection_marine_plot, 
            file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_extrapolated_by_protection_marine_only.png"),
            width_in = 7.5,
            height_in = 5)
 
+save_plots(dives_extrap_by_protection_marine_plot, 
+           file_name = "/Users/kat/Github/tourism-mpa/figures/supplementary/fig_s16.png",
+           width_in = 7.5,
+           height_in = 5)
+
 dives_extrap_by_protection_marine_plot
 ```
+
 ### Country plots
 
 ```{r}
@@ -659,6 +678,11 @@ sites_by_protection_country_marine_plot <- dive_dat_country %>%
 
 save_plots(sites_by_protection_country_marine_plot, 
            file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_sites_by_country_and_protection_marine_only.png"),
+           width_in = 7.5,
+           height_in = 9)
+
+save_plots(sites_by_protection_country_marine_plot, 
+           file_name = "/Users/kat/Github/tourism-mpa/figures/supplementary/fig_s14.png",
            width_in = 7.5,
            height_in = 9)
 
@@ -725,12 +749,21 @@ dives_extrap_by_protection_country_marine_plot <- dive_dat_country %>%
         legend.direction = "horizontal",
         legend.text = element_text(size = 8))
 
+# Output
 save_plots(dives_extrap_by_protection_country_marine_plot, 
            file_name = file.path(emlab_project_dir, "figures", "data-prep", "diveboard_dives_extrapolated_by_country_and_protection_marine_only.png"),
            width_in = 7.5,
            height_in = 9)
 
+save_plots(dives_extrap_by_protection_country_marine_plot, 
+           file_name = "/Users/kat/Github/tourism-mpa/figures/supplementary/fig_s17.png",
+           width_in = 7.5,
+           height_in = 9)
+
+# Save data
 save(dives_extrap_by_protection_country_marine_plot,
+     dive_dat_country,
+     protection_pal,
      file = file.path(emlab_project_dir, "figures", "data-prep", "fig_1_a.Rdata"))
 
 dives_extrap_by_protection_country_marine_plot
@@ -771,45 +804,3 @@ save(sites_map_eez,
      file = file.path(emlab_project_dir, "figures", "data-prep", "dive_database_plots.RData"))
 ```
 
-
-<!-- ### By pixel (50 km x 50 km) -->
-
-<!-- ```{r} -->
-<!-- # Now we match back to our ocean df and plot marine dives (extrapolated) -->
-<!-- dives_map_extrap <- ocean_df %>% -->
-<!--   left_join(dives_by_cell, by = "cell_id") %>% -->
-<!--   ggplot()+ -->
-<!--   map_layer+ -->
-<!--   geom_tile(aes(x = lon, y = lat, fill = n_dives_extrap)) + -->
-<!--   scale_fill_gradientn(colours=viridis(7), -->
-<!--                        na.value = "#D3D3D3", -->
-<!--                        limits=c(0,200000), -->
-<!--                        labels=c("0", "50,000", "100,000", "150,000", "\U02265 200,000"), -->
-<!--                        oob=squish, -->
-<!--                        guide = guide_colorbar(keyheight = unit(2.5, units = "mm"), keywidth=unit(10, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1, title.hjust = 0.5))+ -->
-<!--   labs(fill = "Dives (#)", title = paste0("Total marine dives (extrapolated, annual): ", comma(sum(dives_by_cell$n_dives_extrap))))+ -->
-<!--   map_theme -->
-
-<!-- dives_map_extrap -->
-
-<!-- ggsave(paste0(results_dir, "marine_dives_map_extrapolated.png"), dives_map_extrap, width = 7.5, height = 4.5, units = "in") -->
-<!-- ``` -->
-
-<!-- # ```{r} -->
-<!-- # # Let's also plot the actual number -->
-<!-- # dives_map_actual <- ocean_df %>% -->
-<!-- #   left_join(dives_by_cell, by = "cell_id") %>% -->
-<!-- #   ggplot()+ -->
-<!-- #   map_layer+ -->
-<!-- #   geom_tile(aes(x = lon, y = lat, fill = n_dives)) + -->
-<!-- #   scale_fill_gradientn(colours=viridis(7), -->
-<!-- #                        na.value = "#D3D3D3", -->
-<!-- #                        limits=c(0,200), -->
-<!-- #                        labels=c("0", "50", "100", "150", "\U02265 200"), -->
-<!-- #                        oob=squish, -->
-<!-- #                        guide = guide_colorbar(keyheight = unit(2.5, units = "mm"), keywidth=unit(10, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1, title.hjust = 0.5))+ -->
-<!-- #   labs(fill = "Dives (#)", title = paste0("Total marine dives (actual, 2010-2020): ", comma(sum(dives_by_cell$n_dives))))+ -->
-<!-- #   map_theme -->
-<!-- #  -->
-<!-- # ggsave(paste0(results_dir, "marine_dives_map_actual.png"), dives_map_actual, width = 7.5, height = 4.5, units = "in") -->
-<!-- # ``` -->

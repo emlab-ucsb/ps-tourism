@@ -145,7 +145,7 @@ prj_moll <- "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84"
 world_moll <- ne_countries(scale = "medium", returnclass = "sf") %>%
   sf::st_transform(crs = st_crs(prj_moll))
 
-map_layer_moll <- geom_sf(data = world_moll, aes(group = admin), color = "white", fill = "black", size = 0.1)
+map_layer_moll <- geom_sf(data = world_moll, aes(group = admin), color = "black", fill = "grey80", size = 0.1)
 
 ### Tables ---------------------------------------------------------------------
 # Basic table theme
