@@ -92,6 +92,27 @@ theme_basic <- function(){
                    #axis.title.y = element_text(angle=0, vjust = 0.5))
 }
 
+# Main text plot theme
+theme_main_text <- function(){
+  
+  graph_theme <- ggplot2::theme_minimal() + 
+    ggplot2::theme(panel.border = element_blank(), 
+                   panel.background = element_rect(fill = "transparent",colour = NA), 
+                   plot.background = element_rect(fill = "transparent",colour = NA),
+                   panel.grid.minor=element_blank(),
+                   legend.key.height = unit(3, "mm"), 
+                   legend.key.width = unit(20, "mm"),
+                   legend.title.align = 0.5,
+                   text = element_text(family = "Roboto", color = "#000000", size = 10),
+                   legend.text = element_text(family = "Roboto", color = "#000000", size = 10), 
+                   legend.title = element_text(family = "Roboto Bold", color = "#000000", size = 10), 
+                   plot.title = element_text(family = "Roboto Bold", color = "#000000", size = 12), 
+                   plot.subtitle = element_text(family = "Roboto", color = "#000000", size = 12), 
+                   axis.title = element_text(family = "Roboto Bold", color = "#000000", size = 10), 
+                   axis.text = element_text(family = "Roboto", color = "#000000", size = 10),
+                   strip.text = element_text(family = "Roboto Bold", color = "#000000", size = 10))
+}
+
 # Save high resolution plots
 save_plots <- function(plot_name, file_name, width_in = 5, height_in = 4){ 
   
@@ -120,8 +141,8 @@ theme_basic_map <- function(){
                    legend.key.height = unit(3, "mm"), 
                    legend.key.width = unit(20, "mm"),
                    legend.title.align = 0.5,
-                   legend.text = element_text(family = "Roboto", color = "#848b9b", size = 8), 
-                   legend.title = element_text(family = "Roboto Bold", color = "#363c4c", size = 8), 
+                   legend.text = element_text(family = "Roboto", color = "#000000", size = 10), 
+                   legend.title = element_text(family = "Roboto Bold", color = "#000000", size = 10), 
                    plot.title = element_text(family = "Roboto Bold", color = "#363c4c", size = 10), 
                    plot.subtitle = element_text(family = "Roboto", color = "#363c4c", size = 10), 
                    axis.title = element_blank(), 

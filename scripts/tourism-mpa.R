@@ -409,63 +409,65 @@ no_info_pixels$cell_id #ok, "numeric(0)" means that all pixels have info now (we
 #   geom_raster()+
 #   geom_sf(data = land_shp_moll,fill="darkgray", lwd = 0.1,  inherit.aes = F)
 
-#-- load country classification (SIDS, developing, etc.)
-country_classification <- read.csv(here("data","UN_territory_sovereign_classification.csv"))
-#country_classification$SIDS <-as.factor(country_classification$Classification)
+# #-- load country classification (SIDS, developing, etc.)
+# country_classification <- read.csv(here("data","UN_territory_sovereign_classification.csv"))
+# #country_classification$SIDS <-as.factor(country_classification$Classification)
+# 
+# country_classification_with_iso <- left_join(country_classification,iso_library,by=c("sovereign1","territory1"))
+# country_classification_kat <- read.csv(here("data","country_status_lookup_manual_category.csv")) %>% mutate(Classification_kat = ifelse(manual_development_status=="Developed", "Developed", "Developing")) %>%
+#   select(iso3,Classification_kat) %>% dplyr::rename(iso_ter1 = iso3)
+# 
 
-country_classification_with_iso <- left_join(country_classification,iso_library,by=c("sovereign1","territory1"))
-country_classification_kat <- read.csv(here("data","country_status_lookup_manual_category.csv")) %>% mutate(Classification_kat = ifelse(manual_development_status=="Developed", "Developed", "Developing")) %>%
-  select(iso3,Classification_kat) %>% dplyr::rename(iso_ter1 = iso3)
-
-#-- note from Kat: use "development_status" -- developed and others.
-country_classification_with_iso_and_class <- left_join(country_classification_with_iso,country_classification_kat,by="iso_ter1") %>% mutate(match = (Classification==Classification_kat))
-
-#-- plot number of dives per country
-head(dive_per_country)
-plot_number_dives <- dive_per_country %>% group_by(territory1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap)) %>% left_join(country_classification,by="territory1") %>%
-  arrange(-n_dive) %>% slice(1:50) %>% ggplot(aes(x = reorder(as.factor(territory1), n_dive/1000000), y = n_dive/1000000, fill=Classification))+
-  geom_bar(stat = "identity")+ theme_classic()+ coord_flip()+ labs(y = "Dive per year, million")+theme(axis.title.y = element_blank())
-plot_number_dives
-
-#-- plot number of dive pixels per country
-plot_number_divepexels_country <- dive_per_country %>% group_by(territory1) %>% dplyr::summarize(n_divesites=n()) %>% filter(territory1!="NA") %>% left_join(country_classification,by="territory1") %>%
-  arrange(-n_divesites) %>% slice(1:50) %>% ggplot(aes(x = reorder(as.factor(territory1), n_divesites), y = n_divesites, fill=Classification))+
-  geom_bar(stat = "identity")+ theme_classic()+ coord_flip()+ labs(y = "Number of dive site pixel")+theme(axis.title.y = element_blank())
-plot_number_divepexels_country
-
-##-- correlate # of dives with on-reef values
-ndive_per_sovereign <- dive_per_country %>% group_by(sovereign1,iso_sov1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap))
-head(ndive_per_sovereign)
-
-onreef_values <- read.csv(here("data","tourism_reef_values","Tourvalues_Spalding.csv")) %>% group_by(iso_sov1) %>% summarise(onreef_value=sum(OnReef))
-head(onreef_values)
-
-correlate_dive_and_value <- merge(x=ndive_per_sovereign,y=onreef_values,by="iso_sov1")
-head(correlate_dive_and_value)
-
-plot_correlate_dive_and_value<- ggplot(correlate_dive_and_value, aes(x=onreef_value/1000000,y=n_dive/1000000))+geom_point()+geom_smooth(method = lm,colour="gray")+
-  geom_text_repel(aes(onreef_value/1000000, n_dive/1000000, label = sovereign1), size = 3)+
-  labs(x="On-reef tourism value, billion US$", y = "Dive per year, million")+theme_classic()
-plot_correlate_dive_and_value
-
-##--correlate # of dives with flikr data
-ndive_per_sovereign <- dive_per_country %>% group_by(sovereign1,iso_sov1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap))
-head(ndive_per_sovereign)
-flickr_data <- read.csv(here("data","flickr","flickr_webscraped_data_raw_v11.csv"))  
-flickr_data_sum <- flickr_data %>% group_by(iso_code) %>% dplyr::summarize(count=n()) %>% dplyr::rename(iso_sov1=iso_code)
-head(flickr_data_sum)
-
-correlate_dive_and_flickr <- merge(x=ndive_per_sovereign,y=flickr_data_sum,by="iso_sov1") %>% filter(is.na(iso_sov1)==F)
-head(correlate_dive_and_flickr)
-
-plot_correlate_dive_and_flickr <- ggplot(correlate_dive_and_flickr, aes(x=count,y=n_dive/1000000))+geom_point()+geom_smooth(method = lm,colour="gray")+
-  geom_text_repel(aes(count, n_dive/1000000, label = sovereign1), size = 3)+
-  labs(x="Number of flickr photos", y = "Dive per year, million")+theme_classic()
-
-#figure 1 main
-figure1<-cowplot::plot_grid(plot_number_divepexels_country, plot_number_dives,plot_correlate_dive_and_value,plot_correlate_dive_and_flickr, ncol = 2, labels = "AUTO",rel_heights=c(1,0.5))
-figure1
-ggsave(here("figures","main","plot_number_dives.jpg"),figure1, width = 20, height = 20, units = "cm")
+### Outdated figure code -------------------------------------------------------
+# #-- note from Kat: use "development_status" -- developed and others.
+# country_classification_with_iso_and_class <- left_join(country_classification_with_iso,country_classification_kat,by="iso_ter1") %>% mutate(match = (Classification==Classification_kat))
+# 
+# #-- plot number of dives per country
+# head(dive_per_country)
+# plot_number_dives <- dive_per_country %>% group_by(territory1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap)) %>% left_join(country_classification,by="territory1") %>%
+#   arrange(-n_dive) %>% slice(1:50) %>% ggplot(aes(x = reorder(as.factor(territory1), n_dive/1000000), y = n_dive/1000000, fill=Classification))+
+#   geom_bar(stat = "identity")+ theme_classic()+ coord_flip()+ labs(y = "Dive per year, million")+theme(axis.title.y = element_blank())
+# plot_number_dives
+# 
+# #-- plot number of dive pixels per country
+# plot_number_divepexels_country <- dive_per_country %>% group_by(territory1) %>% dplyr::summarize(n_divesites=n()) %>% filter(territory1!="NA") %>% left_join(country_classification,by="territory1") %>%
+#   arrange(-n_divesites) %>% slice(1:50) %>% ggplot(aes(x = reorder(as.factor(territory1), n_divesites), y = n_divesites, fill=Classification))+
+#   geom_bar(stat = "identity")+ theme_classic()+ coord_flip()+ labs(y = "Number of dive site pixel")+theme(axis.title.y = element_blank())
+# plot_number_divepexels_country
+# 
+# ##-- correlate # of dives with on-reef values
+# ndive_per_sovereign <- dive_per_country %>% group_by(sovereign1,iso_sov1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap))
+# head(ndive_per_sovereign)
+# 
+# onreef_values <- read.csv(here("data","tourism_reef_values","Tourvalues_Spalding.csv")) %>% group_by(iso_sov1) %>% summarise(onreef_value=sum(OnReef))
+# head(onreef_values)
+# 
+# correlate_dive_and_value <- merge(x=ndive_per_sovereign,y=onreef_values,by="iso_sov1")
+# head(correlate_dive_and_value)
+# 
+# plot_correlate_dive_and_value<- ggplot(correlate_dive_and_value, aes(x=onreef_value/1000000,y=n_dive/1000000))+geom_point()+geom_smooth(method = lm,colour="gray")+
+#   geom_text_repel(aes(onreef_value/1000000, n_dive/1000000, label = sovereign1), size = 3)+
+#   labs(x="On-reef tourism value, billion US$", y = "Dive per year, million")+theme_classic()
+# plot_correlate_dive_and_value
+# 
+# ##--correlate # of dives with flikr data
+# ndive_per_sovereign <- dive_per_country %>% group_by(sovereign1,iso_sov1) %>% dplyr::summarize(n_dive=sum(n_dives_extrap))
+# head(ndive_per_sovereign)
+# flickr_data <- read.csv(here("data","flickr","flickr_webscraped_data_raw_v11.csv"))  
+# flickr_data_sum <- flickr_data %>% group_by(iso_code) %>% dplyr::summarize(count=n()) %>% dplyr::rename(iso_sov1=iso_code)
+# head(flickr_data_sum)
+# 
+# correlate_dive_and_flickr <- merge(x=ndive_per_sovereign,y=flickr_data_sum,by="iso_sov1") %>% filter(is.na(iso_sov1)==F)
+# head(correlate_dive_and_flickr)
+# 
+# plot_correlate_dive_and_flickr <- ggplot(correlate_dive_and_flickr, aes(x=count,y=n_dive/1000000))+geom_point()+geom_smooth(method = lm,colour="gray")+
+#   geom_text_repel(aes(count, n_dive/1000000, label = sovereign1), size = 3)+
+#   labs(x="Number of flickr photos", y = "Dive per year, million")+theme_classic()
+# 
+# #figure 1 main
+# figure1<-cowplot::plot_grid(plot_number_divepexels_country, plot_number_dives,plot_correlate_dive_and_value,plot_correlate_dive_and_flickr, ncol = 2, labels = "AUTO",rel_heights=c(1,0.5))
+# figure1
+# ggsave(here("figures","main","plot_number_dives.jpg"),figure1, width = 20, height = 20, units = "cm")
 
 #saving a country file for me to assign country development categorization
 ##---[no need to run] head(dive_per_country)
@@ -671,9 +673,7 @@ sample.n <- sum(!is.na(biomass_data$ratio_biom_divesite))
 (sample.sd <- sd(biomass_data$ratio_biom_divesite,na.rm=T))
 (sample.se <- sample.sd/sqrt(sample.n))
 
-# <<<<<<< HEAD
-# ### Figure 2 --------------------------
-# 
+### Outdated figure code - Figure 2 --------------------------------------------
 # # Mollewide projection
 # prj <- "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84"
 # 
@@ -1070,7 +1070,7 @@ explore_user_fee_merged <- do.call("rbind",explore_user_fee_repeat)
 dim(explore_user_fee_merged)
 head(explore_user_fee_merged)
 
-### Figure 4 --------------------------
+### Figure 4 -------------------------------------------------------------------
 plot_theme <- theme_classic()+
   theme(axis.title = element_text(size = 12),
         axis.text = element_text(size = 10))
@@ -1227,7 +1227,7 @@ legend_b <- get_legend(panel1 + guides(color = guide_legend(nrow = 1)) + theme(l
 plot_explore_user_fee_v1<- cowplot::plot_grid(panel1_inset,panel2_inset,panel3_inset,panel4_inset, ncol = 2, labels = "AUTO",rel_heights=c(1,1))
 Fig4 <- cowplot::plot_grid(plot_explore_user_fee_v1, legend_b, ncol = 1, rel_heights=c(1,.05))
 Fig4
-ggsave(here("figures","main","Fig4.jpg"),Fig4, width = 8, height = 8, units = "in")
+ggsave(here("figures","main","fig_4.jpg"),Fig4, width = 8, height = 8, units = "in")
 
 # #--FIGURE 5
 # data1 <- mean_taxrevenue_db %>% filter(Scenario == "With MPA")
@@ -1267,188 +1267,187 @@ ggsave(here("figures","main","Fig4.jpg"),Fig4, width = 8, height = 8, units = "i
 #ggsave(here("figures","main","plot_explore_user_fee.jpg"),plot_explore_user_fee_v2, width = 6, height = 10, units = "in")
 
 
-### Figure 3 --------------------------
-
-#with MPA, then user fee of 13 USD per dive (to be exact, check the average user fee)
-component_effect_name <- round(effect_name/average_user_fee,4)
-component_biomass_effect <- round(mean(effect_biomass)/average_user_fee,4)
-component_biodiversity_effect <- round(mean(effect_biodiversity)/average_user_fee,4)
-
-pie_theme <- theme_void()+
-  theme(legend.position = "none", # Removes the legend
-                   plot.title = element_text(hjust = 0.5))
-
-pie_dat <- data.frame(value = c(component_effect_name, component_biomass_effect, component_biodiversity_effect), 
-                      Component = c("MPA name effect","Biomass effect","Biodiversity effect")) %>%
-  mutate(csum = rev(cumsum(rev(value))), 
-         pos = value/2 + lead(csum, 1),
-         pos = if_else(is.na(pos), value/2, pos))
-  
-fig_3_a <- ggplot(pie_dat , aes(x = "", y = value, fill = fct_inorder(Component))) +
-  geom_col(color = "black") +
-  coord_polar(theta = "y") +
-  ggtitle("Drivers of global MPA benefits")+
-  geom_label_repel(data = pie_dat,
-                   aes(y = pos, label = paste0(Component, "\n", percent(value))),
-                   size = 4.5, nudge_x = c(0.8, 1, 1.3), show.legend = FALSE) +
-  pie_theme
-
-fig_3_a  #ok, this is the contribution of different components
-
-p1_contribution <- data.frame(value = c(component_effect_name, component_biomass_effect, component_biodiversity_effect), Component = c("MPA name","Biomass","Biodiversity")) %>%
-  ggplot(aes(x = "", y = value, fill = Component)) + geom_col(color = "black") +
-  geom_text(aes(label = percent(value)), position = position_stack(vjust = 0.5)) +
-  coord_polar(theta = "y") +  ggtitle("Drivers of MPA benefits")+
-  theme_void() + theme(plot.title = element_text(hjust = 0.5))
-p1_contribution #contribution of different components (name, biodiv, biomass) to WTP
-
-#Proportion of foreign and local divers per region
-#Load this csv file: local_vs_foreign_tourist_origins_by_region
-diver_origin <- read.csv(here("data","dive","local_vs_foreign_tourist_origins_by_region.csv")) %>% dplyr::rename(Origin=origin)
-
-#--consumer surplus beneficiaries by region and diver origin
-#remove the pixels that are in MPA
-ndives_data_v1 <- dives_input[dives_input$cell_id %in% divepixels_unprotected,]
-ndives_data_v2 <- left_join(ndives_data_v1,cell_id_with_country_kat_withregion,by="cell_id") %>% select(cell_id,n_dives_extrap,n_dives_extrap_min,n_dives_extrap_max,region_fill)
-
-#consumer_surplus_per_region <- ndives_data_v2 %>% mutate(consumer_surplus = 0.5*n_dives_extrap*(choke_price-price_per_dive_constant[1])) %>% group_by(region_fill) %>% summarise(consumer_surplus_per_region = sum(consumer_surplus)/1e6) %>% drop_na() %>% dplyr::rename(region=region_fill)
-#this just tracks the beneficiaries of the change in consumer surplus due to MPA
-consumer_surplus_per_region <- ndives_data_v2 %>% mutate(consumer_surplus = change_consumer_suplus) %>% group_by(region_fill) %>% summarise(consumer_surplus_per_region = sum(consumer_surplus)/1e6) %>% drop_na() %>% dplyr::rename(region=region_fill)
-
-consumer_surplus_beneficiary <- left_join(diver_origin,consumer_surplus_per_region, by="region") %>% mutate(consumer_surplus = consumer_surplus_per_region*percent_avg/100)
-
-consumer_surplus_beneficiary$percent_avg<-round(consumer_surplus_beneficiary$percent_avg)
-
-df_sorted <- arrange(consumer_surplus_beneficiary, region, Origin) 
-head(df_sorted)
-
-df_cumsum <- df_sorted %>% group_by(region) %>% mutate(label_ypos=cumsum(consumer_surplus))
-
-sum(df_cumsum$consumer_surplus)
-
-p2_dissagregated <- df_cumsum %>% ggplot(aes(x=region, y=consumer_surplus, fill=Origin, label=scales::percent(percent_avg/100,accuracy = 1L))) +
-  geom_bar(stat="identity") + geom_text(size = 3, position = position_stack(vjust = 0.5))+
-  scale_fill_brewer(palette="Paired")+
-  labs(x="",y="Consumer surplus\n(US$ million)")+  
-  theme_minimal()+
-  ggtitle("Consumer surplus beneficiaries\nby region and diver origin")+
-  theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank())
-p2_dissagregated 
-
-#-- consumer surplus beneficiaries by foreign and local
-p2_development <- consumer_surplus_beneficiary  %>% group_by(Origin) %>% summarise(total_consumer_surplus=sum(consumer_surplus)) %>%
-  mutate(countT= sum(total_consumer_surplus), Percent_Contribution = total_consumer_surplus/countT) %>%
-  ggplot(aes(x = "", y = Percent_Contribution, fill = Origin)) + geom_col(color = "black") +
-  geom_text(aes(label = percent(Percent_Contribution)), position = position_stack(vjust = 0.5)) +
-  ggtitle("Consumer surplus beneficiaries") + coord_polar(theta = "y") +
-  scale_fill_brewer(palette="Blues") + theme_void() + theme(plot.title = element_text(hjust = 0.5))
-p2_development
-
-# # #consumer surplus for developing countries only
-# head(ndives_data_v2)
-# dim(ndives_data_v2)
-# head(country_classification)
-# left_join(country_classification,by="territory1") 
-# step1<-ndives_data_v2 %>% mutate(consumer_surplus = 0.5*n_dives_extrap*(choke_price-price_per_dive_constant[1]))
-# left_join(step1,country_classification,by="territory1") %>% dim() 
-# #%>% group_by(region_fill) %>% summarise(consumer_surplus_per_region = sum(consumer_surplus)/1e6) %>% drop_na() %>% dplyr::rename(region=region_fill)
-# # dive_per_country[dive_per_country$cell_id %in% divepixels_unprotected,] %>% left_join(country_classification,by="territory1") %>% select(cell_id,Classification,region_fill,n_dives_extrap) %>% head()
-
-#-- Apply tax and track beneficiaries.
-dive_tax <- mean(user_fee_opt)
-
-#shifted number of dives with tax
-shifted_number_dive <- round(parameter_a - parameter_b*price_per_dive_constant + ((effect_name+effect_biomass+effect_biodiversity-dive_tax)*base_number_dive/(choke_price-price_per_dive_constant)))
-min(shifted_number_dive)
-plot((shifted_number_dive - base_number_dive))
-tax_revenue <- dive_tax*shifted_number_dive
-sum(tax_revenue)/1e9 #this is how much you can get from pixel-specific tax when establishing an MPA and imposing tax that does not affect dive numbers
-
-#-- the code below is not needed
-# dive_tax <- mean(user_fee_opt)
-# price_per_dive <- cons_price_per_dive
-
-# #shifted number of dives with crowding and with tax
-# delta_q_crowding <- (wtp_combined - dive_tax)*base_number_dive/(choke_price-price_per_dive)
-# shifted_number_dive_withcrowding <- base_number_dive + delta_q_crowding*(1-(reduce_wtp_crowd*dive_group_size*delta_q_crowding/base_number_dive))
-# shifted_number_dive_withcrowding[shifted_number_dive_withcrowding<0]<-0
-# sum(shifted_number_dive_withcrowding)
+### Outdated figure code - Figure 3 --------------------------------------------
+# #with MPA, then user fee of 13 USD per dive (to be exact, check the average user fee)
+# component_effect_name <- round(effect_name/average_user_fee,4)
+# component_biomass_effect <- round(mean(effect_biomass)/average_user_fee,4)
+# component_biodiversity_effect <- round(mean(effect_biodiversity)/average_user_fee,4)
 # 
-# #with crowding effect and with MPA
-# change_dive_revenue_withcrowding <- price_per_dive*(shifted_number_dive_withcrowding - base_number_dive) # in USD
-# new_choke_price_withcrowding <- (parameter_a+((wtp_combined-dive_tax)*base_number_dive/(choke_price-price_per_dive)))/parameter_b
-# change_consumer_suplus_withcrowding <- (0.5*shifted_number_dive_withcrowding*(new_choke_price_withcrowding-price_per_dive))-(0.5*base_number_dive*(choke_price-price_per_dive))
-# tax_revenue_withcrowding <- dive_tax*shifted_number_dive_withcrowding
-# explore_user_fee_withcrowding<-c(dive_tax,sum(shifted_number_dive_withcrowding)-sum(base_number_dive),sum(change_dive_revenue_withcrowding),sum(change_consumer_suplus_withcrowding),sum(tax_revenue_withcrowding))%>% 
-#   setNames(., c("dive tax", "N dives", "Change dive revenue","Change consumer surplus","Tax revenue"))
-# length(tax_revenue_withcrowding)# length is 1792
-#---
-
-head(dive_per_country)
-cell_developmentstatus <- dive_per_country[dive_per_country$cell_id %in% divepixels_unprotected,] %>% left_join(country_classification,by="territory1") %>% select(cell_id,Classification,region_fill,n_dives_extrap)
-dim(cell_developmentstatus)
-
-#edit this once we have the true data
-cs_dat <- cell_developmentstatus %>% 
-  group_by(Classification) %>% 
-  summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
-  filter(Classification %in% c("Developed", "Developing")) %>% 
-  mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
-  mutate(Percent_Contribution = replace(Percent_Contribution, Classification == "Developed", 0.80)) %>%
-  mutate(Percent_Contribution = replace(Percent_Contribution, Classification == "Developing", 0.20)) %>%  
-  mutate(csum = rev(cumsum(rev(Percent_Contribution))), 
-         pos = Percent_Contribution/2 + lead(csum, 1),
-         pos = if_else(is.na(pos), Percent_Contribution/2, pos))
-  
-fig_3_b <- ggplot(cs_dat, aes(x = "", y = Percent_Contribution, fill = fct_inorder(Classification))) +
-  geom_col(color = "black") +
-  ggtitle("Consumer surplus beneficiaries")+
-  coord_polar(theta = "y") +
-  geom_label_repel(data = cs_dat,
-                   aes(y = pos, label = paste0(Classification, "\n", percent(Percent_Contribution))),
-                   size = 4.5, nudge_x = c(0.9), show.legend = FALSE) +
-  scale_fill_brewer()+
-    #labels=c('Foreign','Local')) +
-  pie_theme
-
-fig_3_b
-
-tax_rev_dat <- cell_developmentstatus %>% 
-  group_by(Classification) %>% 
-  summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
-  filter(Classification %in% c("Developed", "Developing")) %>% 
-  mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
-  mutate(csum = rev(cumsum(rev(Percent_Contribution))), 
-         pos = Percent_Contribution/2 + lead(csum, 1),
-         pos = if_else(is.na(pos), Percent_Contribution/2, pos))
-  
-fig_3_c <- ggplot(tax_rev_dat, aes(x = "", y = Percent_Contribution, fill = fct_inorder(Classification))) +
-  geom_col(color = "black") +
-  ggtitle("Tax revenue beneficiaries")+
-  coord_polar(theta = "y") +
-  geom_label_repel(data = tax_rev_dat,
-                   aes(y = pos, label = paste0(Classification, "\n", percent(Percent_Contribution))),
-                   size = 4.5, nudge_x = c(0.9), show.legend = FALSE) +
-  scale_fill_brewer() +
-  pie_theme
-
-fig_3_c
-
-# combine into final plot 
-fig_3_bottom_row <- cowplot::plot_grid(fig_3_b,
-                                       fig_3_c,
-                                       nrow = 1,
-                                       labels = c("B)", "C)"))
-
-fig_3 <- plot_grid(fig_3_a,
-                   fig_3_bottom_row,
-                   ncol = 1,
-                   rel_heights = c(2,1.5),
-                   labels = c("A)", ""))
-
-fig_3
-
-ggsave(here("figures","main","fig_3.jpg"),fig_3, width = 6.5, height = 6.75, units = "in")
+# pie_theme <- theme_void()+
+#   theme(legend.position = "none", # Removes the legend
+#                    plot.title = element_text(hjust = 0.5))
+# 
+# pie_dat <- data.frame(value = c(component_effect_name, component_biomass_effect, component_biodiversity_effect), 
+#                       Component = c("MPA name effect","Biomass effect","Biodiversity effect")) %>%
+#   mutate(csum = rev(cumsum(rev(value))), 
+#          pos = value/2 + lead(csum, 1),
+#          pos = if_else(is.na(pos), value/2, pos))
+#   
+# fig_3_a <- ggplot(pie_dat , aes(x = "", y = value, fill = fct_inorder(Component))) +
+#   geom_col(color = "black") +
+#   coord_polar(theta = "y") +
+#   ggtitle("Drivers of global MPA benefits")+
+#   geom_label_repel(data = pie_dat,
+#                    aes(y = pos, label = paste0(Component, "\n", percent(value))),
+#                    size = 4.5, nudge_x = c(0.8, 1, 1.3), show.legend = FALSE) +
+#   pie_theme
+# 
+# fig_3_a  #ok, this is the contribution of different components
+# 
+# p1_contribution <- data.frame(value = c(component_effect_name, component_biomass_effect, component_biodiversity_effect), Component = c("MPA name","Biomass","Biodiversity")) %>%
+#   ggplot(aes(x = "", y = value, fill = Component)) + geom_col(color = "black") +
+#   geom_text(aes(label = percent(value)), position = position_stack(vjust = 0.5)) +
+#   coord_polar(theta = "y") +  ggtitle("Drivers of MPA benefits")+
+#   theme_void() + theme(plot.title = element_text(hjust = 0.5))
+# p1_contribution #contribution of different components (name, biodiv, biomass) to WTP
+# 
+# #Proportion of foreign and local divers per region
+# #Load this csv file: local_vs_foreign_tourist_origins_by_region
+# diver_origin <- read.csv(here("data","dive","local_vs_foreign_tourist_origins_by_region.csv")) %>% dplyr::rename(Origin=origin)
+# 
+# #--consumer surplus beneficiaries by region and diver origin
+# #remove the pixels that are in MPA
+# ndives_data_v1 <- dives_input[dives_input$cell_id %in% divepixels_unprotected,]
+# ndives_data_v2 <- left_join(ndives_data_v1,cell_id_with_country_kat_withregion,by="cell_id") %>% select(cell_id,n_dives_extrap,n_dives_extrap_min,n_dives_extrap_max,region_fill)
+# 
+# #consumer_surplus_per_region <- ndives_data_v2 %>% mutate(consumer_surplus = 0.5*n_dives_extrap*(choke_price-price_per_dive_constant[1])) %>% group_by(region_fill) %>% summarise(consumer_surplus_per_region = sum(consumer_surplus)/1e6) %>% drop_na() %>% dplyr::rename(region=region_fill)
+# #this just tracks the beneficiaries of the change in consumer surplus due to MPA
+# consumer_surplus_per_region <- ndives_data_v2 %>% mutate(consumer_surplus = change_consumer_suplus) %>% group_by(region_fill) %>% summarise(consumer_surplus_per_region = sum(consumer_surplus)/1e6) %>% drop_na() %>% dplyr::rename(region=region_fill)
+# 
+# consumer_surplus_beneficiary <- left_join(diver_origin,consumer_surplus_per_region, by="region") %>% mutate(consumer_surplus = consumer_surplus_per_region*percent_avg/100)
+# 
+# consumer_surplus_beneficiary$percent_avg<-round(consumer_surplus_beneficiary$percent_avg)
+# 
+# df_sorted <- arrange(consumer_surplus_beneficiary, region, Origin) 
+# head(df_sorted)
+# 
+# df_cumsum <- df_sorted %>% group_by(region) %>% mutate(label_ypos=cumsum(consumer_surplus))
+# 
+# sum(df_cumsum$consumer_surplus)
+# 
+# p2_dissagregated <- df_cumsum %>% ggplot(aes(x=region, y=consumer_surplus, fill=Origin, label=scales::percent(percent_avg/100,accuracy = 1L))) +
+#   geom_bar(stat="identity") + geom_text(size = 3, position = position_stack(vjust = 0.5))+
+#   scale_fill_brewer(palette="Paired")+
+#   labs(x="",y="Consumer surplus\n(US$ million)")+  
+#   theme_minimal()+
+#   ggtitle("Consumer surplus beneficiaries\nby region and diver origin")+
+#   theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank())
+# p2_dissagregated 
+# 
+# #-- consumer surplus beneficiaries by foreign and local
+# p2_development <- consumer_surplus_beneficiary  %>% group_by(Origin) %>% summarise(total_consumer_surplus=sum(consumer_surplus)) %>%
+#   mutate(countT= sum(total_consumer_surplus), Percent_Contribution = total_consumer_surplus/countT) %>%
+#   ggplot(aes(x = "", y = Percent_Contribution, fill = Origin)) + geom_col(color = "black") +
+#   geom_text(aes(label = percent(Percent_Contribution)), position = position_stack(vjust = 0.5)) +
+#   ggtitle("Consumer surplus beneficiaries") + coord_polar(theta = "y") +
+#   scale_fill_brewer(palette="Blues") + theme_void() + theme(plot.title = element_text(hjust = 0.5))
+# p2_development
+# 
+# # # #consumer surplus for developing countries only
+# # head(ndives_data_v2)
+# # dim(ndives_data_v2)
+# # head(country_classification)
+# # left_join(country_classification,by="territory1") 
+# # step1<-ndives_data_v2 %>% mutate(consumer_surplus = 0.5*n_dives_extrap*(choke_price-price_per_dive_constant[1]))
+# # left_join(step1,country_classification,by="territory1") %>% dim() 
+# # #%>% group_by(region_fill) %>% summarise(consumer_surplus_per_region = sum(consumer_surplus)/1e6) %>% drop_na() %>% dplyr::rename(region=region_fill)
+# # # dive_per_country[dive_per_country$cell_id %in% divepixels_unprotected,] %>% left_join(country_classification,by="territory1") %>% select(cell_id,Classification,region_fill,n_dives_extrap) %>% head()
+# 
+# #-- Apply tax and track beneficiaries.
+# dive_tax <- mean(user_fee_opt)
+# 
+# #shifted number of dives with tax
+# shifted_number_dive <- round(parameter_a - parameter_b*price_per_dive_constant + ((effect_name+effect_biomass+effect_biodiversity-dive_tax)*base_number_dive/(choke_price-price_per_dive_constant)))
+# min(shifted_number_dive)
+# plot((shifted_number_dive - base_number_dive))
+# tax_revenue <- dive_tax*shifted_number_dive
+# sum(tax_revenue)/1e9 #this is how much you can get from pixel-specific tax when establishing an MPA and imposing tax that does not affect dive numbers
+# 
+# #-- the code below is not needed
+# # dive_tax <- mean(user_fee_opt)
+# # price_per_dive <- cons_price_per_dive
+# 
+# # #shifted number of dives with crowding and with tax
+# # delta_q_crowding <- (wtp_combined - dive_tax)*base_number_dive/(choke_price-price_per_dive)
+# # shifted_number_dive_withcrowding <- base_number_dive + delta_q_crowding*(1-(reduce_wtp_crowd*dive_group_size*delta_q_crowding/base_number_dive))
+# # shifted_number_dive_withcrowding[shifted_number_dive_withcrowding<0]<-0
+# # sum(shifted_number_dive_withcrowding)
+# # 
+# # #with crowding effect and with MPA
+# # change_dive_revenue_withcrowding <- price_per_dive*(shifted_number_dive_withcrowding - base_number_dive) # in USD
+# # new_choke_price_withcrowding <- (parameter_a+((wtp_combined-dive_tax)*base_number_dive/(choke_price-price_per_dive)))/parameter_b
+# # change_consumer_suplus_withcrowding <- (0.5*shifted_number_dive_withcrowding*(new_choke_price_withcrowding-price_per_dive))-(0.5*base_number_dive*(choke_price-price_per_dive))
+# # tax_revenue_withcrowding <- dive_tax*shifted_number_dive_withcrowding
+# # explore_user_fee_withcrowding<-c(dive_tax,sum(shifted_number_dive_withcrowding)-sum(base_number_dive),sum(change_dive_revenue_withcrowding),sum(change_consumer_suplus_withcrowding),sum(tax_revenue_withcrowding))%>% 
+# #   setNames(., c("dive tax", "N dives", "Change dive revenue","Change consumer surplus","Tax revenue"))
+# # length(tax_revenue_withcrowding)# length is 1792
+# #---
+# 
+# head(dive_per_country)
+# cell_developmentstatus <- dive_per_country[dive_per_country$cell_id %in% divepixels_unprotected,] %>% left_join(country_classification,by="territory1") %>% select(cell_id,Classification,region_fill,n_dives_extrap)
+# dim(cell_developmentstatus)
+# 
+# #edit this once we have the true data
+# cs_dat <- cell_developmentstatus %>% 
+#   group_by(Classification) %>% 
+#   summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
+#   filter(Classification %in% c("Developed", "Developing")) %>% 
+#   mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
+#   mutate(Percent_Contribution = replace(Percent_Contribution, Classification == "Developed", 0.80)) %>%
+#   mutate(Percent_Contribution = replace(Percent_Contribution, Classification == "Developing", 0.20)) %>%  
+#   mutate(csum = rev(cumsum(rev(Percent_Contribution))), 
+#          pos = Percent_Contribution/2 + lead(csum, 1),
+#          pos = if_else(is.na(pos), Percent_Contribution/2, pos))
+#   
+# fig_3_b <- ggplot(cs_dat, aes(x = "", y = Percent_Contribution, fill = fct_inorder(Classification))) +
+#   geom_col(color = "black") +
+#   ggtitle("Consumer surplus beneficiaries")+
+#   coord_polar(theta = "y") +
+#   geom_label_repel(data = cs_dat,
+#                    aes(y = pos, label = paste0(Classification, "\n", percent(Percent_Contribution))),
+#                    size = 4.5, nudge_x = c(0.9), show.legend = FALSE) +
+#   scale_fill_brewer()+
+#     #labels=c('Foreign','Local')) +
+#   pie_theme
+# 
+# fig_3_b
+# 
+# tax_rev_dat <- cell_developmentstatus %>% 
+#   group_by(Classification) %>% 
+#   summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
+#   filter(Classification %in% c("Developed", "Developing")) %>% 
+#   mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
+#   mutate(csum = rev(cumsum(rev(Percent_Contribution))), 
+#          pos = Percent_Contribution/2 + lead(csum, 1),
+#          pos = if_else(is.na(pos), Percent_Contribution/2, pos))
+#   
+# fig_3_c <- ggplot(tax_rev_dat, aes(x = "", y = Percent_Contribution, fill = fct_inorder(Classification))) +
+#   geom_col(color = "black") +
+#   ggtitle("Tax revenue beneficiaries")+
+#   coord_polar(theta = "y") +
+#   geom_label_repel(data = tax_rev_dat,
+#                    aes(y = pos, label = paste0(Classification, "\n", percent(Percent_Contribution))),
+#                    size = 4.5, nudge_x = c(0.9), show.legend = FALSE) +
+#   scale_fill_brewer() +
+#   pie_theme
+# 
+# fig_3_c
+# 
+# # combine into final plot 
+# fig_3_bottom_row <- cowplot::plot_grid(fig_3_b,
+#                                        fig_3_c,
+#                                        nrow = 1,
+#                                        labels = c("B)", "C)"))
+# 
+# fig_3 <- plot_grid(fig_3_a,
+#                    fig_3_bottom_row,
+#                    ncol = 1,
+#                    rel_heights = c(2,1.5),
+#                    labels = c("A)", ""))
+# 
+# fig_3
+# 
+# ggsave(here("figures","main","fig_3.jpg"),fig_3, width = 6.5, height = 6.75, units = "in")
 
 #This is the summary table of results! with/without MPA and varying tax level.
 head(explore_user_fee_merged)
@@ -1510,34 +1509,34 @@ dive_demand_beneficiaries
 Fig_supp_newdemand <- cowplot::plot_grid(dive_demand_beneficiaries,cons_surp_beneficiaries, ncol = 1, labels = "AUTO")
 ggsave(here("figures","supplementary","Fig_supp_newdemand.jpg"),Fig_supp_newdemand, width = 5, height = 8, units = "in")
 
-#tax revenue distribution
-p3_development <- cell_developmentstatus %>% group_by(Classification) %>% summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
-  filter(Classification %in% c("Developed", "Developing")) %>% mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
-  ggplot(aes(x = "", y = Percent_Contribution, fill = Classification)) + geom_col(color = "black") +
-  geom_text(aes(label = percent(Percent_Contribution)), position = position_stack(vjust = 0.5)) +
-  #ylab("Contribution (US$ million)")
-  ggtitle("User fee revenue beneficiaries")+
-  coord_polar(theta = "y") +
-  scale_fill_brewer(palette="Reds") +
-  theme_void()+   theme(plot.title = element_text(hjust = 0.5))
-p3_development
-
-##USER FEE REVENUE BY REGION BY DEV CATEGORY
-generate_data<-cell_developmentstatus %>% group_by(region_fill, Classification) %>% summarise(total_tax_revenue=sum(tax_revenue)/10^6) %>% drop_na() %>% filter(Classification!="In transition")
-
-# Create the barplot
-p3_dissagregated <- ggplot(data=generate_data, aes(x=region_fill, y=total_tax_revenue, fill=Classification)) +
-  geom_bar(stat="identity")+
-  scale_fill_brewer(palette="Reds")+
-  ggtitle("User fee revenue beneficiaries\nby region and country classification")+
-  labs(x="",y="Potential user fee revenue\n(US$ million)")+  
-  theme_minimal()+theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1))
-p3_dissagregated 
-
-Fig3a <- cowplot::plot_grid(p1_contribution,p2_development,p3_development, ncol = 1, labels = "AUTO")
-Fig3b <- cowplot::plot_grid(p2_dissagregated,p3_dissagregated , ncol = 1, labels = c('D', 'E'))
-Fig3 <- cowplot::plot_grid(Fig3a,Fig3b,ncol=2)
-ggsave(here("figures","main","Fig3.jpg"),Fig3, width = 8, height = 8, units = "in")
+# #tax revenue distribution
+# p3_development <- cell_developmentstatus %>% group_by(Classification) %>% summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
+#   filter(Classification %in% c("Developed", "Developing")) %>% mutate(Percent_Contribution = Contribution/sum(Contribution)) %>%
+#   ggplot(aes(x = "", y = Percent_Contribution, fill = Classification)) + geom_col(color = "black") +
+#   geom_text(aes(label = percent(Percent_Contribution)), position = position_stack(vjust = 0.5)) +
+#   #ylab("Contribution (US$ million)")
+#   ggtitle("User fee revenue beneficiaries")+
+#   coord_polar(theta = "y") +
+#   scale_fill_brewer(palette="Reds") +
+#   theme_void()+   theme(plot.title = element_text(hjust = 0.5))
+# p3_development
+# 
+# ##USER FEE REVENUE BY REGION BY DEV CATEGORY
+# generate_data<-cell_developmentstatus %>% group_by(region_fill, Classification) %>% summarise(total_tax_revenue=sum(tax_revenue)/10^6) %>% drop_na() %>% filter(Classification!="In transition")
+# 
+# # Create the barplot
+# p3_dissagregated <- ggplot(data=generate_data, aes(x=region_fill, y=total_tax_revenue, fill=Classification)) +
+#   geom_bar(stat="identity")+
+#   scale_fill_brewer(palette="Reds")+
+#   ggtitle("User fee revenue beneficiaries\nby region and country classification")+
+#   labs(x="",y="Potential user fee revenue\n(US$ million)")+  
+#   theme_minimal()+theme(axis.text.x = element_text(angle=90, vjust=0.5,hjust=1))
+# p3_dissagregated 
+# 
+# Fig3a <- cowplot::plot_grid(p1_contribution,p2_development,p3_development, ncol = 1, labels = "AUTO")
+# Fig3b <- cowplot::plot_grid(p2_dissagregated,p3_dissagregated , ncol = 1, labels = c('D', 'E'))
+# Fig3 <- cowplot::plot_grid(Fig3a,Fig3b,ncol=2)
+# ggsave(here("figures","main","Fig3.jpg"),Fig3, width = 8, height = 8, units = "in")
 
 # #This is the summary table of results! with/without MPA and varying tax level.
 # head(explore_user_fee_merged)
