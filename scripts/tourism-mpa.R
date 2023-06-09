@@ -2,6 +2,7 @@
 #Code for the paper: "Marine protected areas for dive tourism"
 #R. Cabral
 #Last update: 21 April 2023
+
 #-- This code evaluates the build-up of biomass inside MPAs, evaluate biodiversity change, and calculate dive tourism benefits
 gc()
 rm(list = ls())
@@ -43,7 +44,7 @@ ocean_coordinates <- transformed_stockdistrib %>% select(cell_id,lon,lat,f_highl
 ocean_coordinates %>% ggplot(aes(x=lon,y=lat,fill=1)) + geom_raster()
 
 #-- load MegaData --- add biomass density
-MegaData<-readRDS(here("data","MegaData_Ray.rds"))
+MegaData<-readRDS(here("data","MegaData_Sala.rds"))
 MegaData_filtered <- MegaData %>% filter(INCLUDE==1) %>% mutate(bvk_fin = 1-(ExploitationRate_BAU1_Ray/r_fin)) %>% dplyr::select(stockid,SciName,r_fin,Kfin,bvk_fin)
 #-- ensure no negative numbers
 MegaData_filtered$bvk_fin[MegaData_filtered$bvk_fin < 0] <- 0
@@ -410,7 +411,7 @@ no_info_pixels$cell_id #ok, "numeric(0)" means that all pixels have info now (we
 #   geom_sf(data = land_shp_moll,fill="darkgray", lwd = 0.1,  inherit.aes = F)
 
 # #-- load country classification (SIDS, developing, etc.)
-# country_classification <- read.csv(here("data","UN_territory_sovereign_classification.csv"))
+ country_classification <- read.csv(here("data","UN_territory_sovereign_classification.csv"))
 # #country_classification$SIDS <-as.factor(country_classification$Classification)
 # 
 # country_classification_with_iso <- left_join(country_classification,iso_library,by=c("sovereign1","territory1"))
@@ -483,7 +484,7 @@ ocean_coordinates_dive_suitable_v2 <- left_join(ocean_coordinates_dive_suitable,
 #plot suitability later or current locations of dive sites
 world_dive_sites <- ocean_coordinates_dive_suitable_v2 %>% mutate(suitable = replace_na(suitable,0)) %>% ggplot() + geom_raster(aes(x=lon,y=lat,fill=suitable)) + scale_fill_gradientn(colours=c("black","orange")) #ok, great
 world_dive_sites
-ggsave(here("figures","supplementary","world_dive_sites.jpg"),world_dive_sites, width = 20, height = 12, units = "cm")
+#ggsave(here("figures","supplementary","world_dive_sites.jpg"),world_dive_sites, width = 20, height = 12, units = "cm")
 
 #-- MPA location. Assume that a pixel is an MPA is f_highly_mpa>=0.5.
 MPA_vec <- transformed_stockdistrib %>% dplyr::select(cell_id,f_highly_mpa) %>% mutate(f_highly_mpa = (f_highly_mpa>=0.5))
@@ -1070,51 +1071,51 @@ explore_user_fee_merged <- do.call("rbind",explore_user_fee_repeat)
 dim(explore_user_fee_merged)
 head(explore_user_fee_merged)
 
-### Figure 4 -------------------------------------------------------------------
-plot_theme <- theme_classic()+
-  theme(axis.title = element_text(size = 12),
-        axis.text = element_text(size = 10))
-
-fig_4_a <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`,y=`Tax revenue`/1e9,group=Scenario))+
-  geom_line(aes(linetype=Scenario), lwd = 1)+
-  labs(x ="", y = "Dive fee revenue \n(billion US$)")+
-  scale_linetype(guide = guide_legend(title.hjust = 0.5, title.position = "top"))+
-  plot_theme +
-  theme(legend.position = "bottom")
-
-fig_4_b <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`,y=`Change dive revenue`/1e9, group=Scenario))+
-  geom_line(aes(linetype=Scenario), lwd = 1)+
-  labs(x ="", y = "\u0394 dive revenue \n(billion US$)")+
-  plot_theme
-
-fig_4_c <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`, y=`Change consumer surplus`/1e9, group=Scenario))+
-  geom_line(aes(linetype=Scenario), lwd = 1)+
-  labs(x ="Average user fee per dive \n(US$)", y = "\u0394 consumer surplus \n(billion US$)")+
-  plot_theme
-
-fig_4_d <- ggplot(explore_user_fee_merged,aes(x=`fraction user fee opt`,y=`N dives`/1e6,group=Scenario))+
-  geom_line(aes(linetype=Scenario), lwd = 1)+
-  labs(x ="Average user fee per dive \n(US$)", y = "\u0394 # dives \n(million)")+
-  plot_theme
-
-# Combine into final plot
-fig_4_no_leg <- cowplot::plot_grid(fig_4_a + theme(legend.position = "none"),
-                                   fig_4_b + theme(legend.position = "none"),
-                                   fig_4_c + theme(legend.position = "none"),
-                                   fig_4_d + theme(legend.position = "none"), 
-                                   ncol = 2, 
-                                   labels = c("A)", "B)", "C)", "D)"),
-                                   rel_heights=c(1,1))
-
-fig_4 <- plot_grid(fig_4_no_leg,
-                   get_legend(fig_4_a +
-                                theme(legend.margin = margin(t = 0.25, unit='cm'))),
-                   ncol = 1,
-                   rel_heights = c(6, 1))
-
-fig_4
-
-ggsave(here("figures","main","plot_explore_user_fee.jpg"),fig_4, width = 6.5, height = 6, units = "in")
+# ### Figure 4 -------------------------------------------------------------------
+# plot_theme <- theme_classic()+
+#   theme(axis.title = element_text(size = 12),
+#         axis.text = element_text(size = 10))
+# 
+# fig_4_a <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`,y=`Tax revenue`/1e9,group=Scenario))+
+#   geom_line(aes(linetype=Scenario), lwd = 1)+
+#   labs(x ="", y = "Dive fee revenue \n(billion US$)")+
+#   scale_linetype(guide = guide_legend(title.hjust = 0.5, title.position = "top"))+
+#   plot_theme +
+#   theme(legend.position = "bottom")
+# 
+# fig_4_b <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`,y=`Change dive revenue`/1e9, group=Scenario))+
+#   geom_line(aes(linetype=Scenario), lwd = 1)+
+#   labs(x ="", y = "\u0394 dive revenue \n(billion US$)")+
+#   plot_theme
+# 
+# fig_4_c <- ggplot(explore_user_fee_merged, aes(x=`fraction user fee opt`, y=`Change consumer surplus`/1e9, group=Scenario))+
+#   geom_line(aes(linetype=Scenario), lwd = 1)+
+#   labs(x ="Average user fee per dive \n(US$)", y = "\u0394 consumer surplus \n(billion US$)")+
+#   plot_theme
+# 
+# fig_4_d <- ggplot(explore_user_fee_merged,aes(x=`fraction user fee opt`,y=`N dives`/1e6,group=Scenario))+
+#   geom_line(aes(linetype=Scenario), lwd = 1)+
+#   labs(x ="Average user fee per dive \n(US$)", y = "\u0394 # dives \n(million)")+
+#   plot_theme
+# 
+# # Combine into final plot
+# fig_4_no_leg <- cowplot::plot_grid(fig_4_a + theme(legend.position = "none"),
+#                                    fig_4_b + theme(legend.position = "none"),
+#                                    fig_4_c + theme(legend.position = "none"),
+#                                    fig_4_d + theme(legend.position = "none"), 
+#                                    ncol = 2, 
+#                                    labels = c("A)", "B)", "C)", "D)"),
+#                                    rel_heights=c(1,1))
+# 
+# fig_4 <- plot_grid(fig_4_no_leg,
+#                    get_legend(fig_4_a +
+#                                 theme(legend.margin = margin(t = 0.25, unit='cm'))),
+#                    ncol = 1,
+#                    rel_heights = c(6, 1))
+# 
+# fig_4
+# 
+# ggsave(here("figures","main","plot_explore_user_fee.jpg"),fig_4, width = 6.5, height = 6, units = "in")
 
 mean_taxrevenue_db <- explore_user_fee_merged %>% select(dive_tax, tax_revenue, Scenario) %>% group_by(Scenario,dive_tax) %>% summarise(mean_taxrev = mean(tax_revenue))
 head(mean_taxrevenue_db)
@@ -1227,7 +1228,7 @@ legend_b <- get_legend(panel1 + guides(color = guide_legend(nrow = 1)) + theme(l
 plot_explore_user_fee_v1<- cowplot::plot_grid(panel1_inset,panel2_inset,panel3_inset,panel4_inset, ncol = 2, labels = "AUTO",rel_heights=c(1,1))
 Fig4 <- cowplot::plot_grid(plot_explore_user_fee_v1, legend_b, ncol = 1, rel_heights=c(1,.05))
 Fig4
-ggsave(here("figures","main","fig_4.jpg"),Fig4, width = 8, height = 8, units = "in")
+#ggsave(here("figures","main","fig_4.jpg"),Fig4, width = 8, height = 8, units = "in")
 
 # #--FIGURE 5
 # data1 <- mean_taxrevenue_db %>% filter(Scenario == "With MPA")
@@ -1303,7 +1304,7 @@ ggsave(here("figures","main","fig_4.jpg"),Fig4, width = 8, height = 8, units = "
 # 
 # #Proportion of foreign and local divers per region
 # #Load this csv file: local_vs_foreign_tourist_origins_by_region
-# diver_origin <- read.csv(here("data","dive","local_vs_foreign_tourist_origins_by_region.csv")) %>% dplyr::rename(Origin=origin)
+ diver_origin <- read.csv(here("data","dive","local_vs_foreign_tourist_origins_by_region.csv")) %>% dplyr::rename(Origin=origin)
 # 
 # #--consumer surplus beneficiaries by region and diver origin
 # #remove the pixels that are in MPA
@@ -1383,9 +1384,10 @@ ggsave(here("figures","main","fig_4.jpg"),Fig4, width = 8, height = 8, units = "
 # # length(tax_revenue_withcrowding)# length is 1792
 # #---
 # 
-# head(dive_per_country)
-# cell_developmentstatus <- dive_per_country[dive_per_country$cell_id %in% divepixels_unprotected,] %>% left_join(country_classification,by="territory1") %>% select(cell_id,Classification,region_fill,n_dives_extrap)
-# dim(cell_developmentstatus)
+
+ head(dive_per_country)
+ cell_developmentstatus <- dive_per_country[dive_per_country$cell_id %in% divepixels_unprotected,] %>% left_join(country_classification,by="territory1") %>% select(cell_id,Classification,region_fill,n_dives_extrap)
+ dim(cell_developmentstatus)
 # 
 # #edit this once we have the true data
 # cs_dat <- cell_developmentstatus %>% 
@@ -1507,7 +1509,7 @@ dive_demand_beneficiaries <- cell_developmentstatus %>% group_by(Classification)
 dive_demand_beneficiaries 
 
 Fig_supp_newdemand <- cowplot::plot_grid(dive_demand_beneficiaries,cons_surp_beneficiaries, ncol = 1, labels = "AUTO")
-ggsave(here("figures","supplementary","Fig_supp_newdemand.jpg"),Fig_supp_newdemand, width = 5, height = 8, units = "in")
+#ggsave(here("figures","supplementary","Fig_supp_newdemand.jpg"),Fig_supp_newdemand, width = 5, height = 8, units = "in")
 
 # #tax revenue distribution
 # p3_development <- cell_developmentstatus %>% group_by(Classification) %>% summarise(Contribution=round(sum(tax_revenue)/10^6))%>%
@@ -1552,6 +1554,6 @@ ggsave(here("figures","supplementary","Fig_supp_newdemand.jpg"),Fig_supp_newdema
 # #summary_table1$change_ndive <- 
 # head(summary_table1)
 
-#---SAVE DATA FOR PLOTTING
-save(biomass_data, land_shp_moll, explore_user_fee_merged, effect_name, effect_biomass, effect_biodiversity, average_user_fee, 
-     dives_input, divepixels_unprotected, cell_id_with_country_kat_withregion, change_consumer_suplus, cell_developmentstatus, file = here("scripts","figures","Figure_data.RData"))
+##---SAVE DATA FOR PLOTTING. We need this
+#save(biomass_data, land_shp_moll, explore_user_fee_merged, effect_name, effect_biomass, effect_biodiversity, average_user_fee, 
+#     dives_input, divepixels_unprotected, cell_id_with_country_kat_withregion, change_consumer_suplus, cell_developmentstatus, file = here("scripts","figures","Figure_data.RData"))
