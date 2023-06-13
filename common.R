@@ -24,9 +24,10 @@ library(lubridate)
 knitr::opts_chunk$set(echo = FALSE, error = FALSE, message = FALSE, warning = FALSE, include = FALSE)
 
 ### Directories -----
-# Unfortunately these paths are not general because I haven't fixed the issue caused by the latest GD update
+# Path to project directory to save figures/tables
 emlab_project_dir <- "/Users/kat/Library/CloudStorage/GoogleDrive-kmillage@ucsb.edu/Shared\ drives/emlab/projects/current-projects/ps-tourism"
 
+# Path to general data directory
 emlab_data_dir <- "/Users/kat/Library/CloudStorage/GoogleDrive-kmillage@ucsb.edu/Shared\ drives/emlab/data"
 
 ### Maps -----------------------------------------------------------------------
