@@ -9,8 +9,11 @@ rm(list = ls())
 library(ggplot2)
 library(here)
 library(dplyr)
+library(cowplot)
+library(scales)
+library(tidyverse)
 
-load(here("scripts","figures","Figure_data.RData"))
+load(here("scripts","03-figures","Figure_data.RData"))
 
 #Fig 2
 #1) "biomass_data" contains the change in biomass due to MPA. If you want the dive sites only, use "biomass_data_divesites"
